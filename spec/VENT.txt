@@ -1,0 +1,202 @@
+V E N T
+H x o e
+D c t r
+L e   r
+  p   i
+  t   b
+      l
+      e
+
+
+TVT - The VENT Transpiler
+      
+      
+KeyWords / Equivalents
+--------------------------------
+sig 	/	signal
+ent		/	entity
+comp	/	component
+port	/ 	port
+int		/	integer
+bool	/	boolean
+var		/ 	variable
+gen		/ 	generic
+stl		/	std_logic
+stlv	/ 	std_logic_vector
+str 	/	string
+proc	/ 	process
+usign	/	usigned
+sign	/	signed
+{}		/	others
+break	/ 	exit
+cont	/	next
+
+
+New Keywords
+-------------------------------
+fsm		( for declaring simple Finite State Machines )
+vhdl	( for declaring VHDL directly in VAST )	
+
+
+Dead Keywords
+-------------------------------
+port
+begin
+end
+loop
+generate
+
+
+Code Blocks / Equivalents
+------------------------------------------------------------------------
+
+entity <x> is					/ 		ent <x> {
+	port(						/			stl -> a;
+		a: in std_logic;		/			stl -> b;
+		b: in std_logic;		/			stl <- y;
+		y: out std_logic		/		}
+	);							/
+end <x>;						/
+
+
+architecture <a> of <x> is		/		arch <a> (x) {
+begin							/			y <= a or b;
+	y <= a or b;				/		}
+end architecture;				/
+
+
+architecture <p> of <t> is		/		arch <p> (t) {
+	signal q: std_logic;		/			sig stl q;
+	signal r: std_logic;		/			sig stl r;
+	signal s: std_logiic;		/			sig stl s;
+begin							/			
+	s <= q and r;				/			s <= q and r;
+end architecture;				/		}
+
+
+entity <g> is					/ 		ent <g> {
+	generic (					/			
+		bcd: std_logic;			/			gen stl bcd;	
+		efg: integer;			/			gen int efg;
+		hij: string				/			gen str hij;
+	);							/
+	port(						/			stl -> a;
+		a: in std_logic;		/			stl -> b;
+		b: in std_logic;		/			stl <- y;
+		y: out std_logic		/		}
+	);							/
+end <g>;						/
+
+
+port (							/		
+	a: inout std_logic := '1'	/			stl <-> a := 1;		
+	b: out std_logic;			/			std <- b;
+);								/		
+
+if () then 						/		if() {
+elsif () then					/		elsif () {}
+			else				/		else {}
+end if;							/		}
+
+
+process (clk)					/		proc(clk)
+begin							/		{
+	if(rising_edge(clk) then	/			if(clk'up) {
+		a <= '1';				/				a <= 1; 
+	elsif(falling_edge(clk))then/			elsif(clk'down) 
+		a <= '0';				/				a <= 0;
+	else						/			else
+		a <= 'X';				/				a <= X;
+	end if;						/			}
+end process;					/		}
+
+
+if (rising_edge(clk)) then		/		if(clk'up) 
+if (falling_edge(clk)) then		/		if(clk'down)   
+
+
+std_logic_vector(7 downto 0)	/		stlv(7:0)
+
+
+lbl: for i in 1 to 10 loop		/		for (i in 1:10 ){
+	bitarray[i] <= i;			/			bitarray[i] <= i;
+end loop;						/		}
+
+
+lbl: for i in 1 to 10 generate	/		for (i in 1:10 ){
+	bitarray[i] <= i;			/			bitarray[i] <= i;
+end loop;						/		}
+
+
+process is						/		proc() {
+    variable i : integer := 0;	/			var int i := 0;
+begin							/			
+	while i < 10 loop			/			while(i < 10) {
+	    i := i + 2;				/				i := i + 2;
+	end loop;					/			}
+	wait;						/			wait;
+end process;					/		}
+
+
+component mux is				/		comp mux {
+	port (						/			bit -> a, b, sel;
+		a, b, sel: in bit;		/			bit <- x;
+		x: out bit				/		}
+	);							/
+end component;					/
+
+
+architecture <a> of <x> is		/		arch a(x) {
+	signal in1 : std_logic;		/			sig stl in1;
+	signal in2 : std_logic;		/			sig stl in2;
+	signal mySel : std_logic;	/			sig stl mySel;
+	signal out1 : std_logic;	/			sig stl out1;
+begin							/			
+	mux1: mux port map (		/			map	mux1(mux) {
+		in1 => a,				/				in1 => a,
+		in2 => b,				/				in2 => b,
+		mySel => sel,			/				mySel => sel,
+		out1 => x				/				out1 => x
+	);							/			}
+end architecture;				/		}
+
+
+
+New Constructs
+---------------------------------------------------------------
+
+vhdl {
+	... vhdl code ...
+}
+
+
+prog {
+	... c-like code ...
+}
+
+
+fsm (reset, clk, next) {
+	input:
+		state1:
+			if(A = '1') next <= state2;
+			else next <= state1;
+		state2:
+			if(B= '1') next <= state3;
+			else next <= state2;
+		state3:
+			if(C = '1') next <= state1;
+			else next <= state3
+			
+	output:
+		state1:
+			B <= '0';
+			C <= '0';
+		state2:
+			A <= '0';
+			C <= '0';		
+		state3:
+			A <= '0';
+			B <= '0';
+}
+
+
