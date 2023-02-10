@@ -51,9 +51,9 @@ Code Blocks / Equivalents
 ------------------------------------------------------------------------
 
 entity <x> is					/ 		ent <x> {
-	port(						/			stl -> a;
-		a: in std_logic;		/			stl -> b;
-		b: in std_logic;		/			stl <- y;
+	port(						/			a -> stl;
+		a: in std_logic;		/			b -> stl;
+		b: in std_logic;		/			y <- stl;
 		y: out std_logic		/		}
 	);							/
 end <x>;						/
@@ -66,9 +66,9 @@ end architecture;				/
 
 
 architecture <p> of <t> is		/		arch <p> (t) {
-	signal q: std_logic;		/			sig stl q;
-	signal r: std_logic;		/			sig stl r;
-	signal s: std_logiic;		/			sig stl s;
+	signal q: std_logic;		/			sig q stl;
+	signal r: std_logic;		/			sig r stl;
+	signal s: std_logiic;		/			sig s stl;
 begin							/			
 	s <= q and r;				/			s <= q and r;
 end architecture;				/		}
@@ -93,11 +93,15 @@ port (							/
 	b: out std_logic;			/			std <- b;
 );								/		
 
-if () then 						/		if() {
+if () then 						/		if() {}
 elsif () then					/		elsif () {}
-			else				/		else {}
-end if;							/		}
+else							/		else {}
+end if;							/
 
+if () then 						/		(<condition>) ? <result1> : <result2>
+else							/		
+end if;							/		(<condition>) ? {} : {}
+else							/
 
 process (clk)					/		proc(clk)
 begin							/		{
@@ -109,6 +113,15 @@ begin							/		{
 		a <= 'X';				/				a <= X;
 	end if;						/			}
 end process;					/		}
+
+process (clk)					/		proc(clk)
+begin							/		{
+	if(rising_edge(clk) then	/			(clk'up) ? a <= '1' : a <= 'Z';
+		a <= '1';				/		}
+	else						/
+		a <= 'Z';				/
+	end if;						/
+end process;					/
 
 
 if (rising_edge(clk)) then		/		if(clk'up) 
