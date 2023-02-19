@@ -1,0 +1,52 @@
+/*
+	ander.vent
+
+	# This is an example VENT file
+	# with the most basic structures
+	# including an ent and arch
+
+*/
+
+use ieee.std_logic_1164.all
+
+ent ander {
+	a -> stl;
+	b -> stl;
+	y <- stl;
+}
+
+arch behavioral(ander) {
+
+	sig temp stl;
+
+	temp <= a and b;
+	y <= ~temp;
+} 
+
+/*
+This should be transpiled to the following:
+
+library ieee;
+use ieee.std_logic_1164.all
+
+entity ander is 
+	port(
+		a: in std_logic;
+		b: in std_logic;
+		y: out std_logic;
+	);
+end ander;
+
+architecture behavior of ander is
+
+	signal temp: std_logic;
+
+begin
+
+	temp <= a and b;
+	y <= ~temp;
+
+end architecture;
+
+
+*/

@@ -1,4 +1,4 @@
-#simple makefile for building VENT
+#Simple makefile for building VENT
 
 IDIR=inc
 SDIR=src
@@ -15,21 +15,23 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 MAIN=$(ODIR)/main.o
 
+#this is the VENT Transpiler executable
+tvt: $(OBJ) $(MAIN)
+	$(CC) -o $@ $> $^ $(CLFAGS) -g
+
 $(ODIR):
 	mkdir -p $@
  
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS) | $(ODIR)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) -g
 
 $(MAIN) : main.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) -g
 
+.PHONY: clean debug help
 
-tvt: $(OBJ) $(MAIN)
-	$(CC) -o $@ $> $^ $(CLFAGS)
-
-
-.PHONY: clean debug
+help:
+	@echo "call 'make tvt' or just 'make'"
 
 clean:
 	rm -fr $(ODIR)

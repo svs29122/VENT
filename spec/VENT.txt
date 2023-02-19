@@ -90,7 +90,7 @@ end <g>;						/
 
 port (							/		
 	a: inout std_logic := '1'	/			stl <-> a := 1;		
-	b: out std_logic;			/			std <- b;
+	b: out std_logic;			/			stl <- b;
 );								/		
 
 if () then 						/		if() {}

@@ -5,21 +5,32 @@
 	--
 */
 
-enum TOKEN {
+enum TOKEN_TYPE {
 	
-	//punctuation
-	LPAREN,
-	RPAREN,
-	COLON,
-	SEMICOLON,
-	
+	//delmiters
+	LPAREN, RPAREN, COLON, SEMICOLON, LBRACE, RBRACE, COMMA, TICK,
+
 	//operators
-	ASSIGN,
+	SLASH, STAR, MINUS, PLUS, EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL,
+	LESS, LESS_EQUAL, AND, OR, XOR, NOT,
+
+	//assignment and declaration
+	INPUT, OUTPUT, INOUT, SASSIGN, VASSIGN, AASSIGN,
+
+	//types
+	STL, STLV, SIG, VAR, INTEGER, STRING, BIT, BITV,
+
+	//literals
+	IDENTIFIER, NUMBER,
+
+	//keywords
+	ENT, ARCH, GEN, COMP, MAP, PROC, OTHER,
+	IF, ELSIF, ELSE, FOR, WHILE, WAIT,
 	
 };
 
 struct token {
-	enum TOKEN type;	
+	enum TOKEN_TYPE type;	
 	char *literal;
 };
 

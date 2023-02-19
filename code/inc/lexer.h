@@ -3,9 +3,9 @@
 
 struct lexer;
 
-struct lexer* initLexer(FILE* in);
-int readChar(struct lexer* lex);
-char getChar(struct lexer* lex);
+struct lexer* initLexer(char* in);
+int readChar(struct lexer* l);
+char getChar(struct lexer* l);
 
 
 #endif // INC_LEXER_H

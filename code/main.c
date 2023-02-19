@@ -25,16 +25,39 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+static char* readFile(const char* path){
+	FILE* file = fopen(path, "rb");
+	if(!file) {
+		fprintf(stderr, "Unable to open file \"%s\".\n", path);
+		exit(EXIT_FAILURE);
+	}
+	fseek(file, 0L, SEEK_END);
+	size_t fileSize = ftell(file);
+	rewind(file);
+
+	char* buffer = (char*)malloc(fileSize + 1);
+	if(!buffer){
+		fprintf(stderr, "Unable to allocatate memory for reading \"%s\".\n", path);
+		exit(EXIT_FAILURE);
+	}
+
+	size_t bytesRead = fread(buffer, sizeof(char), fileSize, file); 
+	if(bytesRead < fileSize) {
+		fprintf(stderr, "Unable to read file \"%s\".\n", path);
+		exit(EXIT_FAILURE);
+	}
+	buffer[bytesRead] = '\0';
+
+	fclose(file);
+	return buffer;
+}
+
 void doTranspile(char* fileName){
-		FILE* ventFile = fopen(fileName, "r");
+		char* ventSrc = readFile(fileName);
 	
-		if(!ventFile){
-			perror("Unable to open file!\n");
-		}
-		
-		struct lexer *myLexer = initLexer(ventFile);
+		struct lexer *myLexer = initLexer(ventSrc);
 	
-		while(EOF != readChar(myLexer)){
+		while(readChar(myLexer)){
 			printf("%c", getChar(myLexer));	
 		}
 		
