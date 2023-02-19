@@ -3,7 +3,7 @@
 
 struct lexer;
 
-struct lexer* initLexer(char* in);
+struct lexer* NewLexer(char* in);
 int readChar(struct lexer* l);
 char getChar(struct lexer* l);
 

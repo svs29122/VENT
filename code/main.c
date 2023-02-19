@@ -55,7 +55,7 @@ static char* readFile(const char* path){
 void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
 	
-		struct lexer *myLexer = initLexer(ventSrc);
+		struct lexer *myLexer = NewLexer(ventSrc);
 	
 		while(readChar(myLexer)){
 			printf("%c", getChar(myLexer));	

@@ -26,13 +26,14 @@ enum TOKEN_TYPE {
 	//keywords
 	ENT, ARCH, GEN, COMP, MAP, PROC, OTHER,
 	IF, ELSIF, ELSE, FOR, WHILE, WAIT,
-	
+
+	ILLEGAL,	
 };
 
-struct token {
+typedef struct token {
 	enum TOKEN_TYPE type;	
 	char *literal;
-};
+} Token;
 
 enum VHD_TOKEN {
 	
