@@ -1,2 +1,4 @@
-bin/
 code/tvt
+code/src/obj
+
+docs/*.png
