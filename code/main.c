@@ -56,7 +56,11 @@ void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
 	
 		struct lexer *myLexer = NewLexer(ventSrc);
-	
+		if(!myLexer){
+			fprintf(stdout, "Could not create Lexer.\n");
+			exit(EXIT_FAILURE);
+		}
+		
 		while(readChar(myLexer)){
 			printf("%c", getChar(myLexer));	
 		}

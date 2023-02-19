@@ -4,7 +4,7 @@
 struct lexer;
 
 struct lexer* NewLexer(char* in);
-int readChar(struct lexer* l);
+char readChar(struct lexer* l);
 char getChar(struct lexer* l);
 
 

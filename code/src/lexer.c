@@ -14,17 +14,17 @@
 
 struct lexer {
 	char *input;
+	char ch;
+
 	int currPos;
 	int readPos;
-	
-	char ch;
 	int line;
 };
 
-int readChar(struct lexer* l);
+char readChar(struct lexer* l);
 
 struct lexer* NewLexer(char* in){
-	struct lexer* newLexer = malloc(sizeof(struct lexer));
+	struct lexer* newLexer = (struct lexer*)malloc(sizeof(struct lexer));
 
 	newLexer->input = in;
 	newLexer->currPos = -1;
@@ -37,7 +37,7 @@ struct lexer* NewLexer(char* in){
 	return newLexer;
 }
 
-int readChar(struct lexer* l){
+char readChar(struct lexer* l){
 	
 	//grab next char in buffer
 	l->ch = l->input[l->readPos];
