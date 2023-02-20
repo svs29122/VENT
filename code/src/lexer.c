@@ -8,8 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
-#include "token.h"
+#include "lexer.h"
 
 
 struct lexer {
@@ -21,7 +22,7 @@ struct lexer {
 	int line;
 };
 
-char readChar(struct lexer* l);
+//char readChar(struct lexer* l);
 
 struct lexer* NewLexer(char* in){
 	struct lexer* newLexer = (struct lexer*)malloc(sizeof(struct lexer));
@@ -60,7 +61,8 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 	Token tok;
 
 	tok.type = type;
-	*(tok.literal) = literal;
+	tok.literal = (char*)malloc(sizeof(char));
+	memcpy(tok.literal, &literal, sizeof(char));
 
 	return tok;
 }
@@ -86,6 +88,10 @@ static bool isNumber(char c) {
 }
 
 static char peek(struct lexer* l){
+	return l->input[l->currPos];
+}
+
+static char peekNext(struct lexer* l){
 	return l->input[l->readPos];
 }
 
@@ -104,15 +110,20 @@ static void skipWhiteSpace(struct lexer *l){
 				break;	
 
 			case '/':
-				if(peek(l) == '/') {
+				if(peekNext(l) == '/') {
 					// handle single-line comment
-					while(peek(l) != '\n' && peek(l) != '\0') readChar(l);
-				} else if (peek(l) == '*'){
+					while(peek(l) != '\n' && peek(l) != '\0'){
+						 readChar(l);
+					}
+				} else if (peekNext(l) == '*'){
 					//handle multi-line comment
+					readChar(l);
+					readChar(l);
 					while(peek(l) != '*' && peek(l) != '\0'){
 						readChar(l);
-						if(peek(l) == '/') return;
 					}
+					readChar(l);
+					readChar(l);
 				} else {
 					return;
 				}
@@ -128,27 +139,33 @@ Token NextToken(struct lexer* l) {
 	
 	skipWhiteSpace(l);
 
-	switch(l->ch){
-		case '(' : return newToken(LPAREN, l->ch);
-		case ')' : return newToken(RPAREN, l->ch);
-		case ':' : return newToken(COLON, l->ch);
-		case '{' : return newToken(LBRACE, l->ch);
-		case '}' : return newToken(RBRACE, l->ch);
-		case ',' : return newToken(COMMA, l->ch);
-		case '\'': return newToken(TICK, l->ch);
-		case '/' : return newToken(SLASH, l->ch);
-		case '*' : return newToken(STAR, l->ch);
-		case '-' : return newToken(MINUS, l->ch);
-		case '+' : return newToken(PLUS, l->ch);
-		case '=' : return newToken(EQUAL, l->ch);
+	char ch = l->ch;
+	readChar(l);
+
+	switch(ch){
+		case '(' : return newToken(LPAREN, ch);
+		case ')' : return newToken(RPAREN, ch);
+		case ':' : return newToken(COLON, ch);
+		case '{' : return newToken(LBRACE, ch);
+		case '}' : return newToken(RBRACE, ch);
+		case ',' : return newToken(COMMA, ch);
+		case '\'': return newToken(TICK, ch);
+		case '/' : return newToken(SLASH, ch);
+		case '*' : return newToken(STAR, ch);
+		case '-' : return newToken(MINUS, ch);
+		case '+' : return newToken(PLUS, ch);
+		case '=' : return newToken(EQUAL, ch);
 		default:
-			if(isLetter(l->ch)){
+			if(isLetter(ch)){
 				return readIdentifier(l); 
-			} else if (isNumber(l->ch)){
+			} else if (isNumber(ch)){
 				return readNumber(l);
 			} else {
-				return newToken(ILLEGAL, l->ch);
+				return newToken(ILLEGAL, ch);
 			}
 	}
 }
 
+void PrintToken(Token t){
+	printf("type: %d, literal: %c\n", t.type, *(t.literal));
+}
