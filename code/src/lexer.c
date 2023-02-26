@@ -68,13 +68,13 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 }
 
 static Token readIdentifier(struct lexer *l){
-	Token tok;
+	Token tok = {ILLEGAL, 0};
 
 	return tok;
 }
 
 static Token readNumber(struct lexer *l){
-	Token tok;
+	Token tok = {ILLEGAL, 0};
 
 	return tok;
 }
