@@ -119,7 +119,7 @@ static void skipWhiteSpace(struct lexer *l){
 					//handle multi-line comment
 					readChar(l);
 					readChar(l);
-					while(peek(l) != '*' && peek(l) != '\0'){
+					while((peek(l) != '*' || peekNext(l) != '/') && peek(l) != '\0'){
 						readChar(l);
 					}
 					readChar(l);

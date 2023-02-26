@@ -66,9 +66,6 @@ void doTranspile(char* fileName){
 			PrintToken(t);
 			t = NextToken(vlex);
 		}
-		//while(readChar(vlex)){
-		//	printf("%c", getChar(vlex));	
-		//}
 		
 		free(vlex);
 }

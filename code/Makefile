@@ -33,13 +33,21 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS) | $(ODIR)
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug updateFlags clean cleand cleanall print
+.PHONY: help debug test runtest clean cleand cleanall print
 
 help:
 	@echo "call 'make tvt' or just 'make'"
 
 debug: 
 	$(MAKE) tvt_d CFLAGS="$(DFLAGS)" ODIR=$(DDIR)
+
+test:
+	$(MAKE) -C ./test
+
+runtest: 
+	@$(MAKE) -C ./test --silent
+	@./test/allTests
+	@$(MAKE) -C ./test clean --silent
 
 clean:
 	rm -fr $(ODIR)
@@ -55,4 +63,3 @@ print:
 	@echo $(CFLAGS)
 	@echo $(DEPS)
 	@echo $(OBJ)
-
