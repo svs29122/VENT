@@ -45,6 +45,7 @@ $(TODIR)/%.o: $(TDIR)/%.c $(DEPS) | $(TODIR)
 
 clean:
 	rm -fr $(TODIR)
+	rm -fr $(SODIR)
 	rm -f allTests
 
 print:

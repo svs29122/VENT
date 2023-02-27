@@ -69,14 +69,41 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 
 static Token readIdentifier(struct lexer *l){
 	Token tok = {ILLEGAL, 0};
+	return tok;
+}
+
+static Token readStringLiteral(struct lexer *l){
+	Token tok = {ILLEGAL, 0};
+	return tok;
+}
+
+static Token readNumericLiteral(struct lexer *l){
+	Token tok = {ILLEGAL, 0};
+
+	//we've already passed the first char of number so start at currPos-1
+	char *start = &(l->input[l->currPos-1]);
+	char *end = start+1;
+
+	while(l->ch != ' ' && l->ch != '\0'){
+		readChar(l);
+		end++;
+	}	
+
+	tok.type = NUMBER;
+		
+	int lSize = sizeof(char) * (int)(end-start);
+	tok.literal = (char*)malloc(lSize);
+	strncpy(tok.literal, start, lSize);
 
 	return tok;
 }
 
-static Token readNumber(struct lexer *l){
-	Token tok = {ILLEGAL, 0};
+static bool isCharLiteral(struct lexer *l) {
+    return 0;
+}
 
-	return tok;
+static bool isStringLiteral(struct lexer *l) {
+    return 0;
 }
 
 static bool isLetter(char c) {
@@ -86,6 +113,7 @@ static bool isLetter(char c) {
 static bool isNumber(char c) {
     return c >= '0' && c <= '9';
 }
+
 
 static char peek(struct lexer* l){
 	return l->input[l->currPos];
@@ -149,17 +177,29 @@ Token NextToken(struct lexer* l) {
 		case '{' : return newToken(LBRACE, ch);
 		case '}' : return newToken(RBRACE, ch);
 		case ',' : return newToken(COMMA, ch);
-		case '\'': return newToken(TICK, ch);
 		case '/' : return newToken(SLASH, ch);
 		case '*' : return newToken(STAR, ch);
-		case '-' : return newToken(MINUS, ch);
+		case '-' : return newToken(MINUS, ch); //will need to handle unary - (negative) operator
 		case '+' : return newToken(PLUS, ch);
 		case '=' : return newToken(EQUAL, ch);
+		case '\'':
+			if(isCharLiteral(l)){
+				// handle char literal
+			} else {
+				return newToken(TICK, ch);
+			}
+		case '"':
+		case 'B':
+		case 'O':
+		case 'X':
+			if(isStringLiteral(l)){
+				return readStringLiteral(l);
+			} // else must be identifier. Falling through to default!!! 
 		default:
 			if(isLetter(ch)){
 				return readIdentifier(l); 
 			} else if (isNumber(ch)){
-				return readNumber(l);
+				return readNumericLiteral(l);
 			} else {
 				return newToken(ILLEGAL, ch);
 			}

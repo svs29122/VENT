@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "cutest.h"
 #include "lexer.h"
@@ -125,14 +126,14 @@ void TestNextToken_MultiLineCommentUnterminated (CuTest *tc){
 }
 
 void TestNextToken_Number (CuTest *tc){
-	char* input = strdup("5");
+	char* input = strdup("1.6E-20");
 	struct lexer* tlex = NewLexer(input); 
 
 	enum TOKEN_TYPE expToken = NUMBER;
-	char* expLiteral = "5";
+	char* expLiteral = "1.6E-20";
 
 	Token nt = NextToken(tlex);
-	
+
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
 	
