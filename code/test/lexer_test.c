@@ -216,6 +216,23 @@ void TestNextToken_Identifier (CuTest *tc){
 	free(input);
 }
 
+void TestNextToken_IdentifierSingleLetter (CuTest *tc){
+	char* input = strdup("a and");
+	struct lexer* tlex = NewLexer(input); 
+
+	enum TOKEN_TYPE expToken = IDENTIFIER;
+	char* expLiteral = "a";
+	
+	Token nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral, nt.literal); 
+
+	free(nt.literal);	
+	free(tlex);
+	free(input);
+}
+
 void TestNextToken_Entity (CuTest *tc){
 	char* input = strdup("ent");
 	struct lexer* tlex = NewLexer(input); 
@@ -335,6 +352,7 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_BitString);
 	SUITE_ADD_TEST(suite, TestNextToken_String);
 	SUITE_ADD_TEST(suite, TestNextToken_Identifier);
+	SUITE_ADD_TEST(suite, TestNextToken_IdentifierSingleLetter);
 	SUITE_ADD_TEST(suite, TestNextToken_Entity);
 	SUITE_ADD_TEST(suite, TestNextToken_EntityDeclaration);
 	SUITE_ADD_TEST(suite, TestNextToken_PortDirections);

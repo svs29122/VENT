@@ -98,6 +98,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			if(size > 1){
 				switch(lit[1]){
 					case 'r':	return checkKeyword(2, 2, size, lit, "ch", ARCH);
+					case 'n':	return checkKeyword(2, 1, size, lit, "d", AND);
 				}
 			}
 			break;
@@ -170,27 +171,36 @@ static Token readIdentifier(struct lexer *l){
 	//check for any chars that can follow an identifier
 	//TODO: this is gonna be huge, maybe break it out
 	//to a separate function or a few different functions?
-	while(peekNext(l) != ' ' && peekNext(l) != '=' &&
-			peekNext(l) != '{' && peekNext(l) != '}' &&
-			peekNext(l) != '(' && peekNext(l) != ')' &&
-			peekNext(l) != '<' && peekNext(l) != '>' &&
-			peekNext(l) != '+' && peekNext(l) != '-' &&
-			peekNext(l) != '*' && peekNext(l) != '/' &&
-			peekNext(l) != ';' && peekNext(l) != ',' &&
-			peekNext(l) != '\n' && peekNext(l) != '\0'){
-
-		readChar(l);
-		end++;
+	
+	if(peek(l) != ' ' && peek(l) != ';') {	
+		while(peekNext(l) != ' ' && peekNext(l) != '=' &&
+				peekNext(l) != '{' && peekNext(l) != '}' &&
+				peekNext(l) != '(' && peekNext(l) != ')' &&
+				peekNext(l) != '<' && peekNext(l) != '>' &&
+				peekNext(l) != '+' && peekNext(l) != '-' &&
+				peekNext(l) != '*' && peekNext(l) != '/' &&
+				peekNext(l) != ';' && peekNext(l) != ',' &&
+				peekNext(l) != '\n' && peekNext(l) != '\0'){
+	
+			readChar(l);
+			end++;
+		}
+	} else {
+		//got a single letter identifier
+		end--;
 	}
 
 	//step the lexer past the identifier
-	readChar(l);	
+	if(start != end) readChar(l);	
 
 	int lSize = sizeof(char) * (int)(end-start) + 1;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
 	tok.literal[lSize] = '\0';
 
+#ifdef DEBUG 
+	printf("DEBUG: identifer == %s\r\n", tok.literal); 
+#endif
 	tok.type = getIdentifierType(lSize, tok.literal);
 
 	return tok;
