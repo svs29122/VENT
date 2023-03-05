@@ -53,24 +53,27 @@ enum TOKEN_TYPE {
 
 	//literals
 	IDENTIFIER, 
-	NUMBER,
+	CHARLIT,
+	NUMBERLIT,
+	STRINGLIT,		//40
+	BSTRINGLIT,
 
 	//keywords
 	ENT, 
-	ARCH, 			//40
+	ARCH, 			
 	GEN, 
-	COMP, 
+	COMP, 			//45
 	MAP, 
 	PROC,
-	OTHER,			//45
+	OTHER,			
 	IF, 
-	ELSIF, 
+	ELSIF, 			//50
 	ELSE, 
 	FOR, 
-	WHILE,			//50 
+	WHILE,			 
 	WAIT,
 
-	ILLEGAL,	
+	ILLEGAL,			//55
 };
 
 typedef struct token {

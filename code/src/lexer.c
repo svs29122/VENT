@@ -57,12 +57,21 @@ char getChar(struct lexer* l){
 		return -1;
 }
 
+static char peek(struct lexer* l){
+	return l->input[l->currPos];
+}
+
+static char peekNext(struct lexer* l){
+	return l->input[l->readPos];
+}
+
 static Token newToken(enum TOKEN_TYPE type, char literal){
 	Token tok;
 
 	tok.type = type;
-	tok.literal = (char*)malloc(sizeof(char));
-	memcpy(tok.literal, &literal, sizeof(char));
+	tok.literal = (char*)malloc(sizeof(char) + 1);
+	tok.literal[0] = literal;
+	tok.literal[1] = '\0';
 
 	return tok;
 }
@@ -74,6 +83,65 @@ static Token readIdentifier(struct lexer *l){
 
 static Token readStringLiteral(struct lexer *l){
 	Token tok = {ILLEGAL, 0};
+
+	//we've already passed the first "  of the string
+	// so start at currPos-1
+	char *start = &(l->input[l->currPos-1]);
+	char *end = start+1;
+
+	while(l->ch != '"' && l->ch != '\0'){
+		readChar(l);
+		end++;
+	}	
+
+	//add the end quote too
+	if(l->ch != '\0'){
+		readChar(l);
+		end++;
+	}
+
+	tok.type = STRINGLIT;
+	
+	int lSize = sizeof(char) * (int)(end-start) + 1;
+	tok.literal = (char*)malloc(lSize);
+	strncpy(tok.literal, start, lSize);
+	tok.literal[lSize] = '\0';
+
+	return tok;
+}
+
+static Token readBitStringLiteral(struct lexer *l){
+	Token tok = {ILLEGAL, 0};
+
+	//we've already passed the first base char of 
+	//the bitstring so start at currPos-1
+	char *start = &(l->input[l->currPos-1]);
+	char *end = start+1;
+
+	//add the start quote
+	if(l->ch != '\0'){
+		readChar(l);
+		end++;
+	}
+
+	while(l->ch != '"' && l->ch != '\0'){
+		readChar(l);
+		end++;
+	}	
+
+	//add the end quote too
+	if(l->ch != '\0'){
+		readChar(l);
+		end++;
+	}
+
+	tok.type = BSTRINGLIT;
+	
+	int lSize = sizeof(char) * (int)(end-start) + 1;
+	tok.literal = (char*)malloc(lSize);
+	strncpy(tok.literal, start, lSize);
+	tok.literal[lSize] = '\0';
+
 	return tok;
 }
 
@@ -84,26 +152,45 @@ static Token readNumericLiteral(struct lexer *l){
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
+	//TODO: assuming a space following the number?
+	// no way that's correct
 	while(l->ch != ' ' && l->ch != '\0'){
 		readChar(l);
 		end++;
 	}	
 
-	tok.type = NUMBER;
+	tok.type = NUMBERLIT;
 		
-	int lSize = sizeof(char) * (int)(end-start);
+	int lSize = sizeof(char) * (int)(end-start) + 1;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
+	tok.literal[lSize] = '\0';
+
+	return tok;
+}
+
+static Token readCharLiteral(struct lexer *l){
+	
+	char literal = l->ch;
+	Token tok = newToken(CHARLIT, literal);		
+	
+	//move lexer past literal and '
+	readChar(l);
+	readChar(l);
 
 	return tok;
 }
 
 static bool isCharLiteral(struct lexer *l) {
-    return 0;
+   return peekNext(l) == '\'';
+}
+
+static bool isBitStringLiteral(struct lexer *l) {
+   return peek(l) == '"';
 }
 
 static bool isStringLiteral(struct lexer *l) {
-    return 0;
+   return 0;
 }
 
 static bool isLetter(char c) {
@@ -112,15 +199,6 @@ static bool isLetter(char c) {
 
 static bool isNumber(char c) {
     return c >= '0' && c <= '9';
-}
-
-
-static char peek(struct lexer* l){
-	return l->input[l->currPos];
-}
-
-static char peekNext(struct lexer* l){
-	return l->input[l->readPos];
 }
 
 static void skipWhiteSpace(struct lexer *l){
@@ -184,16 +262,16 @@ Token NextToken(struct lexer* l) {
 		case '=' : return newToken(EQUAL, ch);
 		case '\'':
 			if(isCharLiteral(l)){
-				// handle char literal
+				return readCharLiteral(l);
 			} else {
 				return newToken(TICK, ch);
 			}
-		case '"':
+		case '"': return readStringLiteral(l);
 		case 'B':
 		case 'O':
 		case 'X':
-			if(isStringLiteral(l)){
-				return readStringLiteral(l);
+			if(isBitStringLiteral(l)){
+				return readBitStringLiteral(l);
 			} // else must be identifier. Falling through to default!!! 
 		default:
 			if(isLetter(ch)){
