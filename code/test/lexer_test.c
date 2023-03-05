@@ -12,10 +12,10 @@ void TestNextToken_SingleToken(CuTest *tc){
 
 	Token nt = NextToken(tlex);
 
-	enum TOKEN_TYPE expToken = PLUS;
-	char* expLiteral = "+";
+	const	char* expToken = tokenToString(PLUS);
+	const char* expLiteral = "+";
 
-	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expToken, tokenToString(nt.type)); 
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
 
 	free(nt.literal);	

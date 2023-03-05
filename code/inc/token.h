@@ -80,65 +80,7 @@ typedef struct token {
 	char *literal;
 } Token;
 
-const char* tokToString(enum TOKEN_TYPE type){
-	switch(type){
-		case LPAREN: 		return "LPAREN";
-		case RPAREN:		return "RPAREN";
-		case COLON:			return "COLON";
-		case SCOLON: 		return "SCOLON";
-		case LBRACE:		return "LBRACE";
-		case RBRACE:		return "RBRACE";
-		case COMMA:			return "COMMA";
-		case TICK:			return "TICK";
-		case SLASH:			return "SLASH";
-		case STAR:			return "STAR";
-		case MINUS: 		return "MINUS";
-		case PLUS:	 		return "PLUS";
-		case EQUAL: 		return "EQUAL";
-		case NOT_EQUAL:	return "NOT_EQUAL"; 
-		case GREATER: 		return "GREATER";
-		case LESS:	 		return "LESS";
-		case AND: 			return "AND";
-		case OR: 			return "OR";
-		case XOR: 			return "XOR";
-		case NOT: 			return "NOT";
-		case INPUT: 		return "INPUT";
-		case OUTPUT: 		return "OUTPUT";
-		case INOUT: 		return "INOUT";
-		case SASSIGN: 		return "SASSIGN";
-		case VASSIGN: 		return "VASSIGN";
-		case AASSIGN: 		return "AASSIGN";
-		case STL:	 		return "STL";
-		case STLV:	 		return "STLV";
-		case SIG:	 		return "SIG";
-		case VAR:	 		return "VAR";
-		case INTEGER: 		return "INTEGER";
-		case STRING: 		return "STRING";
-		case BIT:	 		return "BIT";
-		case BITV: 			return "BITV";
-		case SIGNED: 		return "SIGNED";
-		case UNSIGNED: 	return "UNSIGNED";
-		case IDENTIFIER:	return "IDENTIFIER";
-		case CHARLIT: 		return "CHARLIT";
-		case STRINGLIT:	return "STRINGLIT";
-		case BSTRINGLIT:	return "BSTRINGLIT";
-		case ENT:	 		return "ENT";
-		case ARCH:	 		return "ARCH";
-		case GEN:	 		return "GEN";
-		case COMP:	 		return "COMP";
-		case MAP:	 		return "MAP";
-		case PROC: 			return "PROC";
-		case OTHER: 		return "OTHER";
-		case IF: 			return "IF";
-		case ELSIF: 		return "ELSIF";
-		case FOR:	 		return "FOR";
-		case USE:	 		return "USE";
-		case WHILE: 		return "WHILE";
-		case WAIT:	 		return "WAIT";
-		case ILLEGAL: 		return "ILLEGAL";
-		default: 			return "";
-	}
-}
+const char* tokenToString(enum TOKEN_TYPE type);
 
 enum VHD_TOKEN {
 	
