@@ -12,6 +12,7 @@
 
 #include "lexer.h"
 
+static char readChar(struct lexer* l);
 
 struct lexer {
 	char *input;
@@ -21,8 +22,6 @@ struct lexer {
 	int readPos;
 	int line;
 };
-
-//char readChar(struct lexer* l);
 
 struct lexer* NewLexer(char* in){
 	struct lexer* newLexer = (struct lexer*)malloc(sizeof(struct lexer));
@@ -38,33 +37,6 @@ struct lexer* NewLexer(char* in){
 	return newLexer;
 }
 
-char readChar(struct lexer* l){
-	
-	//grab next char in buffer
-	l->ch = l->input[l->readPos];
-	
-	//bump positions	
-	l->currPos = l->readPos;
-	l->readPos += 1;
-
-	return l->ch;
-}
-
-char getChar(struct lexer* l){
-	if(l)
-		return l->ch;
-	else
-		return -1;
-}
-
-static char peek(struct lexer* l){
-	return l->input[l->currPos];
-}
-
-static char peekNext(struct lexer* l){
-	return l->input[l->readPos];
-}
-
 static Token newToken(enum TOKEN_TYPE type, char literal){
 	Token tok;
 
@@ -76,26 +48,169 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 	return tok;
 }
 
+static Token newMultiCharToken(enum TOKEN_TYPE type, struct lexer* l, int len){
+	Token tok = {ILLEGAL, 0};
+
+	//we've already passed the first char of token  so start at currPos-1
+	char *start = &(l->input[l->currPos-1]);
+	char *end = start+1;
+
+	for(int i = 1; i < len-1; i++){
+		readChar(l);
+		end++;
+	}	
+
+	//move the lexer past the token
+	readChar(l);
+
+	int lSize = sizeof(char) * (int)(end-start) + 1;
+	tok.literal = (char*)malloc(lSize);
+	strncpy(tok.literal, start, lSize);
+	tok.literal[lSize] = '\0';
+
+	tok.type = type;
+
+	return tok;
+}
+
+static char peek(struct lexer* l){
+	return l->input[l->currPos];
+}
+
+static char peekNext(struct lexer* l){
+	return l->input[l->readPos];
+}
+
+// 'get' utilities
+static enum TOKEN_TYPE checkKeyword(int start, int keyLen, int litLen, const char* lit, const char* rest, enum TOKEN_TYPE type){
+	
+	if(litLen == start + keyLen && memcmp(&lit[start], rest, keyLen) == 0){
+		return type;
+	}
+
+	return IDENTIFIER;
+}
+
+static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
+	
+	switch(lit[0]){
+		case 'a':
+			if(size > 1){
+				switch(lit[1]){
+					case 'r':	return checkKeyword(2, 2, size, lit, "ch", ARCH);
+				}
+			}
+			break;
+		case 'e': return checkKeyword(1, 2, size, lit, "nt", ENT);
+		case 'i': return checkKeyword(1, 2, size, lit, "nt", INTEGER);
+		case 's': 
+			if(size > 1){
+				switch(lit[1]){
+					case 'i':
+						if(size > 2){
+							switch(lit[2]){
+								case 'g':
+									if(size > 3) return checkKeyword(3, 3, size, lit, "ned", SIGNED);
+									else return SIG;
+							}
+						}
+						break;
+					case 't':
+						if(size > 2){
+							switch(lit[2]){
+								case 'l':
+									if(size > 3) return checkKeyword(3, 1, size, lit, "v", STLV);
+									else return STL;
+								case 'r': 
+									if(size > 3) return checkKeyword(3, 3, size, lit, "ing", STRING); 
+							}
+						}
+						break;
+				}
+			}
+			break;
+		case 'u':
+			if(size > 1){
+				switch(lit[1]){
+					case 's':
+						if(size > 2) return checkKeyword(2, 1, size, lit, "e", USE);
+						break;
+					case 'n':
+						if(size > 2) return checkKeyword(2, 6, size, lit, "signed", UNSIGNED);
+						break;
+				}
+			}
+			break;
+	}
+
+	return IDENTIFIER;
+}
+
+// 'read' utilities
+static char readChar(struct lexer* l){
+	
+	//grab next char in buffer
+	l->ch = l->input[l->readPos];
+	
+	//bump positions	
+	l->currPos = l->readPos;
+	l->readPos += 1;
+
+	return l->ch;
+}
+
 static Token readIdentifier(struct lexer *l){
 	Token tok = {ILLEGAL, 0};
+
+	//we've already passed the first char of
+	//identifier  so start at currPos-1
+	char *start = &(l->input[l->currPos-1]);
+	char *end = start+1;
+
+	//check for any chars that can follow an identifier
+	//TODO: this is gonna be huge, maybe break it out
+	//to a separate function or a few different functions?
+	while(peekNext(l) != ' ' && peekNext(l) != '=' &&
+			peekNext(l) != '{' && peekNext(l) != '}' &&
+			peekNext(l) != '(' && peekNext(l) != ')' &&
+			peekNext(l) != '<' && peekNext(l) != '>' &&
+			peekNext(l) != '+' && peekNext(l) != '-' &&
+			peekNext(l) != '*' && peekNext(l) != '/' &&
+			peekNext(l) != ';' && peekNext(l) != ',' &&
+			peekNext(l) != '\n' && peekNext(l) != '\0'){
+
+		readChar(l);
+		end++;
+	}
+
+	//step the lexer past the identifier
+	readChar(l);	
+
+	int lSize = sizeof(char) * (int)(end-start) + 1;
+	tok.literal = (char*)malloc(lSize);
+	strncpy(tok.literal, start, lSize);
+	tok.literal[lSize] = '\0';
+
+	tok.type = getIdentifierType(lSize, tok.literal);
+
 	return tok;
 }
 
 static Token readStringLiteral(struct lexer *l){
 	Token tok = {ILLEGAL, 0};
 
-	//we've already passed the first "  of the string
+	//we've already passed the first " of the string
 	// so start at currPos-1
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
-	while(l->ch != '"' && l->ch != '\0'){
+	while(peek(l) != '"' && peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}	
 
 	//add the end quote too
-	if(l->ch != '\0'){
+	if(peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}
@@ -119,18 +234,18 @@ static Token readBitStringLiteral(struct lexer *l){
 	char *end = start+1;
 
 	//add the start quote
-	if(l->ch != '\0'){
+	if(peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}
 
-	while(l->ch != '"' && l->ch != '\0'){
+	while(peek(l) != '"' && peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}	
 
 	//add the end quote too
-	if(l->ch != '\0'){
+	if(peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}
@@ -154,7 +269,7 @@ static Token readNumericLiteral(struct lexer *l){
 
 	//TODO: assuming a space following the number?
 	// no way that's correct
-	while(l->ch != ' ' && l->ch != '\0'){
+	while(peek(l) != ' ' && peek(l) != '\0'){
 		readChar(l);
 		end++;
 	}	
@@ -171,7 +286,7 @@ static Token readNumericLiteral(struct lexer *l){
 
 static Token readCharLiteral(struct lexer *l){
 	
-	char literal = l->ch;
+	char literal = peek(l);
 	Token tok = newToken(CHARLIT, literal);		
 	
 	//move lexer past literal and '
@@ -181,16 +296,13 @@ static Token readCharLiteral(struct lexer *l){
 	return tok;
 }
 
+// 'is' utilities
 static bool isCharLiteral(struct lexer *l) {
    return peekNext(l) == '\'';
 }
 
 static bool isBitStringLiteral(struct lexer *l) {
    return peek(l) == '"';
-}
-
-static bool isStringLiteral(struct lexer *l) {
-   return 0;
 }
 
 static bool isLetter(char c) {
@@ -252,20 +364,28 @@ Token NextToken(struct lexer* l) {
 		case '(' : return newToken(LPAREN, ch);
 		case ')' : return newToken(RPAREN, ch);
 		case ':' : return newToken(COLON, ch);
+		case ';' : return newToken(SCOLON, ch);
 		case '{' : return newToken(LBRACE, ch);
 		case '}' : return newToken(RBRACE, ch);
 		case ',' : return newToken(COMMA, ch);
 		case '/' : return newToken(SLASH, ch);
 		case '*' : return newToken(STAR, ch);
-		case '-' : return newToken(MINUS, ch); //will need to handle unary - (negative) operator
+		case '-' :
+			if(peek(l) == '>') return newMultiCharToken(INPUT, l, 2); 			
+			return newToken(MINUS, ch);
+		case '<' :
+			if(peek(l) == '-') {
+				if(peekNext(l) == '>') return newMultiCharToken(INOUT, l, 3);
+				return newMultiCharToken(OUTPUT, l, 2);
+			} else if(peek(l) == '='){
+				return newMultiCharToken(SASSIGN, l, 2);
+			} 
+			return newToken(LESS, ch);
 		case '+' : return newToken(PLUS, ch);
 		case '=' : return newToken(EQUAL, ch);
 		case '\'':
-			if(isCharLiteral(l)){
-				return readCharLiteral(l);
-			} else {
-				return newToken(TICK, ch);
-			}
+			if(isCharLiteral(l)) return readCharLiteral(l);
+			return newToken(TICK, ch);
 		case '"': return readStringLiteral(l);
 		case 'B':
 		case 'O':
@@ -285,5 +405,5 @@ Token NextToken(struct lexer* l) {
 }
 
 void PrintToken(Token t){
-	printf("type: %d, literal: %c\n", t.type, *(t.literal));
+	printf("type: %10s, literal: %s\n", tokToString(t.type), t.literal);
 }

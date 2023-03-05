@@ -13,23 +13,24 @@ TVT - The VENT Transpiler
       
 KeyWords / Equivalents
 --------------------------------
-sig 	/	signal
-ent		/	entity
-comp	/	component
-port	/ 	port
-int		/	integer
 bool	/	boolean
-var		/ 	variable
+break	/ 	exit
+comp	/	component
+cont	/	next
+ent		/	entity
 gen		/ 	generic
+int		/	integer
+port	/ 	port
+proc	/ 	process
+sig 	/	signal
+signed	/	signed				
 stl		/	std_logic
 stlv	/ 	std_logic_vector
-str 	/	string
-proc	/ 	process
-usign	/	usigned
-sign	/	signed
+string 	/	string			
+use		/	use
+unsigned/	unsigned
+var		/ 	variable
 {}		/	others
-break	/ 	exit
-cont	/	next
 
 
 New Keywords

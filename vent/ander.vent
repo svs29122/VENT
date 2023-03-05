@@ -20,7 +20,7 @@ arch behavioral(ander) {
 	sig temp stl;
 
 	temp <= a and b;
-	y <= ~temp;
+	y <= temp;
 } 
 
 /*

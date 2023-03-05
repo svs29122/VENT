@@ -199,6 +199,119 @@ void TestNextToken_String (CuTest *tc){
 	free(input);
 }
 
+void TestNextToken_Identifier (CuTest *tc){
+	char* input = strdup("myEntity{");
+	struct lexer* tlex = NewLexer(input); 
+
+	enum TOKEN_TYPE expToken = IDENTIFIER;
+	char* expLiteral = "myEntity";
+	
+	Token nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral, nt.literal); 
+
+	free(nt.literal);	
+	free(tlex);
+	free(input);
+}
+
+void TestNextToken_Entity (CuTest *tc){
+	char* input = strdup("ent");
+	struct lexer* tlex = NewLexer(input); 
+
+	enum TOKEN_TYPE expToken = ENT;
+	char* expLiteral = "ent";
+	
+	Token nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral, nt.literal); 
+
+	free(nt.literal);	
+	free(tlex);
+	free(input);
+}
+
+void TestNextToken_EntityDeclaration (CuTest *tc){
+	char* input = strdup("ent ander {\n}");
+	struct lexer* tlex = NewLexer(input); 
+
+	enum TOKEN_TYPE expToken = ENT;
+	char* expLiteral = "ent";
+	
+	Token nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral, nt.literal); 
+	free(nt.literal);	
+
+	expToken = IDENTIFIER;
+	char* expLiteral2 = "ander";
+
+	nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral2, nt.literal); 
+	free(nt.literal);	
+
+	expToken = LBRACE;
+	char* expLiteral3 = "{";
+
+	nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral3, nt.literal); 
+	free(nt.literal);	
+
+	expToken = RBRACE;
+	char* expLiteral4 = "}";
+
+	nt = NextToken(tlex);
+
+	CuAssertIntEquals(tc, expToken, nt.type);
+	CuAssertStrEquals(tc, expLiteral4, nt.literal); 
+	free(nt.literal);	
+
+	free(tlex);
+	free(input);
+}
+
+void TestNextToken_PortDirections (CuTest *tc){
+	char* input = strdup("-> <- <->");
+	struct lexer* tlex = NewLexer(input); 
+
+	enum TOKEN_TYPE expToken = INPUT;
+	char* expLiteral = "->";
+	
+	Token nt = NextToken(tlex);
+
+	CuAssertStrEquals(tc, expLiteral, nt.literal); 
+	CuAssertIntEquals(tc, expToken, nt.type);
+	free(nt.literal);	
+
+	expToken = OUTPUT;
+	char* expLiteral2 = "<-";
+	
+	nt = NextToken(tlex);
+
+	CuAssertStrEquals(tc, expLiteral2, nt.literal); 
+	CuAssertIntEquals(tc, expToken, nt.type);
+	free(nt.literal);	
+
+	expToken = INOUT;
+	char* expLiteral3 = "<->";
+	
+	nt = NextToken(tlex);
+
+	CuAssertStrEquals(tc, expLiteral3, nt.literal); 
+	CuAssertIntEquals(tc, expToken, nt.type);
+	free(nt.literal);	
+
+	free(tlex);
+	free(input);
+}
+
 void TestNextToken_ (CuTest *tc){
 	char* input = strdup("");
 	struct lexer* tlex = NewLexer(input); 
@@ -221,6 +334,10 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_Char);
 	SUITE_ADD_TEST(suite, TestNextToken_BitString);
 	SUITE_ADD_TEST(suite, TestNextToken_String);
+	SUITE_ADD_TEST(suite, TestNextToken_Identifier);
+	SUITE_ADD_TEST(suite, TestNextToken_Entity);
+	SUITE_ADD_TEST(suite, TestNextToken_EntityDeclaration);
+	SUITE_ADD_TEST(suite, TestNextToken_PortDirections);
 
 	return suite;
 }
