@@ -72,6 +72,7 @@ enum TOKEN_TYPE {
 	WHILE,			 
 	WAIT,
 
+	EOP, // end of program			
 	ILLEGAL,			
 };
 

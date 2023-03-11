@@ -1,10 +1,11 @@
 /*
 	lexer.c
 
-	this file contains all code relating to transforming (lexing) 
-	a VHDL file into a series of tokens that the parser can process 
+	This file contains all code relating to transforming (lexing) 
+	a VENT file into a series of tokens that the parser can process 
 	--
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -373,7 +374,9 @@ Token NextToken(struct lexer* l) {
 	switch(ch){
 		case '(' : return newToken(LPAREN, ch);
 		case ')' : return newToken(RPAREN, ch);
-		case ':' : return newToken(COLON, ch);
+		case ':' : 
+			if(peek(l) == '=') return newMultiCharToken(VASSIGN, l, 2);
+			return newToken(COLON, ch);
 		case ';' : return newToken(SCOLON, ch);
 		case '{' : return newToken(LBRACE, ch);
 		case '}' : return newToken(RBRACE, ch);
@@ -392,7 +395,10 @@ Token NextToken(struct lexer* l) {
 			} 
 			return newToken(LESS, ch);
 		case '+' : return newToken(PLUS, ch);
-		case '=' : return newToken(EQUAL, ch);
+		case '=' : 
+			if(peek(l) == '>') return newMultiCharToken(AASSIGN, l, 2); 			
+			return newToken(EQUAL, ch);
+		case '\0': return newToken(EOP, ch);
 		case '\'':
 			if(isCharLiteral(l)) return readCharLiteral(l);
 			return newToken(TICK, ch);
@@ -473,6 +479,7 @@ const char* tokenToString(enum TOKEN_TYPE type){
 		case USE:	 		return "USE";
 		case WHILE: 		return "WHILE";
 		case WAIT:	 		return "WAIT";
+		case EOP:	 		return "EOP";
 		case ILLEGAL: 		return "ILLEGAL";
 		default: 			return "";
 	}

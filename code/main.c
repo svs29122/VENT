@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}	
 
-	if(strcmp("-t", argv[1]) == 0){
-		doTranspile(argv[2]);
+	if(argc == 2){
+		doTranspile(argv[1]);
 	} else if(strcmp("-i", argv[1]) == 0){
 		 doMenu();
 	}
@@ -62,7 +62,7 @@ void doTranspile(char* fileName){
 		}
 		
 		Token t = NextToken(vlex);
-		while(t.type != ILLEGAL){
+		while(t.type != ILLEGAL && t.type != EOP){
 			PrintToken(t);
 			t = NextToken(vlex);
 		}
