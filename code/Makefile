@@ -36,7 +36,15 @@ $(MAIN) : main.c
 .PHONY: help debug test runtest clean cleand cleant cleanall print
 
 help:
-	@echo "call 'make tvt' or just 'make'"
+	@echo "  build tvt: 'make tvt' or just 'make'"
+	@echo "  build tvt with debug symbols: 'make debug'"
+	@echo "  build unit test application: 'make test'"
+	@echo "  build and run unit tests: 'make runtest'"
+	@echo "  "
+	@echo "  clean output products: 'make clean'"
+	@echo "  clean debug output products: 'make cleand'"
+	@echo "  clean test output products: 'make cleant'"
+	@echo "  clean everything: 'make cleanall'"
 
 debug: 
 	$(MAKE) tvt_d CFLAGS="$(DFLAGS)" ODIR=$(DDIR)

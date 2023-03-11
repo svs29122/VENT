@@ -67,6 +67,8 @@ void doTranspile(char* fileName){
 			t = NextToken(vlex);
 		}
 		
+		if(t.type == ILLEGAL) PrintToken(t);
+		
 		free(vlex);
 }
 

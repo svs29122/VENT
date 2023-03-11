@@ -6,8 +6,6 @@
 struct lexer;
 
 struct lexer* NewLexer(char* in);
-char readChar(struct lexer* l);
-char getChar(struct lexer* l);
 
 Token NextToken(struct lexer* l);
 void PrintToken(Token t);

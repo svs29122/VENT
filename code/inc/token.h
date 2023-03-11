@@ -1,39 +1,86 @@
-/*
-	token.h
-	
-	token definitions
-	--
-*/
+#ifndef INC_TOKEN_H
+#define INC_TOKEN_H
 
 enum TOKEN_TYPE {
 	
 	//delmiters
-	LPAREN, RPAREN, COLON, SEMICOLON, LBRACE, RBRACE, COMMA, TICK,
+	LPAREN = 1,
+	RPAREN, 
+	COLON, 
+	SCOLON, 
+	LBRACE, 			//5 
+	RBRACE, 
+	COMMA, 
+	TICK,
 
 	//operators
-	SLASH, STAR, MINUS, PLUS, EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL,
-	LESS, LESS_EQUAL, AND, OR, XOR, NOT,
+	SLASH, 
+	STAR, 			//10 
+	MINUS,
+	PLUS, 
+	EQUAL, 
+	NOT_EQUAL, 
+	GREATER, 		//15 
+	GREATER_EQUAL,
+	LESS, 
+	LESS_EQUAL, 
+	AND, 
+	OR, 				//20
+	XOR, 
+	NOT,
 
 	//assignment and declaration
-	INPUT, OUTPUT, INOUT, SASSIGN, VASSIGN, AASSIGN,
+	INPUT, 
+	OUTPUT, 
+	INOUT,			//25 
+	SASSIGN, 
+	VASSIGN, 
+	AASSIGN,
 
 	//types
-	STL, STLV, SIG, VAR, INTEGER, STRING, BIT, BITV,
+	STL, 
+	STLV, 			//30
+	SIG, 
+	VAR, 
+	INTEGER, 
+	STRING, 
+	BIT,				//35 
+	BITV,
+	SIGNED,
+	UNSIGNED,
 
 	//literals
-	IDENTIFIER, NUMBER,
+	IDENTIFIER, 
+	CHARLIT,
+	NUMBERLIT,
+	STRINGLIT,		
+	BSTRINGLIT,
 
 	//keywords
-	ENT, ARCH, GEN, COMP, MAP, PROC, OTHER,
-	IF, ELSIF, ELSE, FOR, WHILE, WAIT,
+	ENT, 
+	ARCH, 			
+	GEN, 
+	COMP, 			
+	MAP, 
+	PROC,
+	OTHER,			
+	IF, 
+	ELSIF, 			
+	ELSE, 
+	FOR, 
+	USE,
+	WHILE,			 
+	WAIT,
 
-	ILLEGAL,	
+	ILLEGAL,			
 };
 
 typedef struct token {
 	enum TOKEN_TYPE type;	
 	char *literal;
 } Token;
+
+const char* tokenToString(enum TOKEN_TYPE type);
 
 enum VHD_TOKEN {
 	
@@ -127,3 +174,5 @@ struct revToken {
 	enum VHD_TOKEN type;	
 	char *literal;
 };
+
+#endif // INC_TOKEN_H

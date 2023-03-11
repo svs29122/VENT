@@ -14,19 +14,19 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
- 
+
 entity UART_TX is
-  generic (
-    g_CLKS_PER_BIT : integer := 115     -- Needs to be set correctly
-    );
-  port (
-    i_Clk       : in  std_logic;
-    i_TX_DV     : in  std_logic;
-    i_TX_Byte   : in  std_logic_vector(7 downto 0);
-    o_TX_Active : out std_logic;
-    o_TX_Serial : out std_logic;
-    o_TX_Done   : out std_logic
-    );
+  generic (
+g_CLKS_PER_BIT : integer := 115     -- Needs to be set correctly
+);
+port (
+	i_Clk       : in  std_logic;
+	i_TX_DV     : in  std_logic;
+	i_TX_Byte   : in  std_logic_vector(7 downto 0);
+	o_TX_Active : out std_logic;
+	o_TX_Serial : out std_logic;
+	o_TX_Done   : out std_logic
+);
 end UART_TX;
  
  

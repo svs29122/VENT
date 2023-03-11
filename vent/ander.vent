@@ -20,12 +20,11 @@ arch behavioral(ander) {
 	sig temp stl;
 
 	temp <= a and b;
-	y <= ~temp;
+	y <= temp;
 } 
 
+//This should be transpiled to the following:
 /*
-This should be transpiled to the following:
-
 library ieee;
 use ieee.std_logic_1164.all
 
@@ -37,16 +36,14 @@ entity ander is
 	);
 end ander;
 
-architecture behavior of ander is
+architecture behavioral of ander is
 
 	signal temp: std_logic;
 
 begin
 
 	temp <= a and b;
-	y <= ~temp;
+	y <= temp;
 
 end architecture;
-
-
 */
