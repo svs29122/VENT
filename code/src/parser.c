@@ -7,13 +7,6 @@
 	--
 */
 
-#include <stdio.h>
-
-#include "token.h"
-#include "lexer.h"
-#include "ast.h"
-
-
 ////////////////////////////////////////////////////////////////
 /*
 	The VENT Grammar
@@ -100,9 +93,16 @@
 		-> "tempSig <= a and b;"
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "token.h"
+#include "lexer.h"
+#include "ast.h"
+
 struct parser {
 	struct lexer* l;
-	Token curToken;
+	Token currToken;
 	Token peekToken;
 };
 
@@ -110,22 +110,50 @@ struct parser* NewParser(struct lexer *lex){
 	struct parser* newParser = (struct parser*)malloc(sizeof(struct parser));
 
 	newParser->l = lex;
-	newParser->curToken = lex->NextToken();
-	newParser->peekToken = lex->NextToken();	
+	newParser->currToken = NextToken(newParser->l);
+	newParser->peekToken = NextToken(newParser->l);	
 
 	return newParser;
 }
 
-Program* ParseProgram(struct parser *par){
+static Token nextToken(struct parser* p){
+	p->currToken = p->peekToken;
+	p->peekToken = NextToken(p->l);
+}
+
+static UseStatement* parseUseStatement(Token token){
+	UseStatement* stmt = NULL;
+
+	return stmt;
+}
+
+static DesignUnit* parseDesignUnit(struct parser* p){
+	DesignUnit* unit = NULL;
+
+	return unit;
+}
+
+Program* ParseProgram(struct parser *p){
 	Program* prog = (Program*)malloc(sizeof(Program));
 	prog->statements = NULL;
+	prog->units = NULL;
 
-	while(par->nextToken() != EOP){
-		// statement = parseStatement();
-		if(statement != NULL){
+	// first get the use statements
+	while(p->currToken.type == USE && p->currToken.type != EOP){
+		UseStatement* stmt = parseUseStatement(p->currToken);
+		if(stmt != NULL){
 			//prog->statements = add(statement);
 		}
-		par->NexToken();
+		nextToken(p);
+	}
+
+	// next parse any design units
+	while(p->currToken.type != EOP){
+		DesignUnit* unit = parseDesignUnit(p);
+		if(unit != NULL){
+			//prog->units = add(unit);
+		}
+		nextToken(p);
 	}
 	
 	return prog;
