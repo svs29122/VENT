@@ -81,8 +81,6 @@ typedef struct token {
 	char *literal;
 } Token;
 
-const char* tokenToString(enum TOKEN_TYPE type);
-
 enum VHD_TOKEN {
 	
 	//punctuation

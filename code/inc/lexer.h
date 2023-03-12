@@ -4,7 +4,6 @@
 #include "token.h"
 
 struct lexer;
-
 struct lexer* NewLexer(char* in);
 
 Token NextToken(struct lexer* l);

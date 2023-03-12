@@ -420,10 +420,6 @@ Token NextToken(struct lexer* l) {
 	}
 }
 
-void PrintToken(Token t){
-	printf("type: %10s, literal: %s\n", tokenToString(t.type), t.literal);
-}
-
 const char* tokenToString(enum TOKEN_TYPE type){
 	switch(type){
 		case LPAREN: 		return "LPAREN";
@@ -483,4 +479,8 @@ const char* tokenToString(enum TOKEN_TYPE type){
 		case ILLEGAL: 		return "ILLEGAL";
 		default: 			return "";
 	}
+}
+
+void PrintToken(Token t){
+	printf("type: %10s, literal: %s\n", tokenToString(t.type), t.literal);
 }
