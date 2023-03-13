@@ -95,6 +95,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "token.h"
 #include "lexer.h"
@@ -121,28 +123,89 @@ static Token nextToken(struct parser* p){
 	p->peekToken = NextToken(p->l);
 }
 
-static UseStatement* parseUseStatement(Token token){
-	UseStatement* stmt = NULL;
+static bool match(Token tok, enum TOKEN_TYPE type){
+	return tok.type == type;
+}
 
+static UseStatement* parseUseStatement(Token token){
+	UseStatement* stmt = malloc(sizeof(UseStatement));
+
+#ifdef DEBUG	
+	memcpy(&(stmt->token), &token, sizeof(Token));
+#endif
+	memcpy(stmt->value, token.literal, strlen(token.literal));
+	
 	return stmt;
 }
 
-static DesignUnit* parseDesignUnit(struct parser* p){
-	DesignUnit* unit = NULL;
+static PortDecl* parsePortDecl(struct parser* p){
+	PortDecl* pdecl = NULL;
 
-	return unit;
+	return pdecl;
+}
+
+static void parseEntityDecl(EntityDecl* decl, struct parser* p){
+#ifdef DEBUG
+	memcpy(&(decl->token), &(p->currToken), sizeof(Token));
+#endif
+
+	nextToken(p);	
+	if(!match(p->currToken, IDENTIFIER)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+	memcpy(decl->name->value, p->currToken.literal, strlen(p->currToken.literal));
+
+	nextToken(p);
+	if(!match(p->currToken, LBRACE)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+
+	nextToken(p);
+	decl->ports = parsePortDecl(p);	
+	
+	nextToken(p);
+	if(!match(p->currToken, RBRACE)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+}
+
+static void parseArchitectureDecl(ArchitectureDecl* decl, struct parser* p){
+	
+}
+
+static DesignUnit* parseDesignUnit(struct parser* p){
+
+	switch(p->currToken.type){
+		case ENT: { 
+			DesignUnit* unit = malloc(sizeof(DesignUnit));
+			unit->type = ENTITY;
+			parseEntityDecl(&(unit->decl.entity), p);
+			return unit;
+		}
+
+		case ARCH: {
+			DesignUnit* unit = malloc(sizeof(DesignUnit));
+			unit->type = ARCHITECTURE;
+			parseArchitectureDecl(&(unit->decl.architecture), p);
+			return unit;
+		}
+
+		default:
+			break;
+	}
+
+	return NULL;
 }
 
 Program* ParseProgram(struct parser *p){
-	Program* prog = (Program*)malloc(sizeof(Program));
-	prog->statements = NULL;
-	prog->units = NULL;
+	Program* prog = malloc(sizeof(Program));
 
 	// first get the use statements
 	while(p->currToken.type == USE && p->currToken.type != EOP){
 		UseStatement* stmt = parseUseStatement(p->currToken);
 		if(stmt != NULL){
-			//prog->statements = add(statement);
+			//TODO: using first member temporarily
+			memcpy(&(prog->statements[0]), &stmt, sizeof(UseStatement));
 		}
 		nextToken(p);
 	}
@@ -151,7 +214,8 @@ Program* ParseProgram(struct parser *p){
 	while(p->currToken.type != EOP){
 		DesignUnit* unit = parseDesignUnit(p);
 		if(unit != NULL){
-			//prog->units = add(unit);
+			//TODO: using first member temporarily
+			memcpy(&(prog->units[0]), &unit, sizeof(DesignUnit));
 		}
 		nextToken(p);
 	}

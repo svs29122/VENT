@@ -1,0 +1,10 @@
+This is a TODO list for VENT work:
+
+I) AST ToDo
+	1) Implement variable size arrays for syntax tree units requiring it
+	2) Wrap AST token declarations in DEBUG macros
+
+II) Parser ToDo
+	1) Unit tests for basic parser functions
+		i) flesh this out fully for ents before adding much more functionality
+	2) Implement error strategy e.g. the wrong token follows an ent decl

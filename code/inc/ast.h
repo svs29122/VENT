@@ -3,80 +3,100 @@
 
 #include "token.h"
 
-typedef enum unittype {
-	UNIT_ENTITY,
-	UNIT_ARCHITECTURE,
-	UNIT_PACKAGE,
-	UNIT_PACKAGe_BODY,
-	UNIT_CONFIGURATION
-} UnitType;
+typedef struct DataType DataType;
+typedef struct Identifier Identifier;
+typedef struct Label Label;
+typedef struct PortMode PortMode;
+typedef struct SignalAssignment SignalAssignment;
+typedef struct SignalDecl SignalDecl;
+typedef struct ArchitectureDecl ArchitectureDecl;
+typedef struct PortDecl PortDecl;
+typedef struct EntityDecl EntityDecl;
+typedef struct DesignUnit DesignUnit;
+typedef struct UseStatement UseStatement;
+typedef struct Program Program;
 
-typedef struct datatype {
+struct DataType {
 	Token token;
-} DataType;
+};
 
-typedef struct identifier {
-	Token token;
-	char* value;
-} Identifier;
-
-typedef struct label {
-	Token token;
-	char* value;
-} Label;
-
-typedef struct portMode {
+struct Identifier {
 	Token token;
 	char* value;
-} PortMode;
+};
 
-typedef struct signalassign{
+struct Label {
+	Token token;
+	char* value;
+};
+
+struct PortMode {
+	Token token;
+	char* value;
+};
+
+struct SignalAssignment {
 	Token token; // the "<=" operator
-	Label label;
-	Identifier target;
+	struct Label label;
+	struct Identifier target;
 	void* expression;
-} SignalAssignment;
+};
 
-typedef struct signaldecl {
+struct SignalDecl {
 	Token token; // the sig keyword
-	Identifier *names;
-	DataType dtype;
+	struct Identifier *names;
+	struct DataType dtype;
 	void* expression;
-} SignalDecl;
+};
 
-typedef struct archdecl{
+struct ArchitectureDecl {
 	Token token; //the arch keyword
-	Identifier archName;
-	Identifier entName;
+	struct Identifier archName;
+	struct Identifier entName;
 	void* declarations;
 	void* statements;
-} ArchitectureDecl;
+};
 
-typedef struct portdecl {
-	Identifier *names;
-	PortMode pmode;
-	DataType dtype; 
-} PortDecl;
+struct PortDecl {
+	struct Identifier *names;
+	struct PortMode pmode;
+	struct DataType dtype; 
+};
 
-typedef struct entitydecl {
+struct EntityDecl {
 	Token token; // the ent keyword
-	Identifier* name;
-	PortDecl* ports;
-} EntityDecl;
+	struct Identifier* name;
+	struct PortDecl* ports;
+};
 
-typedef struct designunit {
-	UnitType type;
-	void* unitDeclaration;
-} DesignUnit;
+struct DesignUnit{
+	enum {
+		ENTITY,
+		ARCHITECTURE,
+		//PACKAGE,
+		//PACKAGE_BODY,
+		//CONFIGURATION
+	} type;
+	union {
+		struct EntityDecl entity;
+		struct ArchitectureDecl architecture;
+		//PackageDecl;
+		//PackageBodyDecl;
+		//ConfigurationDecl; 
+	} decl;
+};
 
-typedef struct usestatement {
+struct UseStatement {
 	Token token;
 	char* value;
-} UseStatement;
+};
 
-typedef struct program {
-	UseStatement* statements;
-	DesignUnit* units;
-} Program;
+struct Program {
+	struct UseStatement statements[5];
+	struct DesignUnit units[5];
+	//TODO: implement variable size versions
+	//struct UseStatement* statements;
+	//struct DesignUnit* units;
+};
 
-#endif // INC_AST_H
+#endif //INC_AST_H
