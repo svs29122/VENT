@@ -22,9 +22,9 @@ struct lexer {
 	int currPos;
 	int readPos;
 	int line;
-} lexer;
+} static lexer;
 
-struct lexer *l = &lexer;
+static struct lexer *l = &lexer;
 
 void InitLexer(char* in){
 
@@ -419,7 +419,7 @@ Token NextToken() {
 	}
 }
 
-const char* tokenToString(enum TOKEN_TYPE type){
+const char* TokenToString(enum TOKEN_TYPE type){
 	switch(type){
 		case LPAREN: 		return "LPAREN";
 		case RPAREN:		return "RPAREN";
@@ -481,5 +481,5 @@ const char* tokenToString(enum TOKEN_TYPE type){
 }
 
 void PrintToken(Token t){
-	printf("type: %10s, literal: %s\n", tokenToString(t.type), t.literal);
+	printf("type: %10s, literal: %s\n", TokenToString(t.type), t.literal);
 }

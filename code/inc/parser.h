@@ -1,7 +1,9 @@
 #ifndef INC_PARSER_H
 #define INC_PARSER_H
 
-void InitParser(struct lexer*);
+#include <ast.h>
+
+void InitParser();
 Program* ParseProgram();
 
 #endif // INC_PARSER_H

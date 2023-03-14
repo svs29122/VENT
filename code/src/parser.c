@@ -100,27 +100,24 @@
 
 #include "token.h"
 #include "lexer.h"
-#include "ast.h"
+#include "parser.h"
 
 struct parser {
-	struct lexer* l;
 	Token currToken;
 	Token peekToken;
-} parser;
+} static parser;
 
-struct parser *p = &parser;
+static struct parser *p = &parser;
 
-void InitParser(struct lexer *lex){
+void InitParser(){
 
-	p->l = lex;
-	p->currToken = NextToken(p->l);
-	p->peekToken = NextToken(p->l);	
-
+	p->currToken = NextToken();
+	p->peekToken = NextToken();	
 }
 
 static Token nextToken(){
 	p->currToken = p->peekToken;
-	p->peekToken = NextToken(p->l);
+	p->peekToken = NextToken();
 }
 
 static bool match( enum TOKEN_TYPE type){
