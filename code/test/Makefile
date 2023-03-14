@@ -8,7 +8,7 @@
 IDIR=../inc
 SDIR=../src
 TDIR=.
-SODIR=$(SDIR)/obj
+SODIR=$(SDIR)/obj_d
 TODIR=$(TDIR)/obj
 
 CC=gcc
@@ -24,7 +24,7 @@ _TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
 # this is the executable to run all tests
-allTests: $(TOBJS) $(OBJS)
+RunUnitTests: $(TOBJS) $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 #build source code
@@ -41,12 +41,15 @@ $(TODIR):
 $(TODIR)/%.o: $(TDIR)/%.c $(DEPS) | $(TODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: clean print
+.PHONY: runtest clean print
+
+runtest: RunUnitTests
+	@./RunUnitTests
 
 clean:
 	rm -fr $(TODIR)
 	rm -fr $(SODIR)
-	rm -f allTests
+	rm -f RunUnitTests
 
 print:
 	@echo $(TDIR)

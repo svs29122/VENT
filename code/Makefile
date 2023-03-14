@@ -54,7 +54,7 @@ test:
 
 runtest: 
 	@$(MAKE) -C ./test --silent
-	@./test/allTests
+	@./test/RunUnitTests
 	@$(MAKE) -C ./test clean --silent
 
 clean:

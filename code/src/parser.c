@@ -135,22 +135,32 @@ static UseStatement* parseUseStatement(Token token){
 	return stmt;
 }
 
+static Identifier* parseIdentifier(char* val){
+	Identifier* ident = malloc(sizeof(Identifier));
+	
+	int size = strlen(val);
+	ident->value = malloc(sizeof(size));
+	memcpy(ident->value, val, size);
+
+	return ident;
+}
+
 static PortDecl* parsePortDecl(){
 	PortDecl* pdecl = NULL;
 
 	return pdecl;
 }
 
-static void parseEntityDecl(EntityDecl* decl){
+static void parseEntityDecl(EntityDecl* eDecl){
 #ifdef DEBUG
-	memcpy(&(decl->token), &(p->currToken), sizeof(Token));
+	memcpy(&(eDecl->token), &(p->currToken), sizeof(Token));
 #endif
 
 	nextToken();	
 	if(!match(IDENTIFIER)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
-	memcpy(decl->name->value, p->currToken.literal, strlen(p->currToken.literal));
+	eDecl->name = parseIdentifier(p->currToken.literal);
 
 	nextToken();
 	if(!match(LBRACE)){
@@ -158,9 +168,10 @@ static void parseEntityDecl(EntityDecl* decl){
 	}
 
 	nextToken();
-	decl->ports = parsePortDecl(p);	
+	eDecl->ports = parsePortDecl();	
 	
-	nextToken();
+	if(eDecl->ports != NULL) nextToken();
+
 	if(!match(RBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
@@ -201,8 +212,8 @@ Program* ParseProgram(){
 	while(p->currToken.type == USE && p->currToken.type != EOP){
 		UseStatement* stmt = parseUseStatement(p->currToken);
 		if(stmt != NULL){
-			//TODO: using first member temporarily
-			memcpy(&(prog->statements[0]), &stmt, sizeof(UseStatement));
+			prog->statements = malloc(sizeof(UseStatement));
+			memcpy(prog->statements, stmt, sizeof(UseStatement));
 		}
 		nextToken();
 	}
@@ -211,11 +222,43 @@ Program* ParseProgram(){
 	while(p->currToken.type != EOP){
 		DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
-			//TODO: using first member temporarily
-			memcpy(&(prog->units[0]), &unit, sizeof(DesignUnit));
+			prog->units = malloc(sizeof(DesignUnit));
+			memcpy(prog->units, unit, sizeof(DesignUnit));
 		}
 		nextToken();
 	}
 	
 	return prog;
+}
+
+void PrintProgram(Program* prog){
+	if(prog){
+		printf("<Program>\r\n");
+	}
+	if(prog->statements){
+		printf("\t<UseStatement>: %s\r\n", prog->statements->value);
+	}
+	if(prog->units){
+		DesignUnit* unit = prog->units;
+		
+		switch(unit->type){
+			case ENTITY:
+				printf("\t<DesignUnit>\r\n");
+				EntityDecl* eDecl = &(unit->decl.entity);
+				printf("\t\t<EntityDecl>\r\n");
+				if(eDecl->name){
+						if(eDecl->name->value){
+							printf("\t\t\t<Identifier>: %s\r\n", eDecl->name->value);
+						}
+				}
+				break;
+			
+			case ARCHITECTURE: 
+				break;
+			
+			default: 
+				break;
+			
+		}
+	}
 }

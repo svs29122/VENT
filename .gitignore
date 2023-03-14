@@ -6,7 +6,7 @@ code/src/obj
 code/tvt_d
 code/src/obj_d
 
-code/test/allTests
+code/test/RunUnitTests
 code/test/obj
 
 docs/*.png

@@ -110,11 +110,8 @@ struct UseStatement {
 };
 
 struct Program {
-	struct UseStatement statements[5];
-	struct DesignUnit units[5];
-	//TODO: implement variable size versions
-	//struct UseStatement* statements;
-	//struct DesignUnit* units;
+	struct UseStatement* statements;
+	struct DesignUnit* units;
 };
 
 #endif //INC_AST_H
