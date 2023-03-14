@@ -13,7 +13,7 @@ void setup(char* in){
 }
 
 void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
-	char* input = strdup("ent ander {}");
+	char* input = strdup("ent ander {\n}");
 	setup(input);
 
 	Program* prog = ParseProgram();
@@ -28,13 +28,10 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	free(input);
 }
 
-void TestPrintProgram(CuTest *tc){
-	
+void TestParse_(CuTest *tc){
 	char* input = strdup("ent ander {}");
 	setup(input);
 
-	Program* prog = ParseProgram();
-	PrintProgram(prog);
 	
 	free(input);
 }
@@ -43,7 +40,7 @@ CuSuite* ParserTestGetSuite(){
 	CuSuite* suite = CuSuiteNew();
 
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationNoPorts);
-	SUITE_ADD_TEST(suite, TestPrintProgram);
+	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
 }

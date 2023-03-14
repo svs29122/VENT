@@ -167,11 +167,12 @@ static void parseEntityDecl(EntityDecl* eDecl){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	nextToken();
-	eDecl->ports = parsePortDecl();	
-	
-	if(eDecl->ports != NULL) nextToken();
+	if(p->peekToken.type != RBRACE){
+		nextToken();
+		eDecl->ports = parsePortDecl();	
+	}
 
+   nextToken();
 	if(!match(RBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
@@ -228,27 +229,38 @@ Program* ParseProgram(){
 		nextToken();
 	}
 	
+	PrintProgram(prog);
+
 	return prog;
+}
+
+char tabs(int c){
+	printf("\e[0;34m|");
+	for(int i=0; i<c-1; i++){
+		printf("-");	
+	}
+	printf("\e[0m");
+	return ' ';
 }
 
 void PrintProgram(Program* prog){
 	if(prog){
-		printf("<Program>\r\n");
+		printf("\e[1;32m""Program\r\n");
 	}
 	if(prog->statements){
-		printf("\t<UseStatement>: %s\r\n", prog->statements->value);
+		printf("\e[1;36m""%cUseStatement: %s\r\n",tabs(1), prog->statements->value);
 	}
 	if(prog->units){
 		DesignUnit* unit = prog->units;
 		
 		switch(unit->type){
 			case ENTITY:
-				printf("\t<DesignUnit>\r\n");
+				printf("\e[1;32m""%cDesignUnit\r\n", tabs(1));
 				EntityDecl* eDecl = &(unit->decl.entity);
-				printf("\t\t<EntityDecl>\r\n");
+				printf("\e[0;32m""%cEntityDecl\r\n", tabs(2));
 				if(eDecl->name){
 						if(eDecl->name->value){
-							printf("\t\t\t<Identifier>: %s\r\n", eDecl->name->value);
+							printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", tabs(3), eDecl->name->value);
 						}
 				}
 				break;
@@ -261,4 +273,5 @@ void PrintProgram(Program* prog){
 			
 		}
 	}
+	printf("\e[0m");
 }
