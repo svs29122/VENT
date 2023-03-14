@@ -17,40 +17,54 @@ typedef struct UseStatement UseStatement;
 typedef struct Program Program;
 
 struct DataType {
+#ifdef DEBUG
 	Token token;
+#endif
 };
 
 struct Identifier {
+#ifdef DEBUG
 	Token token;
+#endif
 	char* value;
 };
 
 struct Label {
+#ifdef DEBUG
 	Token token;
+#endif
 	char* value;
 };
 
 struct PortMode {
+#ifdef DEBUG
 	Token token;
+#endif
 	char* value;
 };
 
 struct SignalAssignment {
+#ifdef DEBUG
 	Token token; // the "<=" operator
+#endif
 	struct Label label;
 	struct Identifier target;
 	void* expression;
 };
 
 struct SignalDecl {
+#ifdef DEBUG
 	Token token; // the sig keyword
+#endif
 	struct Identifier *names;
 	struct DataType dtype;
 	void* expression;
 };
 
 struct ArchitectureDecl {
+#ifdef DEBUG
 	Token token; //the arch keyword
+#endif
 	struct Identifier archName;
 	struct Identifier entName;
 	void* declarations;
@@ -64,7 +78,9 @@ struct PortDecl {
 };
 
 struct EntityDecl {
+#ifdef DEBUG
 	Token token; // the ent keyword
+#endif
 	struct Identifier* name;
 	struct PortDecl* ports;
 };
@@ -87,7 +103,9 @@ struct DesignUnit{
 };
 
 struct UseStatement {
+#ifdef DEBUG
 	Token token;
+#endif
 	char* value;
 };
 

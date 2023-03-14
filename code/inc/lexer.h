@@ -3,10 +3,8 @@
 
 #include "token.h"
 
-struct lexer;
-struct lexer* NewLexer(char* in);
-
-Token NextToken(struct lexer* l);
+void InitLexer(char* in);
+Token NextToken();
 void PrintToken(Token t);
 
 

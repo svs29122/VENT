@@ -54,22 +54,17 @@ static char* readFile(const char* path){
 
 void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
-	
-		struct lexer *vlex = NewLexer(ventSrc);
-		if(!vlex){
-			fprintf(stdout, "Could not create Lexer.\n");
-			exit(EXIT_FAILURE);
-		}
+		InitLexer(ventSrc);
 		
-		Token t = NextToken(vlex);
+		Token t = NextToken();
 		while(t.type != ILLEGAL && t.type != EOP){
 			PrintToken(t);
-			t = NextToken(vlex);
+			t = NextToken();
 		}
 		
 		if(t.type == ILLEGAL) PrintToken(t);
 		
-		free(vlex);
+		free(ventSrc);
 }
 
 void doRevTranspile(char* fileName){
