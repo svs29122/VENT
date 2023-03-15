@@ -2,8 +2,8 @@
 	parser.c
 
 	This file contains all code used to parse the list of tokens 
-	produced by the lexer. The end result is an abstract syntax
-	tree representing a VENT program/file.
+	produced by the lexer. The end result is a syntax tree 
+	representing a VENT program/file.
 	--
 */
 
@@ -12,7 +12,7 @@
 	The VENT Grammar
 	-----------------
 
-	program 			->			useStmt* designUnit* EOF;
+	program 			->			useStmt* designUnit+ EOF;
 
 	useStmt			->			"use" IDENTIFIER  ("." IDENTIFIER)* (".all")?  ;
 
@@ -124,17 +124,6 @@ static bool match( enum TOKEN_TYPE type){
 	return p->currToken.type == type;
 }
 
-static UseStatement* parseUseStatement(Token token){
-	UseStatement* stmt = malloc(sizeof(UseStatement));
-
-#ifdef DEBUG	
-	memcpy(&(stmt->token), &token, sizeof(Token));
-#endif
-	memcpy(stmt->value, token.literal, strlen(token.literal));
-	
-	return stmt;
-}
-
 static Identifier* parseIdentifier(char* val){
 	Identifier* ident = malloc(sizeof(Identifier));
 	
@@ -143,6 +132,10 @@ static Identifier* parseIdentifier(char* val){
 	memcpy(ident->value, val, size);
 
 	return ident;
+}
+
+static void parseArchitectureDecl(ArchitectureDecl* decl){
+	
 }
 
 static PortDecl* parsePortDecl(){
@@ -169,8 +162,8 @@ static void parseEntityDecl(EntityDecl* eDecl){
 
 	if(p->peekToken.type != RBRACE){
 		nextToken();
-		eDecl->ports = parsePortDecl();	
 	}
+	eDecl->ports = parsePortDecl();	
 
    nextToken();
 	if(!match(RBRACE)){
@@ -178,8 +171,26 @@ static void parseEntityDecl(EntityDecl* eDecl){
 	}
 }
 
-static void parseArchitectureDecl(ArchitectureDecl* decl){
+static UseStatement* parseUseStatement(){
+	UseStatement* stmt = malloc(sizeof(UseStatement));
+
+#ifdef DEBUG	
+	memcpy(&(stmt->token), &token, sizeof(Token));
+#endif
+
+	if(!match(USE)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+		
+	nextToken();	
+	if(!match(IDENTIFIER)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
 	
+	stmt->value = malloc(strlen(p->currToken.literal));
+	memcpy(stmt->value, p->currToken.literal, strlen(p->currToken.literal));
+	
+	return stmt;
 }
 
 static DesignUnit* parseDesignUnit(){
@@ -211,7 +222,7 @@ Program* ParseProgram(){
 
 	// first get the use statements
 	while(p->currToken.type == USE && p->currToken.type != EOP){
-		UseStatement* stmt = parseUseStatement(p->currToken);
+		UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
 			prog->statements = malloc(sizeof(UseStatement));
 			memcpy(prog->statements, stmt, sizeof(UseStatement));
@@ -229,12 +240,48 @@ Program* ParseProgram(){
 		nextToken();
 	}
 	
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	return prog;
 }
 
-char tabs(int c){
+void FreeProgram(Program *prog){
+	if(prog){
+		if(prog->statements){
+			if(prog->statements->value){
+				free(prog->statements->value);
+			}
+			free(prog->statements);
+		}
+		if(prog->units){
+			switch(prog->units->type){
+				case ENTITY:
+					if(prog->units->decl.entity.name){
+						if(prog->units->decl.entity.name->value){
+							free(prog->units->decl.entity.name->value);
+						}	
+						free(prog->units->decl.entity.name);
+					}
+					if(prog->units->decl.entity.ports){
+						if(prog->units->decl.entity.ports->names){
+							free(prog->units->decl.entity.ports->names->value);
+						}
+						if(prog->units->decl.entity.ports->pmode.value){
+							free(prog->units->decl.entity.ports->pmode.value);
+						}
+						free(prog->units->decl.entity.ports);
+					}
+				case ARCHITECTURE:
+					break;
+				default:
+					break;
+			}
+			free(prog->units);
+		}
+	}// endif prog
+}
+
+char shift(int c){
 	printf("\e[0;34m|");
 	for(int i=0; i<c-1; i++){
 		printf("-");	
@@ -248,19 +295,19 @@ void PrintProgram(Program* prog){
 		printf("\e[1;32m""Program\r\n");
 	}
 	if(prog->statements){
-		printf("\e[1;36m""%cUseStatement: %s\r\n",tabs(1), prog->statements->value);
+		printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), prog->statements->value);
 	}
 	if(prog->units){
 		DesignUnit* unit = prog->units;
 		
 		switch(unit->type){
 			case ENTITY:
-				printf("\e[1;32m""%cDesignUnit\r\n", tabs(1));
+				printf("\e[1;32m""%cDesignUnit\r\n", shift(1));
 				EntityDecl* eDecl = &(unit->decl.entity);
-				printf("\e[0;32m""%cEntityDecl\r\n", tabs(2));
+				printf("\e[0;32m""%cEntityDecl\r\n", shift(2));
 				if(eDecl->name){
 						if(eDecl->name->value){
-							printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", tabs(3), eDecl->name->value);
+							printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(3), eDecl->name->value);
 						}
 				}
 				break;
