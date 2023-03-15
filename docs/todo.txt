@@ -7,4 +7,7 @@ I) AST ToDo
 II) Parser ToDo
 	1) Unit tests for basic parser functions
 		i) flesh this out fully for ents before adding much more functionality
+		ii) thinking I want a set of tests for the public API and for the private
+			e.g. parser_test.c for public
+				 parser_test_internals.c for private
 	2) Implement error strategy e.g. the wrong token follows an ent decl
