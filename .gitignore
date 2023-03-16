@@ -9,4 +9,6 @@ code/src/obj_d
 code/test/RunUnitTests
 code/test/obj
 
+code/sandbox
+
 docs/*.png
