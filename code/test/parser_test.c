@@ -80,6 +80,31 @@ void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
 	
+	FreeProgram(prog);	
+	free(input);
+}
+
+void TestParseProgram_UseEntityWithPorts(CuTest *tc){
+	char* input = strdup(" \
+use ieee.std_logic_1164.all \
+ent ander { \
+a -> stl; \
+b -> stl; \
+y <- stl; \
+} \
+");
+
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	
 	PrintProgram(prog);
 	
 	FreeProgram(prog);	
@@ -100,6 +125,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationNoPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseWithEntityDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
+	SUITE_ADD_TEST(suite, TestParseProgram_UseEntityWithPorts);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

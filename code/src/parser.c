@@ -159,9 +159,11 @@ static PortMode* parsePortMode(char* val){
 
 static Identifier* parseIdentifier(char* val){
 	Identifier* ident = malloc(sizeof(Identifier));
+	memset(ident, 0, sizeof(Identifier));
 	
-	int size = strlen(val);
+	int size = strlen(val) + 1;
 	ident->value = malloc(sizeof(size));
+	memset(ident->value, 0, size);
 	memcpy(ident->value, val, size);
 
 	return ident;
@@ -174,33 +176,39 @@ static void parseArchitectureDecl(ArchitectureDecl* decl){
 static Dba* parsePortDecl(){
 	Dba* ports = initBlockArray(sizeof(PortDecl)); 	
 
+	nextToken();
+
 	while(!match(RBRACE) && !match(EOP)){
 		PortDecl* port = malloc(sizeof(PortDecl));		
 
-		nextToken();
 		if(!match(IDENTIFIER)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("TokenDump: %d:%sd\r\n", p->currToken.type ,p->currToken.literal);		
+			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->name = parseIdentifier(p->currToken.literal);
 		
 		nextToken();
 		if(!match(INPUT) && !match(OUTPUT) && !match(INOUT)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->pmode = parsePortMode(p->currToken.literal);
 		
 		nextToken();
 		if(!validDataType()){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->dtype = parseDataType(p->currToken.literal);
 		
 		nextToken();
 		if(!match(SCOLON)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		writeBlockArray(ports, (char*)port);
+		
+		nextToken();
 	}
 
 	return ports;
@@ -225,11 +233,13 @@ static void parseEntityDecl(EntityDecl* eDecl){
 
 	if(p->peekToken.type != RBRACE){
 		eDecl->ports = parsePortDecl();	
+	} else {
+		nextToken();
 	}
 
-   nextToken();
 	if(!match(RBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 	}
 }
 
@@ -334,8 +344,10 @@ void FreeProgram(Program *prog){
 						if(unit->decl.entity.name){
 							if(unit->decl.entity.name->value){
 								free(unit->decl.entity.name->value);
+								unit->decl.entity.name->value = NULL;
 							}	
 							free(unit->decl.entity.name);
+							unit->decl.entity.name = NULL;
 						}
 						if(unit->decl.entity.ports){
 							Dba* ports = unit->decl.entity.ports;
