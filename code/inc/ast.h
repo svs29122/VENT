@@ -112,7 +112,7 @@ struct UseStatement {
 
 struct Program {
 	struct DynamicBlockArray* useStatements;
-	struct DesignUnit* units;
+	struct DynamicBlockArray* units;
 };
 
 #endif //INC_AST_H

@@ -219,18 +219,16 @@ static DesignUnit* parseDesignUnit(){
 
 Program* ParseProgram(){
 	Program* prog = malloc(sizeof(Program));
+	memset(prog, 0, sizeof(Program));
 
 	// first get the use statements
 	while(p->currToken.type == USE && p->currToken.type != EOP){
 		UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
-			printf("Got Use Statment\r\n");
 			if(prog->useStatements == NULL){
 				prog->useStatements = malloc(sizeof(Dba));
-				printf("Init Use Statment Block Array\r\n");
 				initBlockArray(prog->useStatements, sizeof(UseStatement));
 			}
-			printf("Write Use Statement Block Array\r\n");
 			writeBlockArray(prog->useStatements, (char*)stmt);
 		}
 		nextToken();
@@ -240,8 +238,11 @@ Program* ParseProgram(){
 	while(p->currToken.type != EOP){
 		DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
-			prog->units = malloc(sizeof(DesignUnit));
-			memcpy(prog->units, unit, sizeof(DesignUnit));
+			if(prog->units == NULL){
+				prog->units = malloc(sizeof(Dba));
+				initBlockArray(prog->units, sizeof(DesignUnit));	
+			}
+			writeBlockArray(prog->units, (char*)unit);
 		}
 		nextToken();
 	}
@@ -263,32 +264,41 @@ void FreeProgram(Program *prog){
 			}
 			freeBlockArray(arr);
 			free(prog->useStatements);
+			prog->useStatements = NULL;
 		}
 		if(prog->units){
-			switch(prog->units->type){
-				case ENTITY:
-					if(prog->units->decl.entity.name){
-						if(prog->units->decl.entity.name->value){
-							free(prog->units->decl.entity.name->value);
-						}	
-						free(prog->units->decl.entity.name);
-					}
-					if(prog->units->decl.entity.ports){
-						if(prog->units->decl.entity.ports->names){
-							free(prog->units->decl.entity.ports->names->value);
+			Dba* arr = prog->units;
+			for(int i=0; i < arr->count; i++){
+				DesignUnit* unit = (DesignUnit*)(arr->block + (i * arr->blockSize));
+				switch(unit->type){
+					case ENTITY:
+						if(unit->decl.entity.name){
+							if(unit->decl.entity.name->value){
+								free(unit->decl.entity.name->value);
+							}	
+							free(unit->decl.entity.name);
 						}
-						if(prog->units->decl.entity.ports->pmode.value){
-							free(prog->units->decl.entity.ports->pmode.value);
+						if(unit->decl.entity.ports){
+							if(unit->decl.entity.ports->names){
+								free(unit->decl.entity.ports->names->value);
+							}
+							if(unit->decl.entity.ports->pmode.value){
+								free(unit->decl.entity.ports->pmode.value);
+							}
+							free(unit->decl.entity.ports);
 						}
-						free(prog->units->decl.entity.ports);
-					}
-				case ARCHITECTURE:
-					break;
-				default:
-					break;
+					case ARCHITECTURE:
+						break;
+					default:
+						break;
+				}
 			}
+			freeBlockArray(arr);
 			free(prog->units);
+			prog->units = NULL;
 		}
+		free(prog);
+		prog = NULL;
 	}// endif prog
 }
 
@@ -315,26 +325,27 @@ void PrintProgram(Program* prog){
 		}
 	}
 	if(prog->units){
-		DesignUnit* unit = prog->units;
-		
-		switch(unit->type){
-			case ENTITY:
-				printf("\e[1;32m""%cDesignUnit\r\n", shift(1));
-				EntityDecl* eDecl = &(unit->decl.entity);
-				printf("\e[0;32m""%cEntityDecl\r\n", shift(2));
-				if(eDecl->name){
+		Dba* arr = prog->units;
+		for(int i=0; i < arr->count; i++){
+			DesignUnit* unit = (DesignUnit*)(arr->block + (i * arr->blockSize));
+			switch(unit->type){
+				case ENTITY:
+					printf("\e[1;32m""%cDesignUnit\r\n", shift(1));
+					EntityDecl* eDecl = &(unit->decl.entity);
+					printf("\e[0;32m""%cEntityDecl\r\n", shift(2));
+					if(eDecl->name){
 						if(eDecl->name->value){
 							printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(3), eDecl->name->value);
 						}
-				}
-				break;
+					}
+					break;
 			
-			case ARCHITECTURE: 
-				break;
+				case ARCHITECTURE: 
+					break;
 			
-			default: 
-				break;
-			
+				default: 
+					break;
+			}	
 		}
 	}
 	printf("\e[0m");

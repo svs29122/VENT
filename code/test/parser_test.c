@@ -37,9 +37,10 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, prog->units->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", prog->units->decl.entity.name->value);
-	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, prog->units->decl.entity.ports);
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, unit->decl.entity.ports);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -56,11 +57,13 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
 	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
-	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
+	if(stmt != NULL)
+		CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
 
-	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, prog->units->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", prog->units->decl.entity.name->value);
-	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, prog->units->decl.entity.ports);
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, unit->decl.entity.ports);
 
 	PrintProgram(prog);
 	
@@ -72,7 +75,6 @@ void TestParse_(CuTest *tc){
 	char* input = strdup("ent ander {}");
 	setup(input);
 
-	
 	free(input);
 }
 

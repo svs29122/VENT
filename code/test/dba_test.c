@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "dba.h"
 
@@ -198,13 +199,24 @@ int main(){
 	printf("\e[1;37mTest of the Dynamic Block Array\r\n\n\e[0m");
 
 	printf("\e[4;37mTest 1: Using an array\r\n\e[0m");
+	float timeA = (float)clock()/CLOCKS_PER_SEC;
 	testBlockArray();
+	float timeB = (float)clock()/CLOCKS_PER_SEC;
+	printf("\n\e[1;32mTest1 took %f\r\n\e[0m", timeB-timeA);
 
 	printf("\e[4;37m\n\nTest 2: Using a struct\r\n\e[0m");
+	timeA = (float)clock()/CLOCKS_PER_SEC;
 	testBlockStruct();
+	timeB = (float)clock()/CLOCKS_PER_SEC;
+	printf("\n\e[1;32mTest2 took %f\r\n\e[0m", timeB-timeA);
 
 	printf("\e[4;37m\n\nTest 3: Using a union\r\n\e[0m");
+	timeA = (float)clock()/CLOCKS_PER_SEC;
 	testBlockUnion();
+	timeB = (float)clock()/CLOCKS_PER_SEC;
+	printf("\n\e[1;32mTest3 took %f\r\n\e[0m", timeB-timeA);
+
+	printf("\nDone...\n\n");
 
 	return 0;
 }
