@@ -36,15 +36,15 @@ enum TOKEN_TYPE {
 	SASSIGN, 
 	VASSIGN, 
 	AASSIGN,
+	SIG, 
+	VAR, 
 
 	//types
 	STL, 
-	STLV, 			//30
-	SIG, 
-	VAR, 
+	STLV, 			
 	INTEGER, 
 	STRING, 
-	BIT,				//35 
+	BIT,				 
 	BITV,
 	SIGNED,
 	UNSIGNED,

@@ -40,7 +40,6 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
-	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, unit->decl.entity.ports);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -63,8 +62,24 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
-	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, unit->decl.entity.ports);
 
+	FreeProgram(prog);	
+	free(input);
+}
+
+void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
+	char* input = strdup("ent ander{ a -> stl; b -> stl; y <- stl;}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	
 	PrintProgram(prog);
 	
 	FreeProgram(prog);	
@@ -84,6 +99,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_UseDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationNoPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseWithEntityDeclaration);
+	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

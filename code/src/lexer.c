@@ -28,6 +28,8 @@ static struct lexer *l = &lexer;
 
 void InitLexer(char* in){
 
+	memset(l, 0, sizeof(struct lexer));
+
 	l->input = in;
 	l->currPos = -1;
 	l->readPos = 0;
@@ -481,5 +483,5 @@ const char* TokenToString(enum TOKEN_TYPE type){
 }
 
 void PrintToken(Token t){
-	printf("type: %10s, literal: %s\n", TokenToString(t.type), t.literal);
+	printf("\e[0;35mtype:\e[0m %10s, \e[0;33mliteral:\e[0m %s\n", TokenToString(t.type), t.literal);
 }

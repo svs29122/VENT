@@ -1,7 +1,7 @@
 This is a TODO list for VENT work:
 
 I) AST ToDo
-	1) Implement variable size arrays for syntax tree units requiring it
+### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
 ### DONE ###	2) Wrap AST token declarations in DEBUG macros
 
 II) Parser ToDo

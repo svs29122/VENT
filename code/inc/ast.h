@@ -21,6 +21,7 @@ struct DataType {
 #ifdef DEBUG
 	Token token;
 #endif
+	char* value;
 };
 
 struct Identifier {
@@ -73,9 +74,10 @@ struct ArchitectureDecl {
 };
 
 struct PortDecl {
-	struct Identifier *names;
-	struct PortMode pmode;
-	struct DataType dtype; 
+	//need to add support for , separated identifier list
+	struct Identifier *name;
+	struct PortMode* pmode;
+	struct DataType* dtype; 
 };
 
 struct EntityDecl {
@@ -83,7 +85,7 @@ struct EntityDecl {
 	Token token; // the ent keyword
 #endif
 	struct Identifier* name;
-	struct PortDecl* ports;
+	struct DynamicBlockArray* ports;
 };
 
 struct DesignUnit{

@@ -110,6 +110,8 @@ struct parser {
 static struct parser *p = &parser;
 
 void InitParser(){
+	
+	memset(p, 0, sizeof(struct parser));
 
 	p->currToken = NextToken();
 	p->peekToken = NextToken();	
@@ -122,6 +124,37 @@ static Token nextToken(){
 
 static bool match( enum TOKEN_TYPE type){
 	return p->currToken.type == type;
+}
+
+static bool validDataType(){
+	bool valid = false; 
+	
+	valid = 	match(STL) 		||	match(STLV) 	||
+				match(INTEGER) || match(STRING) 	||
+				match(BIT) 		|| match(BITV)		||
+				match(SIGNED)	|| match(UNSIGNED);
+
+	return valid;
+}
+
+static DataType* parseDataType(char* val){
+	DataType* dt = malloc(sizeof(DataType));
+	
+	int size = strlen(val);
+	dt->value = malloc(sizeof(size));
+	memcpy(dt->value, val, size);
+
+	return dt;
+}
+
+static PortMode* parsePortMode(char* val){
+	PortMode* pm = malloc(sizeof(PortMode));
+	
+	int size = strlen(val);
+	pm->value = malloc(sizeof(size));
+	memcpy(pm->value, val, size);
+
+	return pm;
 }
 
 static Identifier* parseIdentifier(char* val){
@@ -138,16 +171,46 @@ static void parseArchitectureDecl(ArchitectureDecl* decl){
 	
 }
 
-static PortDecl* parsePortDecl(){
-	PortDecl* pdecl = NULL;
+static Dba* parsePortDecl(){
+	Dba* ports = initBlockArray(sizeof(PortDecl)); 	
 
-	return pdecl;
+	while(!match(RBRACE) && !match(EOP)){
+		PortDecl* port = malloc(sizeof(PortDecl));		
+
+		nextToken();
+		if(!match(IDENTIFIER)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			printf("TokenDump: %d:%sd\r\n", p->currToken.type ,p->currToken.literal);		
+		}	
+		port->name = parseIdentifier(p->currToken.literal);
+		
+		nextToken();
+		if(!match(INPUT) && !match(OUTPUT) && !match(INOUT)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		port->pmode = parsePortMode(p->currToken.literal);
+		
+		nextToken();
+		if(!validDataType()){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		port->dtype = parseDataType(p->currToken.literal);
+		
+		nextToken();
+		if(!match(SCOLON)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		writeBlockArray(ports, (char*)port);
+	}
+
+	return ports;
 }
 
 static void parseEntityDecl(EntityDecl* eDecl){
 #ifdef DEBUG
 	memcpy(&(eDecl->token), &(p->currToken), sizeof(Token));
 #endif
+	memset(eDecl, 0, sizeof(EntityDecl));
 
 	nextToken();	
 	if(!match(IDENTIFIER)){
@@ -161,9 +224,8 @@ static void parseEntityDecl(EntityDecl* eDecl){
 	}
 
 	if(p->peekToken.type != RBRACE){
-		nextToken();
+		eDecl->ports = parsePortDecl();	
 	}
-	eDecl->ports = parsePortDecl();	
 
    nextToken();
 	if(!match(RBRACE)){
@@ -226,8 +288,7 @@ Program* ParseProgram(){
 		UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
 			if(prog->useStatements == NULL){
-				prog->useStatements = malloc(sizeof(Dba));
-				initBlockArray(prog->useStatements, sizeof(UseStatement));
+				prog->useStatements = initBlockArray(sizeof(UseStatement));
 			}
 			writeBlockArray(prog->useStatements, (char*)stmt);
 		}
@@ -239,8 +300,7 @@ Program* ParseProgram(){
 		DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
 			if(prog->units == NULL){
-				prog->units = malloc(sizeof(Dba));
-				initBlockArray(prog->units, sizeof(DesignUnit));	
+				prog->units = initBlockArray(sizeof(DesignUnit));	
 			}
 			writeBlockArray(prog->units, (char*)unit);
 		}
@@ -263,7 +323,6 @@ void FreeProgram(Program *prog){
 				}
 			}
 			freeBlockArray(arr);
-			free(prog->useStatements);
 			prog->useStatements = NULL;
 		}
 		if(prog->units){
@@ -279,13 +338,21 @@ void FreeProgram(Program *prog){
 							free(unit->decl.entity.name);
 						}
 						if(unit->decl.entity.ports){
-							if(unit->decl.entity.ports->names){
-								free(unit->decl.entity.ports->names->value);
+							Dba* ports = unit->decl.entity.ports;
+							for(int i=0; i < ports->count; i++){
+								PortDecl* port = (PortDecl*)(ports->block + (i * ports->blockSize));
+								if(port->name){
+									free(port->name->value);
+								}
+								if(port->pmode->value){
+									free(port->pmode->value);
+								}
+								if(port->dtype->value){
+									free(port->dtype->value);
+								}
 							}
-							if(unit->decl.entity.ports->pmode.value){
-								free(unit->decl.entity.ports->pmode.value);
-							}
-							free(unit->decl.entity.ports);
+							freeBlockArray(ports);
+							unit->decl.entity.ports = NULL;
 						}
 					case ARCHITECTURE:
 						break;
@@ -294,7 +361,6 @@ void FreeProgram(Program *prog){
 				}
 			}
 			freeBlockArray(arr);
-			free(prog->units);
 			prog->units = NULL;
 		}
 		free(prog);
@@ -336,6 +402,22 @@ void PrintProgram(Program* prog){
 					if(eDecl->name){
 						if(eDecl->name->value){
 							printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(3), eDecl->name->value);
+						}
+					}
+					if(eDecl->ports){
+						Dba* ports = eDecl->ports;
+						for(int i=0; i < ports->count; i++){
+							printf("\e[0;32m""%cPortDecl\r\n", shift(3));
+							PortDecl* port = (PortDecl*)(ports->block + (i * ports->blockSize));
+							if(port->name->value){
+								printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(4), port->name->value);
+							}
+							if(port->pmode->value){
+								printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), port->pmode->value);
+							}
+							if(port->dtype->value){
+								printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), port->dtype->value);
+							}
 						}
 					}
 					break;
