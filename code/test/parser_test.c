@@ -19,9 +19,10 @@ void TestParseProgram_UseDeclaration(CuTest *tc){
 	Program* prog = ParseProgram();
 
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
-	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->statements);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
 
-	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", prog->statements->value);
+	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -51,10 +52,12 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	Program* prog = ParseProgram();
 
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
-	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->statements);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	CuAssertStrEquals_Msg(tc,"Use path incorrect!", "ieee.std_logic_1164.all", prog->statements->value);
+	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
+
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, prog->units->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", prog->units->decl.entity.name->value);
 	CuAssertPtrEquals_Msg(tc,"Port Declaration not NULL!", NULL, prog->units->decl.entity.ports);

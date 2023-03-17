@@ -224,8 +224,14 @@ Program* ParseProgram(){
 	while(p->currToken.type == USE && p->currToken.type != EOP){
 		UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
-			prog->statements = malloc(sizeof(UseStatement));
-			memcpy(prog->statements, stmt, sizeof(UseStatement));
+			printf("Got Use Statment\r\n");
+			if(prog->useStatements == NULL){
+				prog->useStatements = malloc(sizeof(Dba));
+				printf("Init Use Statment Block Array\r\n");
+				initBlockArray(prog->useStatements, sizeof(UseStatement));
+			}
+			printf("Write Use Statement Block Array\r\n");
+			writeBlockArray(prog->useStatements, (char*)stmt);
 		}
 		nextToken();
 	}
@@ -247,11 +253,16 @@ Program* ParseProgram(){
 
 void FreeProgram(Program *prog){
 	if(prog){
-		if(prog->statements){
-			if(prog->statements->value){
-				free(prog->statements->value);
+		if(prog->useStatements){
+			Dba* arr = prog->useStatements;
+			for(int i=0; i < arr->count; i++){
+				UseStatement* stmt = (UseStatement*)(arr->block + (i * arr->blockSize));
+				if(stmt->value){
+					free(stmt->value);
+				}
 			}
-			free(prog->statements);
+			freeBlockArray(arr);
+			free(prog->useStatements);
 		}
 		if(prog->units){
 			switch(prog->units->type){
@@ -294,8 +305,14 @@ void PrintProgram(Program* prog){
 	if(prog){
 		printf("\e[1;32m""Program\r\n");
 	}
-	if(prog->statements){
-		printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), prog->statements->value);
+	if(prog->useStatements){	
+		Dba* arr = prog->useStatements;
+		for(int i=0; i < arr->count; i++){
+			UseStatement* stmt = (UseStatement*)(arr->block + (i * arr->blockSize));
+			if(stmt->value){
+				printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), stmt->value);
+			}
+		}
 	}
 	if(prog->units){
 		DesignUnit* unit = prog->units;

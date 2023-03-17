@@ -2,6 +2,7 @@
 #define INC_AST_H
 
 #include "token.h"
+#include "dba.h"
 
 typedef struct DataType DataType;
 typedef struct Identifier Identifier;
@@ -110,7 +111,7 @@ struct UseStatement {
 };
 
 struct Program {
-	struct UseStatement* statements;
+	struct DynamicBlockArray* useStatements;
 	struct DesignUnit* units;
 };
 

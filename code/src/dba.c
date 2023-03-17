@@ -18,7 +18,7 @@ void freeBlockArray(Dba* arr){
 void writeBlockArray(Dba* arr, char* block){
 	if(arr->capacity < arr->count + 1){
 		int oldCapacity = arr->capacity;
-		arr->capacity = oldCapacity < 8 ? 8 : (oldCapacity * 2);
+		arr->capacity = oldCapacity < 2 ? 2 : (oldCapacity * 2);
 		arr->block = (char*) realloc(arr->block, (arr->blockSize * arr->capacity)); 
 	}
 
