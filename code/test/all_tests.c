@@ -1,20 +1,46 @@
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "cutest.h"
 
+// convenience macros
+//#define TEST_LEXER
+#define TEST_PARSER
+
+
 CuSuite* LexerTestGetSuite();
+CuSuite* ParserTestGetSuite();
 
 void RunAllTests(void){
 	CuString *output = CuStringNew();
-	CuSuite* suite = CuSuiteNew();
+	CuSuite* masterSuite = CuSuiteNew();
 
 	// add new suites here!
-	CuSuiteAddSuite(suite, LexerTestGetSuite());
+#ifdef TEST_LEXER
+	CuSuite* lexerTestSuite = LexerTestGetSuite();
+	CuSuiteAddSuite(masterSuite, lexerTestSuite);
+#endif
+#ifdef TEST_PARSER
+	CuSuite* parserTestSuite = ParserTestGetSuite();
+	CuSuiteAddSuite(masterSuite, parserTestSuite);
+#endif
 
-	CuSuiteRun(suite);
-	CuSuiteSummary(suite, output);
-	CuSuiteDetails(suite, output);
+	// run those babies!
+	CuSuiteRun(masterSuite);
+	CuSuiteSummary(masterSuite, output);
+	CuSuiteDetails(masterSuite, output);
+
 	printf("%s\n", output->buffer);
+	CuStringDelete(output);
+
+	// cleanup all test cases and suites
+#ifdef TEST_PARSER
+	CuSuiteDelete(parserTestSuite);
+#endif
+#ifdef TEST_LEXER
+	CuSuiteDelete(lexerTestSuite);
+#endif
+	free(masterSuite);
 }
 
 int main(void) {

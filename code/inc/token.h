@@ -36,15 +36,15 @@ enum TOKEN_TYPE {
 	SASSIGN, 
 	VASSIGN, 
 	AASSIGN,
+	SIG, 
+	VAR, 
 
 	//types
 	STL, 
-	STLV, 			//30
-	SIG, 
-	VAR, 
+	STLV, 			
 	INTEGER, 
 	STRING, 
-	BIT,				//35 
+	BIT,				 
 	BITV,
 	SIGNED,
 	UNSIGNED,
@@ -72,6 +72,7 @@ enum TOKEN_TYPE {
 	WHILE,			 
 	WAIT,
 
+	EOP, // end of program			
 	ILLEGAL,			
 };
 
@@ -79,8 +80,6 @@ typedef struct token {
 	enum TOKEN_TYPE type;	
 	char *literal;
 } Token;
-
-const char* tokenToString(enum TOKEN_TYPE type);
 
 enum VHD_TOKEN {
 	

@@ -8,23 +8,23 @@
 IDIR=../inc
 SDIR=../src
 TDIR=.
-SODIR=$(SDIR)/obj
+SODIR=$(SDIR)/obj_d
 TODIR=$(TDIR)/obj
 
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -g
 
-_DEP = lexer.h token.h cutest.h
+_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = lexer.o
+_OBJ = parser.o dba.o lexer.o display.o ast.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
-_TOBJ = lexer_test.o all_tests.o cutest.o
+_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
 # this is the executable to run all tests
-allTests: $(TOBJS) $(OBJS)
+RunUnitTests: $(TOBJS) $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 #build source code
@@ -41,12 +41,15 @@ $(TODIR):
 $(TODIR)/%.o: $(TDIR)/%.c $(DEPS) | $(TODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: clean print
+.PHONY: runtest clean print
+
+runtest: RunUnitTests
+	@./RunUnitTests
 
 clean:
 	rm -fr $(TODIR)
 	rm -fr $(SODIR)
-	rm -f allTests
+	rm -f RunUnitTests
 
 print:
 	@echo $(TDIR)

@@ -6,20 +6,20 @@
 #include "lexer.h"
 #include "display.h"
 
-void doTranspile(char* fileName);
-void doRevTranspile(char* fileName);
+static void doTranspile(char* fileName);
+static void doRevTranspile(char* fileName);
 
 int main(int argc, char* argv[]) {
 
 	if(argc < 2){
-		printUsage();
+		PrintUsage();
 		return -1;
 	}	
 
-	if(strcmp("-t", argv[1]) == 0){
-		doTranspile(argv[2]);
+	if(argc == 2){
+		doTranspile(argv[1]);
 	} else if(strcmp("-i", argv[1]) == 0){
-		 doMenu();
+		 DoMenu();
 	}
 
 	return 0;
@@ -46,32 +46,30 @@ static char* readFile(const char* path){
 		fprintf(stderr, "Unable to read file \"%s\".\n", path);
 		exit(EXIT_FAILURE);
 	}
-	buffer[bytesRead] = '\0';
+	buffer[bytesRead-1] = '\0';
 
 	fclose(file);
 	return buffer;
 }
 
-void doTranspile(char* fileName){
+static void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
-	
-		struct lexer *vlex = NewLexer(ventSrc);
-		if(!vlex){
-			fprintf(stdout, "Could not create Lexer.\n");
-			exit(EXIT_FAILURE);
-		}
+		InitLexer(ventSrc);
 		
-		Token t = NextToken(vlex);
-		while(t.type != ILLEGAL){
+		Token t = NextToken();
+		while(t.type != ILLEGAL && t.type != EOP){
 			PrintToken(t);
-			t = NextToken(vlex);
+			free(t.literal);
+
+			t = NextToken();
 		}
 		
 		if(t.type == ILLEGAL) PrintToken(t);
+		free(t.literal);
 		
-		free(vlex);
+		free(ventSrc);
 }
 
-void doRevTranspile(char* fileName){
+static void doRevTranspile(char* fileName){
 }
 
