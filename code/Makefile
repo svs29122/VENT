@@ -12,7 +12,7 @@ DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 _DEPS = display.h error.h lexer.h token.h dba.h ast.h parser.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = display.o error.o lexer.o dba.o parser.o
+_OBJ = display.o error.o lexer.o dba.o parser.o ast.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 MAIN=$(ODIR)/main.o

@@ -6,20 +6,20 @@
 #include "lexer.h"
 #include "display.h"
 
-void doTranspile(char* fileName);
-void doRevTranspile(char* fileName);
+static void doTranspile(char* fileName);
+static void doRevTranspile(char* fileName);
 
 int main(int argc, char* argv[]) {
 
 	if(argc < 2){
-		printUsage();
+		PrintUsage();
 		return -1;
 	}	
 
 	if(argc == 2){
 		doTranspile(argv[1]);
 	} else if(strcmp("-i", argv[1]) == 0){
-		 doMenu();
+		 DoMenu();
 	}
 
 	return 0;
@@ -52,7 +52,7 @@ static char* readFile(const char* path){
 	return buffer;
 }
 
-void doTranspile(char* fileName){
+static void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
 		InitLexer(ventSrc);
 		
@@ -70,6 +70,6 @@ void doTranspile(char* fileName){
 		free(ventSrc);
 }
 
-void doRevTranspile(char* fileName){
+static void doRevTranspile(char* fileName){
 }
 

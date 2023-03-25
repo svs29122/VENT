@@ -9,6 +9,6 @@ void InitParser();
 Program* ParseProgram();
 
 void FreeProgram(Program *prog);
-void PrintProgram(Program*);
+//void PrintProgram(Program*);
 
 #endif // INC_PARSER_H

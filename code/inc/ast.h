@@ -16,6 +16,24 @@ typedef struct EntityDecl EntityDecl;
 typedef struct DesignUnit DesignUnit;
 typedef struct UseStatement UseStatement;
 typedef struct Program Program;
+typedef struct OperationBlock OperationBlock; 
+typedef void (*astNodeOpPtr) (void*);
+
+void noOp(void*);
+OperationBlock* initOperationBlock(void);
+void WalkTree(Program*, OperationBlock*);
+
+struct OperationBlock {
+	astNodeOpPtr doProgOp;
+	astNodeOpPtr doBlockArrayOp;
+	astNodeOpPtr doUseStatementOp;
+	astNodeOpPtr doDesignUnitOp;
+	astNodeOpPtr doEntityDeclOp;
+	astNodeOpPtr doPortDeclOp;
+	astNodeOpPtr doIdentifierOp;
+	astNodeOpPtr doPortModeOp;
+	astNodeOpPtr doDataTypeOp;
+};
 
 struct DataType {
 #ifdef DEBUG

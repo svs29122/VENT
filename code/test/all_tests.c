@@ -3,6 +3,11 @@
 
 #include "cutest.h"
 
+// convenience macros
+//#define TEST_LEXER
+#define TEST_PARSER
+
+
 CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
 
@@ -11,11 +16,14 @@ void RunAllTests(void){
 	CuSuite* masterSuite = CuSuiteNew();
 
 	// add new suites here!
+#ifdef TEST_LEXER
 	CuSuite* lexerTestSuite = LexerTestGetSuite();
 	CuSuiteAddSuite(masterSuite, lexerTestSuite);
-
+#endif
+#ifdef TEST_PARSER
 	CuSuite* parserTestSuite = ParserTestGetSuite();
 	CuSuiteAddSuite(masterSuite, parserTestSuite);
+#endif
 
 	// run those babies!
 	CuSuiteRun(masterSuite);
@@ -26,8 +34,12 @@ void RunAllTests(void){
 	CuStringDelete(output);
 
 	// cleanup all test cases and suites
+#ifdef TEST_PARSER
 	CuSuiteDelete(parserTestSuite);
+#endif
+#ifdef TEST_LEXER
 	CuSuiteDelete(lexerTestSuite);
+#endif
 	free(masterSuite);
 }
 

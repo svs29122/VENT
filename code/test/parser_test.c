@@ -6,6 +6,7 @@
 #include "cutest.h"
 #include "lexer.h"
 #include "parser.h"
+#include "display.h"
 
 void setup(char* in){
 	InitLexer(in);
@@ -107,7 +108,7 @@ y <- stl; \
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
 	
-	//PrintProgram(prog);
+	PrintProgram(prog);
 	
 	FreeProgram(prog);	
 	free(input);
