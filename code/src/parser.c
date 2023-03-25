@@ -102,6 +102,13 @@
 #include "lexer.h"
 #include "parser.h"
 
+// I know this isn't portable, but I just love it so much 
+#define lambda(return_type, function_body) \
+({ \
+      return_type __fn__ function_body \
+          __fn__; \
+})
+
 struct parser {
 	Token currToken;
 	Token peekToken;
@@ -320,80 +327,24 @@ Program* ParseProgram(){
 		nextToken();
 	}
 	
-	//PrintProgram(prog);
-
 	return prog;
 }
 
-void FreeProgram(Program *prog){
-	if(prog){
-		if(prog->useStatements){
-			Dba* arr = prog->useStatements;
-			for(int i=0; i < arr->count; i++){
-				UseStatement* stmt = (UseStatement*)(arr->block + (i * arr->blockSize));
-				if(stmt){
-					if(stmt->value){
-						free(stmt->value);
-					}
-				}
-			}
-			freeBlockArray(arr);
-			prog->useStatements = NULL;
-		}
-		if(prog->units){
-			Dba* arr = prog->units;
-			for(int i=0; i < arr->count; i++){
-				DesignUnit* unit = (DesignUnit*)(arr->block + (i * arr->blockSize));
-				switch(unit->type){
-					case ENTITY:
-						if(unit->decl.entity.name){
-							if(unit->decl.entity.name->value){
-								free(unit->decl.entity.name->value);
-								unit->decl.entity.name->value = NULL;
-							}	
-							free(unit->decl.entity.name);
-							unit->decl.entity.name = NULL;
-						}
-						if(unit->decl.entity.ports){
-							Dba* ports = unit->decl.entity.ports;
-							for(int i=0; i < ports->count; i++){
-								PortDecl* port = (PortDecl*)(ports->block + (i * ports->blockSize));
-								if(port->name){
-									if(port->name->value){
-										free(port->name->value);
-									}
-									free(port->name);
-								}
-								if(port->pmode){
-									if(port->pmode->value){
-										free(port->pmode->value);
-									}
-									free(port->pmode);
-								}
-								if(port->dtype){
-									if(port->dtype->value){
-										free(port->dtype->value);
-									}
-									free(port->dtype);
-								}
-							}
-							freeBlockArray(ports);
-							unit->decl.entity.ports = NULL;
-						}
-					case ARCHITECTURE:
-						break;
-					default:
-						break;
-				}
-			}
-			freeBlockArray(arr);
-			prog->units = NULL;
-		}
-		free(prog);
-		prog = NULL;
-	}// endif prog
+void FreeProgram(Program* prog){
 	
+	// setup block
+	OperationBlock* opBlk = initOperationBlock();
+	opBlk->doProgOp 			= lambda (void, (void* prog) 	{ Program* pg = (Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
+	opBlk->doUseStatementOp = lambda (void, (void* stmt) 	{ UseStatement* st = (UseStatement*)stmt; if(st->value) free(st->value); });
+	opBlk->doBlockArrayOp 	= lambda (void, (void* arr) 	{ freeBlockArray((Dba*)arr); });
+	opBlk->doIdentifierOp	= lambda (void, (void* ident) { Identifier* id = (Identifier*)ident; if(id->value) free(id->value); free(id); });
+	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { PortMode* pm = (PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
+	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { DataType* dt = (DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
+	
+	WalkTree(prog, opBlk);
+
 	if(p->currToken.literal) free(p->currToken.literal);
 	if(p->peekToken.literal) free(p->peekToken.literal);
-}
 
+	free(opBlk);
+}
