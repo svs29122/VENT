@@ -21,7 +21,9 @@ struct lexer {
 
 	int currPos;
 	int readPos;
+	
 	int line;
+	int length;
 } static lexer;
 
 static struct lexer *l = &lexer;
@@ -34,6 +36,7 @@ void InitLexer(char* in){
 	l->currPos = -1;
 	l->readPos = 0;
 	l->line = 1;
+	l->length = strlen(in) + 1;
 
 	//init our lexer with a char
 	readChar();
@@ -43,7 +46,7 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 	Token tok;
 
 	tok.type = type;
-	tok.literal = (char*)malloc(sizeof(char) + 1);
+	tok.literal = (char*)malloc(sizeof(char) * 2);
 	tok.literal[0] = literal;
 	tok.literal[1] = '\0';
 
@@ -65,10 +68,10 @@ static Token newMultiCharToken(enum TOKEN_TYPE type, int len){
 	//move the lexer past the token
 	readChar();
 
-	int lSize = sizeof(char) * (int)(end-start) + 1;
+	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
-	tok.literal[lSize] = '\0';
+	tok.literal[lSize-1] = '\0';
 
 	tok.type = type;
 
@@ -153,7 +156,8 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 static char readChar(){
 	
 	//grab next char in buffer
-	l->ch = l->input[l->readPos];
+	if(l->readPos < l->length)	
+		l->ch = l->input[l->readPos];
 	
 	//bump positions	
 	l->currPos = l->readPos;
@@ -195,15 +199,15 @@ static Token readIdentifier(){
 	//step the lexer past the identifier
 	if(start != end) readChar();	
 
-	int lSize = sizeof(char) * (int)(end-start) + 1;
+	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
-	tok.literal[lSize] = '\0';
+	tok.literal[lSize-1] = '\0';
 
 #ifdef DEBUG 
 	printf("DEBUG: identifer == %s\r\n", tok.literal); 
 #endif
-	tok.type = getIdentifierType(lSize, tok.literal);
+	tok.type = getIdentifierType(lSize-1, tok.literal);
 
 	return tok;
 }
@@ -229,10 +233,10 @@ static Token readStringLiteral(){
 
 	tok.type = STRINGLIT;
 	
-	int lSize = sizeof(char) * (int)(end-start) + 1;
+	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
-	tok.literal[lSize] = '\0';
+	tok.literal[lSize-1] = '\0';
 
 	return tok;
 }
@@ -264,10 +268,10 @@ static Token readBitStringLiteral(){
 
 	tok.type = BSTRINGLIT;
 	
-	int lSize = sizeof(char) * (int)(end-start) + 1;
+	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
-	tok.literal[lSize] = '\0';
+	tok.literal[lSize-1] = '\0';
 
 	return tok;
 }
@@ -288,10 +292,10 @@ static Token readNumericLiteral(){
 
 	tok.type = NUMBERLIT;
 		
-	int lSize = sizeof(char) * (int)(end-start) + 1;
+	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
-	tok.literal[lSize] = '\0';
+	tok.literal[lSize-1] = '\0';
 
 	return tok;
 }
@@ -370,6 +374,8 @@ Token NextToken() {
 	skipWhiteSpace();
 
 	char ch = l->ch;
+	if(ch == '\0') return newToken(EOP, ch);
+
 	readChar();
 
 	switch(ch){
@@ -399,7 +405,6 @@ Token NextToken() {
 		case '=' : 
 			if(peek() == '>') return newMultiCharToken(AASSIGN, 2); 			
 			return newToken(EQUAL, ch);
-		case '\0': return newToken(EOP, ch);
 		case '\'':
 			if(isCharLiteral()) return readCharLiteral();
 			return newToken(TICK, ch);

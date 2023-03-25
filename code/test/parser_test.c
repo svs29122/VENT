@@ -24,6 +24,8 @@ void TestParseProgram_UseDeclaration(CuTest *tc){
 	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
 	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
 
+	//PrintProgram(prog);
+
 	FreeProgram(prog);	
 	free(input);
 }
@@ -105,7 +107,7 @@ y <- stl; \
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
 	
-	PrintProgram(prog);
+	//PrintProgram(prog);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -113,7 +115,7 @@ y <- stl; \
 
 void TestParse_(CuTest *tc){
 	char* input = strdup("ent ander {}");
-	setup(input);
+	//setup(input);
 
 	free(input);
 }

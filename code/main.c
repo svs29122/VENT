@@ -46,7 +46,7 @@ static char* readFile(const char* path){
 		fprintf(stderr, "Unable to read file \"%s\".\n", path);
 		exit(EXIT_FAILURE);
 	}
-	buffer[bytesRead] = '\0';
+	buffer[bytesRead-1] = '\0';
 
 	fclose(file);
 	return buffer;
@@ -59,10 +59,13 @@ void doTranspile(char* fileName){
 		Token t = NextToken();
 		while(t.type != ILLEGAL && t.type != EOP){
 			PrintToken(t);
+			free(t.literal);
+
 			t = NextToken();
 		}
 		
 		if(t.type == ILLEGAL) PrintToken(t);
+		free(t.literal);
 		
 		free(ventSrc);
 }
