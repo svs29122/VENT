@@ -15,9 +15,11 @@ OperationBlock* initOperationBlock(void){
 	op->doEntityDeclOp				= noOp;
 	op->doArchDeclOp					= noOp;
 	op->doPortDeclOp					= noOp;
+	op->doSignalDeclOp				= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
+	op->doExpressionOp				= noOp;
 
 	return op;
 }
@@ -77,6 +79,17 @@ void WalkTree(Program *prog, OperationBlock* op){
 						if(archDecl->declarations){
 							Dba* decls = archDecl->declarations;
 							for(int j=0; j < decls->count; j++){
+								SignalDecl* sigDecl = (SignalDecl*)(decls->block + (j * decls->blockSize));
+								op->doSignalDeclOp((void*)sigDecl);
+								if(sigDecl->name){
+									op->doIdentifierOp((void*)sigDecl->name);
+								}
+								if(sigDecl->dtype){
+									op->doDataTypeOp((void*)sigDecl->dtype);
+								}	
+								if(sigDecl->expression){
+									op->doExpressionOp((void*)sigDecl->expression);
+								}
 							}
 							op->doBlockArrayOp((void*)decls);
 						}

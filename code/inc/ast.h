@@ -31,9 +31,11 @@ struct OperationBlock {
 	astNodeOpPtr doEntityDeclOp;
 	astNodeOpPtr doArchDeclOp;
 	astNodeOpPtr doPortDeclOp;
+	astNodeOpPtr doSignalDeclOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
+	astNodeOpPtr doExpressionOp;
 };
 
 struct DataType {
@@ -77,8 +79,9 @@ struct SignalDecl {
 #ifdef DEBUG
 	Token token; // the sig keyword
 #endif
-	struct Identifier *names;
-	struct DataType dtype;
+	//need to add support for , separated identifier list
+	struct Identifier *name;
+	struct DataType* dtype;
 	void* expression;
 };
 

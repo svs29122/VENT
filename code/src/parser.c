@@ -147,6 +147,10 @@ static bool validDataType(){
 	return valid;
 }
 
+static void* parseExpression(void){
+	return NULL;
+}
+
 static DataType* parseDataType(char* val){
 	DataType* dt = calloc(1, sizeof(DataType));
 
@@ -177,12 +181,46 @@ static Identifier* parseIdentifier(char* val){
 	return ident;
 }
 
-static Dba* parseArchBodyDeclarations(){
+static Dba* parseArchBodyStatements(){
 	return NULL;
 }
 
-static Dba* parseArchBodyStatments(){
-	return NULL;
+static Dba* parseArchBodyDeclarations(){
+	Dba* decls = initBlockArray(sizeof(SignalDecl));
+
+	nextToken();	
+	
+	while(match(SIG)){
+		SignalDecl* decl = malloc(sizeof(SignalDecl));
+
+		nextToken();
+		if(!match(IDENTIFIER)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		decl->name = parseIdentifier(p->currToken.literal);
+		
+		nextToken();
+		if(!validDataType()){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		decl->dtype = parseDataType(p->currToken.literal);
+		
+		if(p->peekToken.type == VASSIGN){
+			decl->expression = parseExpression();	
+		} else {
+			nextToken();
+		}
+
+		if(!match(SCOLON)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}	
+		writeBlockArray(decls, (char*)decl);
+		free(decl);
+	
+		nextToken();	
+	}
+	
+	return decls;
 }
 
 static Dba* parsePortDecl(){
@@ -195,28 +233,24 @@ static Dba* parsePortDecl(){
 
 		if(!match(IDENTIFIER)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->name = parseIdentifier(p->currToken.literal);
 		
 		nextToken();
 		if(!match(INPUT) && !match(OUTPUT) && !match(INOUT)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->pmode = parsePortMode(p->currToken.literal);
 		
 		nextToken();
 		if(!validDataType()){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		port->dtype = parseDataType(p->currToken.literal);
 		
 		nextToken();
 		if(!match(SCOLON)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 		}	
 		writeBlockArray(ports, (char*)port);
 		free(port);
@@ -261,7 +295,7 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 
 	if(p->peekToken.type != RBRACE){
 		aDecl->declarations = parseArchBodyDeclarations();	
-		aDecl->statements = parseArchBodyDeclarations();	
+		aDecl->statements = parseArchBodyStatements();	
 	} else {
 		nextToken();
 	}

@@ -35,7 +35,7 @@ enum TOKEN_TYPE {
 	INOUT,			//25 
 	SASSIGN, 
 	VASSIGN, 
-	AASSIGN,
+	AASSIGN, //aggregate assignment e.g. (others => '0')
 	SIG, 
 	VAR, 
 

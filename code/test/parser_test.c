@@ -105,7 +105,9 @@ y <- stl; \
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
-	
+
+	//TODO: you aren't validating any port stuff here. You need to fix this! 
+
 	FreeProgram(prog);	
 	free(input);
 }
@@ -124,8 +126,33 @@ void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
 	
+	FreeProgram(prog);	
+	free(input);
+}
+
+void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
+	char* input = strdup("arch behavioral(ander) { sig temp stl;}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
+
+	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->decl.architecture.declarations);		
+	SignalDecl* sDecl = (SignalDecl*)unit->decl.architecture.declarations->block;
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
+	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
+
 	PrintProgram(prog);
-	
+
 	FreeProgram(prog);	
 	free(input);
 }
@@ -146,6 +173,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseEntityWithPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureDeclarationEmpty);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalDeclaration);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
