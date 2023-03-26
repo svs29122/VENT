@@ -102,12 +102,17 @@
 #include "lexer.h"
 #include "parser.h"
 
-// I know this isn't portable, but I just love it so much 
-#define lambda(return_type, function_body) \
-({ \
-      return_type __fn__ function_body \
-          __fn__; \
-})
+enum OP_PRECEDENCE {
+
+	LOWEST =1,
+	LOGICAL, // and or xor nand nor xnor
+	RELATIONAL, // = /= < <= > >=
+	SHIFT, // sll srl sla sra rol ror
+	ADD, // + - &
+	MULTIPLY, // * / mod rem
+	PREFIX, // ** abs not
+	CALL, // function(x)
+};
 
 struct parser {
 	Token currToken;
@@ -136,6 +141,10 @@ static bool match( enum TOKEN_TYPE type){
 	return p->currToken.type == type;
 }
 
+static bool peek( enum TOKEN_TYPE type){
+	return p->peekToken.type == type;
+}
+
 static bool validDataType(){
 	bool valid = false; 
 	
@@ -148,6 +157,11 @@ static bool validDataType(){
 }
 
 static void* parseExpression(void){
+
+	if(peek(SCOLON)){
+		nextToken();
+	}
+
 	return NULL;
 }
 
@@ -205,7 +219,7 @@ static Dba* parseArchBodyDeclarations(){
 		}	
 		decl->dtype = parseDataType(p->currToken.literal);
 		
-		if(p->peekToken.type == VASSIGN){
+		if(peek(VASSIGN)){
 			decl->expression = parseExpression();	
 		} else {
 			nextToken();
@@ -293,7 +307,7 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	if(p->peekToken.type != RBRACE){
+	if(!peek(RBRACE)){
 		aDecl->declarations = parseArchBodyDeclarations();	
 		aDecl->statements = parseArchBodyStatements();	
 	} else {
@@ -321,7 +335,7 @@ static void parseEntityDecl(EntityDecl* eDecl){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	if(p->peekToken.type != RBRACE){
+	if(!peek(RBRACE)){
 		eDecl->ports = parsePortDecl();	
 	} else {
 		nextToken();
@@ -411,6 +425,13 @@ Program* ParseProgram(){
 	
 	return prog;
 }
+
+// I know this isn't portable, but I just love it so much 
+#define lambda(return_type, function_body) \
+({ \
+      return_type __fn__ function_body \
+          __fn__; \
+})
 
 void FreeProgram(Program* prog){
 	
