@@ -191,7 +191,7 @@ static Dba* parseArchBodyDeclarations(){
 	nextToken();	
 	
 	while(match(SIG)){
-		SignalDecl* decl = malloc(sizeof(SignalDecl));
+		SignalDecl* decl = calloc(1, sizeof(SignalDecl));
 
 		nextToken();
 		if(!match(IDENTIFIER)){
