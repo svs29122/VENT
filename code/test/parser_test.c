@@ -25,8 +25,6 @@ void TestParseProgram_UseDeclaration(CuTest *tc){
 	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
 	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
 
-	//PrintProgram(prog);
-
 	FreeProgram(prog);	
 	free(input);
 }
@@ -108,6 +106,24 @@ y <- stl; \
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
 	
+	FreeProgram(prog);	
+	free(input);
+}
+
+void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
+	char* input = strdup("arch behavioral(ander) {}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
+	
 	PrintProgram(prog);
 	
 	FreeProgram(prog);	
@@ -129,6 +145,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_UseWithEntityDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseEntityWithPorts);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureDeclarationEmpty);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

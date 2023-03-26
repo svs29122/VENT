@@ -111,6 +111,11 @@ static void printEntityDecl(void* eDecl){
 	ishift = 3;
 }
 
+static void printArchDecl(void* eDecl){
+	printf("\e[0;32m""%cArchDecl\r\n", shift(2));
+	ishift = 3;
+}
+
 static void printIdentifier(void* ident){
 	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((Identifier*)ident)->value);
 }
@@ -135,6 +140,7 @@ void PrintProgram(Program * prog){
 	opBlk->doUseStatementOp = printUseStatement;	
 	opBlk->doDesignUnitOp = printDesignUnit;
 	opBlk->doEntityDeclOp = printEntityDecl;
+	opBlk->doArchDeclOp = printArchDecl;
 	opBlk->doPortDeclOp = printPortDecl;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;

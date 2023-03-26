@@ -29,6 +29,7 @@ struct OperationBlock {
 	astNodeOpPtr doUseStatementOp;
 	astNodeOpPtr doDesignUnitOp;
 	astNodeOpPtr doEntityDeclOp;
+	astNodeOpPtr doArchDeclOp;
 	astNodeOpPtr doPortDeclOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
@@ -85,10 +86,10 @@ struct ArchitectureDecl {
 #ifdef DEBUG
 	Token token; //the arch keyword
 #endif
-	struct Identifier archName;
-	struct Identifier entName;
-	void* declarations;
-	void* statements;
+	struct Identifier* archName;
+	struct Identifier* entName;
+	struct DynamicBlockArray* declarations;
+	struct DynamicBlockArray* statements;
 };
 
 struct PortDecl {

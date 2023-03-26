@@ -13,6 +13,7 @@ OperationBlock* initOperationBlock(void){
 	op->doUseStatementOp				= noOp;
 	op->doDesignUnitOp				= noOp;
 	op->doEntityDeclOp				= noOp;
+	op->doArchDeclOp					= noOp;
 	op->doPortDeclOp					= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
@@ -65,6 +66,26 @@ void WalkTree(Program *prog, OperationBlock* op){
 						break;
 					}
 					case ARCHITECTURE: {					
+						ArchitectureDecl* archDecl = &(unit->decl.architecture);
+						op->doArchDeclOp((void*)archDecl);
+						if(archDecl->archName){
+							op->doIdentifierOp((void*)archDecl->archName);
+						}
+						if(archDecl->entName){
+							op->doIdentifierOp((void*)archDecl->entName);
+						}
+						if(archDecl->declarations){
+							Dba* decls = archDecl->declarations;
+							for(int j=0; j < decls->count; j++){
+							}
+							op->doBlockArrayOp((void*)decls);
+						}
+						if(archDecl->statements){
+							Dba* stmts = archDecl->statements;
+							for(int j=0; j < stmts->count; j++){
+							}
+							op->doBlockArrayOp((void*)stmts);
+						}
 						break;
 					}
 					default:

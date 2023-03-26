@@ -177,8 +177,12 @@ static Identifier* parseIdentifier(char* val){
 	return ident;
 }
 
-static void parseArchitectureDecl(ArchitectureDecl* decl){
-	
+static Dba* parseArchBodyDeclarations(){
+	return NULL;
+}
+
+static Dba* parseArchBodyStatments(){
+	return NULL;
 }
 
 static Dba* parsePortDecl(){
@@ -221,6 +225,50 @@ static Dba* parsePortDecl(){
 	}
 
 	return ports;
+}
+
+static void parseArchitectureDecl(ArchitectureDecl* aDecl){
+#ifdef DEBUG
+	memcpy(&(aDecl->token), &(p->currToken), sizeof(Token));
+#endif
+	
+	nextToken();	
+	if(!match(IDENTIFIER)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+	aDecl->archName = parseIdentifier(p->currToken.literal);
+	
+	nextToken();
+	if(!match(LPAREN)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+
+	nextToken();	
+	if(!match(IDENTIFIER)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+	aDecl->entName = parseIdentifier(p->currToken.literal);
+	
+	nextToken();
+	if(!match(RPAREN)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+
+	nextToken();
+	if(!match(LBRACE)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
+
+	if(p->peekToken.type != RBRACE){
+		aDecl->declarations = parseArchBodyDeclarations();	
+		aDecl->statements = parseArchBodyDeclarations();	
+	} else {
+		nextToken();
+	}
+
+	if(!match(RBRACE)){
+		printf("Error: %s:%d\r\n", __func__, __LINE__);		
+	}
 }
 
 static void parseEntityDecl(EntityDecl* eDecl){
