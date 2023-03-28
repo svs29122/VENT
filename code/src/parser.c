@@ -118,19 +118,22 @@ typedef enum {
 	CALL_PREC, 			// function(x)
 } Precedence;
 
-typedef Expression* (*ParseFn)();
+typedef Expression* (*ParsePrefixFn)();
+typedef Expression* (*ParseInfixFn)(Expression*);
 
 typedef struct {
-	ParseFn prefix;
-	ParseFn infix;
+	ParsePrefixFn prefix;
+	ParseInfixFn infix;
 	Precedence precedence;
 } ParseRule;
 
 //forward declarations
+static Expression* parseBinary(Expression* expr);
 static Expression* parseIdentifier();
 static Expression* parseCharlit();
 
 ParseRule rules[] = {
+	[TOKEN_AND] = {NULL, parseBinary, LOGICAL_PREC},
 	[TOKEN_IDENTIFIER] = {parseIdentifier, NULL, LOWEST_PREC},
 	[TOKEN_CHARLIT] = {parseCharlit, NULL, LOWEST_PREC},
 };
@@ -181,13 +184,25 @@ static bool validDataType(){
 	return valid;
 }
 
-static Expression* parseExpression(void){
-	ParseFn prefixRule = getRule(p->currToken.type)->prefix;
+static Expression* parseExpression(Precedence precedence){
+	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
+	PrintToken(p->currToken);
 	if(prefixRule == NULL){
-		printf("Error: expected expression tok type %d\n", p->currToken.type);
+		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
 		return NULL;
 	}	
 	Expression* leftExp = prefixRule();
+
+	nextToken();	
+	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
+		ParseInfixFn infixRule = getRule(p->currToken.type)->infix;
+		PrintToken(p->currToken);
+		if(infixRule == NULL){
+			return leftExp;
+		}
+
+		leftExp = infixRule(leftExp);
+	}
 
 	if(peek(TOKEN_SCOLON)){
 		nextToken();
@@ -226,15 +241,23 @@ static Expression* parseCharlit(){
 	return &(chexp->self);
 }
 
-static Expression* parseBinary(){
+static Expression* parseBinary(Expression* expr){
 	BinaryExpr* biexp = calloc(1, sizeof(BinaryExpr));
 #ifdef DEBUG
 	memcpy(&(biexp->self.token), &(p->currToken), sizeof(Token));
 #endif
 
 	biexp->self.type = BINARY_EXPR;
+	biexp->left = expr;
 
-	//need to store operator and get left/right epressions
+	int size = strlen(p->currToken.literal) + 1;
+	biexp->op = calloc(size, sizeof(char));
+	memcpy(biexp->op, p->currToken.literal, size);
+
+	Precedence precedence = getRule(p->currToken.type)->precedence;
+	nextToken();
+	
+	biexp->right = parseExpression(precedence);
 
 	return &(biexp->self);
 }
@@ -282,11 +305,10 @@ static Dba* parseArchBodyStatements(){
 		}
 		
 		nextToken();
-		stmt->expression = parseExpression();
+		stmt->expression = parseExpression(LOWEST_PREC);
 
 		if(!match(TOKEN_SCOLON)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-			printf("Expected token: %d, but got %d\r\n", TOKEN_SCOLON, p->currToken.type);
+			printf("Error: %s:%d -> Expected token: %d, but got %d\r\n", __func__, __LINE__, TOKEN_SCOLON, p->currToken.type);
 		}	
 		writeBlockArray(stmts, (char*)stmt);
 		free(stmt);
@@ -318,7 +340,7 @@ static Dba* parseArchBodyDeclarations(){
 		nextToken();
 		if(match(TOKEN_VASSIGN)){
 			nextToken();
-			decl->expression = parseExpression();	
+			decl->expression = parseExpression(LOWEST_PREC);	
 		}
 
 		if(!match(TOKEN_SCOLON)){
