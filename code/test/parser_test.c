@@ -177,6 +177,41 @@ void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
 	CuAssertPtrNotNullMsg(tc,"Signal initialization expression NULL!", sDecl->expression);		
+	CuAssertStrEquals_Msg(tc,"Expression not to char literal!", "0", ((CharExpr*)(sDecl->expression))->literal);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
+	char* input = strdup("arch behavioral(ander) { sig temp stl; temp <= '0';}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
+
+	CuAssertPtrNotNullMsg(tc,"Arch declarations NULL!", unit->as.architecture.declarations);		
+	SignalDecl* sDecl = (SignalDecl*)unit->as.architecture.declarations->block;
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
+	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
+
+	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
+	SignalAssign* sAssign = (SignalAssign*)unit->as.architecture.statements->block;
+
+	
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
+	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
+	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "0", ((CharExpr*)(sAssign->expression))->literal);
+	
 
 	PrintProgram(prog);
 
@@ -202,6 +237,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureDeclarationEmpty);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalInit);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssign);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

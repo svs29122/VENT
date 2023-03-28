@@ -16,6 +16,7 @@ OperationBlock* initOperationBlock(void){
 	op->doArchDeclOp					= noOp;
 	op->doPortDeclOp					= noOp;
 	op->doSignalDeclOp				= noOp;
+	op->doSignalAssignOp				= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
@@ -96,6 +97,14 @@ void WalkTree(Program *prog, OperationBlock* op){
 						if(archDecl->statements){
 							Dba* stmts = archDecl->statements;
 							for(int j=0; j < stmts->count; j++){
+								SignalAssign* sigAssign = (SignalAssign*)(stmts->block + (j * stmts->blockSize));
+								op->doSignalAssignOp((void*)sigAssign);
+								if(sigAssign->target){
+									op->doIdentifierOp((void*)sigAssign->target);
+								}
+								if(sigAssign->expression){
+									op->doExpressionOp((void*)sigAssign->expression);
+								}
 							}
 							op->doBlockArrayOp((void*)stmts);
 						}

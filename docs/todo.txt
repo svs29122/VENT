@@ -18,6 +18,7 @@ II) Parser ToDo
 				 parser_test_internals.c for private
 	2) Implement error strategy e.g. the wrong token follows an ent decl
    3) Begin implementing Architecture parsing functionality	
+   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
 	
 III) Refactor ToDo

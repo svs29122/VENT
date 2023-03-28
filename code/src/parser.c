@@ -266,14 +266,40 @@ static PortMode* parsePortMode(char* val){
 }
 
 static Dba* parseArchBodyStatements(){
-	return NULL;
+	Dba* stmts = initBlockArray(sizeof(SignalAssign));
+	
+	while(!match(TOKEN_RBRACE)){
+		SignalAssign* stmt = calloc(1, sizeof(SignalAssign));
+
+		if(!match(TOKEN_IDENTIFIER)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}
+		stmt->target = (Identifier*)parseIdentifier();
+
+		nextToken();
+		if(!match(TOKEN_SASSIGN)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}
+		
+		nextToken();
+		stmt->expression = parseExpression();
+
+		if(!match(TOKEN_SCOLON)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			printf("Expected token: %d, but got %d\r\n", TOKEN_SCOLON, p->currToken.type);
+		}	
+		writeBlockArray(stmts, (char*)stmt);
+		free(stmt);
+	
+		nextToken();	
+	}
+
+	return stmts;
 }
 
 static Dba* parseArchBodyDeclarations(){
 	Dba* decls = initBlockArray(sizeof(SignalDecl));
 
-	nextToken();	
-	
 	while(match(TOKEN_SIG)){
 		SignalDecl* decl = calloc(1, sizeof(SignalDecl));
 
@@ -377,11 +403,10 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	if(!peek(TOKEN_RBRACE)){
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
 		aDecl->declarations = parseArchBodyDeclarations();	
 		aDecl->statements = parseArchBodyStatements();	
-	} else {
-		nextToken();
 	}
 
 	if(!match(TOKEN_RBRACE)){
@@ -505,6 +530,23 @@ Program* ParseProgram(){
           __fn__; \
 })
 
+static void freeExpression(void* expr){
+	 ExpressionType type = ((Expression*)expr)->type;
+
+	switch(type) {
+
+		case CHAR_EXPR: {
+			CharExpr* chexp = (CharExpr*)expr;
+			free(chexp->literal);
+			free(chexp);
+			break;
+		}
+
+		default:
+		break;
+	}
+}
+
 void FreeProgram(Program* prog){
 	
 	// setup block
@@ -515,6 +557,7 @@ void FreeProgram(Program* prog){
 	opBlk->doIdentifierOp	= lambda (void, (void* ident) { Identifier* id = (Identifier*)ident; if(id->value) free(id->value); free(id); });
 	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { PortMode* pm = (PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
 	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { DataType* dt = (DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
+	opBlk->doExpressionOp	= freeExpression;
 	
 	WalkTree(prog, opBlk);
 

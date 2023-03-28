@@ -130,6 +130,11 @@ static void printSignalDecl(void* sDecl){
 	ishift = 4;
 }
 
+static void printSignalAssign(void* sAssign){
+	printf("\e[0;32m""%cSignalAssign\r\n", shift(3));
+	ishift = 4;
+}
+
 static void printPortMode(void* pMode){
 	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((PortMode*)pMode)->value);
 }
@@ -164,6 +169,7 @@ void PrintProgram(Program * prog){
 	opBlk->doArchDeclOp = printArchDecl;
 	opBlk->doPortDeclOp = printPortDecl;
 	opBlk->doSignalDeclOp = printSignalDecl;
+	opBlk->doSignalAssignOp = printSignalAssign;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;

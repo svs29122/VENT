@@ -11,7 +11,7 @@ typedef struct Identifier Identifier;
 typedef struct DataType DataType;
 typedef struct Label Label;
 typedef struct PortMode PortMode;
-typedef struct SignalAssignment SignalAssignment;
+typedef struct SignalAssign SignalAssign;
 typedef struct SignalDecl SignalDecl;
 typedef struct ArchitectureDecl ArchitectureDecl;
 typedef struct PortDecl PortDecl;
@@ -35,6 +35,7 @@ struct OperationBlock {
 	astNodeOpPtr doArchDeclOp;
 	astNodeOpPtr doPortDeclOp;
 	astNodeOpPtr doSignalDeclOp;
+	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
@@ -111,13 +112,13 @@ struct PortMode {
 	char* value;
 };
 
-struct SignalAssignment {
+struct SignalAssign {
 #ifdef DEBUG
 	Token token; // the "<=" operator
 #endif
 	struct Label label;
-	struct Identifier target;
-	void* expression;
+	struct Identifier* target;
+	struct Expression* expression;
 };
 
 struct SignalDecl {
