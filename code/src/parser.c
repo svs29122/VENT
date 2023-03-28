@@ -108,7 +108,6 @@
 #include "parser.h"
 
 typedef enum {
-
 	LOWEST_PREC =1,
 	LOGICAL_PREC, 		// and or xor nand nor xnor
 	RELATIONAL_PREC, 	// = /= < <= > >=
@@ -137,7 +136,7 @@ ParseRule rules[] = {
 };
 
 static ParseRule* getRule(enum TOKEN_TYPE type){
-	return NULL;
+	return &rules[type];
 }
 
 struct parser {
@@ -182,17 +181,19 @@ static bool validDataType(){
 	return valid;
 }
 
-static void* parseExpression(void){
-	ParseRule* prefix = getRule(p->currToken.type);
-	if(prefix == NULL){
+static Expression* parseExpression(void){
+	ParseFn prefixRule = getRule(p->currToken.type)->prefix;
+	if(prefixRule == NULL){
+		printf("Error: expected expression tok type %d\n", p->currToken.type);
 		return NULL;
 	}	
+	Expression* leftExp = prefixRule();
 
 	if(peek(TOKEN_SCOLON)){
 		nextToken();
 	}
 
-	return prefix;
+	return leftExp;
 }
 
 static Expression* parseIdentifier(){
@@ -223,6 +224,19 @@ static Expression* parseCharlit(){
 	memcpy(chexp->literal, p->currToken.literal, size);
 	
 	return &(chexp->self);
+}
+
+static Expression* parseBinary(){
+	BinaryExpr* biexp = calloc(1, sizeof(BinaryExpr));
+#ifdef DEBUG
+	memcpy(&(biexp->self.token), &(p->currToken), sizeof(Token));
+#endif
+
+	biexp->self.type = BINARY_EXPR;
+
+	//need to store operator and get left/right epressions
+
+	return &(biexp->self);
 }
 
 static DataType* parseDataType(char* val){
@@ -275,10 +289,10 @@ static Dba* parseArchBodyDeclarations(){
 		}	
 		decl->dtype = parseDataType(p->currToken.literal);
 		
-		if(peek(TOKEN_VASSIGN)){
-			decl->expression = parseExpression();	
-		} else {
+		nextToken();
+		if(match(TOKEN_VASSIGN)){
 			nextToken();
+			decl->expression = parseExpression();	
 		}
 
 		if(!match(TOKEN_SCOLON)){

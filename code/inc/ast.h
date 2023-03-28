@@ -5,6 +5,7 @@
 #include "dba.h"
 
 typedef struct Expression Expression;
+typedef struct BinaryExpr BinaryExpr;
 typedef struct CharExpr CharExpr;
 typedef struct Identifier Identifier;
 typedef struct DataType DataType;
@@ -40,11 +41,7 @@ struct OperationBlock {
 	astNodeOpPtr doExpressionOp;
 };
 
-struct Expression {
-#ifdef DEBUG
-	Token token;
-#endif
-	enum {
+typedef enum {
 		BINARY_EXPR,
 		UNARY_EXPR,
 		GROUPED_EXPR,
@@ -56,19 +53,25 @@ struct Expression {
 		Q_EXPR,
 		NEW_EXPR,
 		CALL_EXPR,
-	} type;
+} ExpressionType;
+
+struct Expression {
+#ifdef DEBUG
+	Token token;
+#endif
+	ExpressionType type;
 };
 
 struct BinaryExpr {
 	struct Expression self;
-	struct Expression *left;
-	struct Expression * right;
+	struct Expression* left;
+	struct Expression* right;
 	char* op;
 };
 
 struct UnaryExpr {
 	struct Expression self;
-	struct Expression * right;
+	struct Expression* right;
 	char* op;
 };
 
@@ -124,7 +127,7 @@ struct SignalDecl {
 	//need to add support for , separated identifier list
 	struct Identifier *name;
 	struct DataType* dtype;
-	void* expression;
+	struct Expression* expression;
 };
 
 struct ArchitectureDecl {

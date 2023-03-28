@@ -138,6 +138,22 @@ static void printDataType(void* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((DataType*)dType)->value);
 }
 
+static void printExpression(void* expr){
+	ExpressionType type = ((Expression*)expr)->type;
+	
+	switch(type) {
+	
+		case CHAR_EXPR: {
+			CharExpr* chexp = (CharExpr*)expr;
+			printf("\e[0;35m""%cCharExpr: \'%s\'\r\n", shift(ishift), chexp->literal);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
 void PrintProgram(Program * prog){
 	
 	// setup block
@@ -151,6 +167,7 @@ void PrintProgram(Program * prog){
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;
+	opBlk->doExpressionOp = printExpression;
 	
 	printProg();	
 	WalkTree(prog, opBlk);
