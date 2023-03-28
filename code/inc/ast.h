@@ -4,8 +4,10 @@
 #include "token.h"
 #include "dba.h"
 
-typedef struct DataType DataType;
+typedef struct Expression Expression;
+typedef struct CharExpr CharExpr;
 typedef struct Identifier Identifier;
+typedef struct DataType DataType;
 typedef struct Label Label;
 typedef struct PortMode PortMode;
 typedef struct SignalAssignment SignalAssignment;
@@ -38,14 +40,54 @@ struct OperationBlock {
 	astNodeOpPtr doExpressionOp;
 };
 
-struct DataType {
+struct Expression {
 #ifdef DEBUG
 	Token token;
 #endif
-	char* value;
+	enum {
+		BINARY_EXPR,
+		UNARY_EXPR,
+		GROUPED_EXPR,
+		NAME_EXPR,
+		PHYLIT_EXPR,
+		CHAR_EXPR,
+		STRING_EXPR,
+		AGGREGATE_EXPR,
+		Q_EXPR,
+		NEW_EXPR,
+		CALL_EXPR,
+	} type;
+};
+
+struct BinaryExpr {
+	struct Expression self;
+	struct Expression *left;
+	struct Expression * right;
+	char* op;
+};
+
+struct UnaryExpr {
+	struct Expression self;
+	struct Expression * right;
+	char* op;
+};
+
+struct NameExpr {
+	struct Expression self;
+	struct Identifier* name;
+};
+
+struct CharExpr {
+	struct Expression self;
+	char* literal;
 };
 
 struct Identifier {
+	struct Expression self;
+	char* value;
+};
+
+struct DataType {
 #ifdef DEBUG
 	Token token;
 #endif
@@ -124,7 +166,7 @@ struct DesignUnit{
 		//PackageDecl;
 		//PackageBodyDecl;
 		//ConfigurationDecl; 
-	} decl;
+	} as;
 };
 
 struct UseStatement {

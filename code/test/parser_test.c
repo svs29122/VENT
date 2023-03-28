@@ -40,7 +40,7 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -62,7 +62,7 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -79,7 +79,7 @@ void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
 
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -104,7 +104,7 @@ y <- stl; \
 
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->decl.entity.name->value);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
 
 	//TODO: you aren't validating any port stuff here. You need to fix this! 
 
@@ -123,8 +123,8 @@ void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
 
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
-	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
-	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -142,11 +142,11 @@ void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
-	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
-	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->decl.architecture.declarations);		
-	SignalDecl* sDecl = (SignalDecl*)unit->decl.architecture.declarations->block;
+	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->as.architecture.declarations);		
+	SignalDecl* sDecl = (SignalDecl*)unit->as.architecture.declarations->block;
 
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
@@ -167,11 +167,11 @@ void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
-	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->decl.architecture.archName->value);
-	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->decl.architecture.entName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->decl.architecture.declarations);		
-	SignalDecl* sDecl = (SignalDecl*)unit->decl.architecture.declarations->block;
+	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->as.architecture.declarations);		
+	SignalDecl* sDecl = (SignalDecl*)unit->as.architecture.declarations->block;
 
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);

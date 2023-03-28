@@ -43,7 +43,7 @@ void WalkTree(Program *prog, OperationBlock* op){
 				op->doDesignUnitOp((void*)unit);
 				switch(unit->type){
 					case ENTITY: {
-						EntityDecl* entDecl = &(unit->decl.entity);
+						EntityDecl* entDecl = &(unit->as.entity);
 						op->doEntityDeclOp((void*)entDecl);
 						if(entDecl->name){
 							op->doIdentifierOp((void*)entDecl->name);
@@ -68,7 +68,7 @@ void WalkTree(Program *prog, OperationBlock* op){
 						break;
 					}
 					case ARCHITECTURE: {					
-						ArchitectureDecl* archDecl = &(unit->decl.architecture);
+						ArchitectureDecl* archDecl = &(unit->as.architecture);
 						op->doArchDeclOp((void*)archDecl);
 						if(archDecl->archName){
 							op->doIdentifierOp((void*)archDecl->archName);
