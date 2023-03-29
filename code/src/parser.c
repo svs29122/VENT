@@ -545,29 +545,47 @@ Program* ParseProgram(){
 	return prog;
 }
 
+static void freeExpression(void* expr){
+   ExpressionType type = ((Expression*)expr)->type;
+
+   switch(type) {
+
+      case CHAR_EXPR: {
+         CharExpr* chexp = (CharExpr*)expr;
+         free(chexp->literal);
+			free(chexp);
+         break;
+      }
+
+      case BINARY_EXPR:{
+         BinaryExpr* bexp = (BinaryExpr*) expr;
+         freeExpression((void*)bexp->left);
+         free(bexp->op);
+         freeExpression((void*)bexp->right);
+			free(bexp);
+         break;
+      }
+
+      case NAME_EXPR: {
+         //NameExpr* nexp = (NameExpr*) expr;
+         //free(nexp->name->value);
+         Identifier* ident = (Identifier*)expr;
+         free(ident->value);
+         free(ident);
+         break;
+      }
+
+      default:
+         break;
+   }
+}
+
 // I know this isn't portable, but I just love it so much 
 #define lambda(return_type, function_body) \
 ({ \
       return_type __fn__ function_body \
           __fn__; \
 })
-
-static void freeExpression(void* expr){
-	 ExpressionType type = ((Expression*)expr)->type;
-
-	switch(type) {
-
-		case CHAR_EXPR: {
-			CharExpr* chexp = (CharExpr*)expr;
-			free(chexp->literal);
-			free(chexp);
-			break;
-		}
-
-		default:
-		break;
-	}
-}
 
 void FreeProgram(Program* prog){
 	

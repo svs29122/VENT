@@ -102,11 +102,30 @@ y <- stl; \
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
+	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
+
 	DesignUnit* unit = (DesignUnit*)prog->units->block;
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
 
-	//TODO: you aren't validating any port stuff here. You need to fix this! 
+	CuAssertPtrNotNullMsg(tc,"Port list NULL!", unit->as.entity.ports);	
+	Dba* ports = unit->as.entity.ports;
+	
+	PortDecl* port1 = (PortDecl*)ports->block;
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "a", port1->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port1->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port1->dtype->value);
+
+	PortDecl* port2 = (PortDecl*)(ports->block + ports->blockSize);
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "b", port2->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port2->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port2->dtype->value);
+
+	PortDecl* port3 = (PortDecl*)(ports->block + (ports->blockSize * 2));
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "y", port3->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "<-", port3->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port3->dtype->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -212,8 +231,6 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "0", ((CharExpr*)(sAssign->expression))->literal);
 
-	//PrintProgram(prog);
-
 	FreeProgram(prog);
 	free(input);
 }
@@ -245,8 +262,6 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
-
-	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -283,6 +298,24 @@ y <= temp; \
 	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, ent->type);
 	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", ent->as.entity.name->value);
 
+	CuAssertPtrNotNullMsg(tc,"Port list NULL!", ent->as.entity.ports);	
+	Dba* ports = ent->as.entity.ports;
+	
+	PortDecl* port1 = (PortDecl*)ports->block;
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "a", port1->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port1->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port1->dtype->value);
+
+	PortDecl* port2 = (PortDecl*)(ports->block + ports->blockSize);
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "b", port2->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port2->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port2->dtype->value);
+
+	PortDecl* port3 = (PortDecl*)(ports->block + (ports->blockSize * 2));
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "y", port3->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "<-", port3->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port3->dtype->value);
+
 	DesignUnit* unit = (DesignUnit*)(arr->block + arr->blockSize);
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
@@ -301,10 +334,10 @@ y <= temp; \
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
 
-	//sAssign = (SignalAssign*)unit->as.architecture.statements->block + unit->as.architecture.statements->blockSize;
-	//CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", sAssign->target->value);
-	//CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
-	//CuAssertStrEquals_Msg(tc,"Expression not char literal!", "temp", ((Identifier*)(sAssign->expression))->value);
+	sAssign = (SignalAssign*)(unit->as.architecture.statements->block + unit->as.architecture.statements->blockSize);
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", sAssign->target->value);
+	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
+	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "temp", ((Identifier*)(sAssign->expression))->value);
 
 	PrintProgram(prog);
 
