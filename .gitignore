@@ -12,3 +12,5 @@ code/test/obj
 code/sandbox
 
 docs/*.png
+
+vgcore*

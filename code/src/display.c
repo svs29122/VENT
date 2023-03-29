@@ -130,6 +130,11 @@ static void printSignalDecl(void* sDecl){
 	ishift = 4;
 }
 
+static void printSignalAssign(void* sAssign){
+	printf("\e[0;32m""%cSignalAssign\r\n", shift(3));
+	ishift = 4;
+}
+
 static void printPortMode(void* pMode){
 	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((PortMode*)pMode)->value);
 }
@@ -137,6 +142,48 @@ static void printPortMode(void* pMode){
 static void printDataType(void* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((DataType*)dType)->value);
 }
+
+static void printSubExpression(void* expr){
+	ExpressionType type = ((Expression*)expr)->type;
+
+	switch(type) {
+	
+		case CHAR_EXPR: {
+			CharExpr* chexp = (CharExpr*)expr;
+			printf("%s", chexp->literal);
+			break;
+		}
+
+		case BINARY_EXPR:{
+			BinaryExpr* bexp = (BinaryExpr*) expr;
+			printSubExpression((void*)bexp->left);
+			printf(" %s ", bexp->op);
+			printSubExpression((void*)bexp->right);
+			break;
+		}
+
+		case NAME_EXPR: {
+			//NameExpr* nexp = (NameExpr*) expr;
+			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
+			Identifier* ident = (Identifier*)expr;
+			printf("%s", ident->value);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
+static void printExpression(void* expr){
+	
+	printf("\e[0;35m""%cExpression: \'", shift(ishift));
+	
+	printSubExpression(expr);	
+
+	printf("\'\r\n");
+}
+
 
 void PrintProgram(Program * prog){
 	
@@ -148,9 +195,11 @@ void PrintProgram(Program * prog){
 	opBlk->doArchDeclOp = printArchDecl;
 	opBlk->doPortDeclOp = printPortDecl;
 	opBlk->doSignalDeclOp = printSignalDecl;
+	opBlk->doSignalAssignOp = printSignalAssign;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;
+	opBlk->doExpressionOp = printExpression;
 	
 	printProg();	
 	WalkTree(prog, opBlk);

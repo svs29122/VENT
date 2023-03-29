@@ -16,6 +16,7 @@ OperationBlock* initOperationBlock(void){
 	op->doArchDeclOp					= noOp;
 	op->doPortDeclOp					= noOp;
 	op->doSignalDeclOp				= noOp;
+	op->doSignalAssignOp				= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
@@ -43,7 +44,7 @@ void WalkTree(Program *prog, OperationBlock* op){
 				op->doDesignUnitOp((void*)unit);
 				switch(unit->type){
 					case ENTITY: {
-						EntityDecl* entDecl = &(unit->decl.entity);
+						EntityDecl* entDecl = &(unit->as.entity);
 						op->doEntityDeclOp((void*)entDecl);
 						if(entDecl->name){
 							op->doIdentifierOp((void*)entDecl->name);
@@ -68,7 +69,7 @@ void WalkTree(Program *prog, OperationBlock* op){
 						break;
 					}
 					case ARCHITECTURE: {					
-						ArchitectureDecl* archDecl = &(unit->decl.architecture);
+						ArchitectureDecl* archDecl = &(unit->as.architecture);
 						op->doArchDeclOp((void*)archDecl);
 						if(archDecl->archName){
 							op->doIdentifierOp((void*)archDecl->archName);
@@ -96,6 +97,14 @@ void WalkTree(Program *prog, OperationBlock* op){
 						if(archDecl->statements){
 							Dba* stmts = archDecl->statements;
 							for(int j=0; j < stmts->count; j++){
+								SignalAssign* sigAssign = (SignalAssign*)(stmts->block + (j * stmts->blockSize));
+								op->doSignalAssignOp((void*)sigAssign);
+								if(sigAssign->target){
+									op->doIdentifierOp((void*)sigAssign->target);
+								}
+								if(sigAssign->expression){
+									op->doExpressionOp((void*)sigAssign->expression);
+								}
 							}
 							op->doBlockArrayOp((void*)stmts);
 						}

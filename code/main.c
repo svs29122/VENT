@@ -57,19 +57,15 @@ static void doTranspile(char* fileName){
 		InitLexer(ventSrc);
 		
 		Token t = NextToken();
-		while(t.type != ILLEGAL && t.type != EOP){
+		while(t.type != TOKEN_ILLEGAL && t.type != TOKEN_EOP){
 			PrintToken(t);
 			free(t.literal);
 
 			t = NextToken();
 		}
 		
-		if(t.type == ILLEGAL) PrintToken(t);
+		if(t.type == TOKEN_ILLEGAL) PrintToken(t);
 		free(t.literal);
 		
 		free(ventSrc);
 }
-
-static void doRevTranspile(char* fileName){
-}
-

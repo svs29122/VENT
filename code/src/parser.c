@@ -1,4 +1,4 @@
-/*
+ /*
 	parser.c
 
 	This file contains all code used to parse the list of tokens 
@@ -50,10 +50,15 @@
 
 	sigDecl			->			"sig" IDENTIFIER ("," IDENTIFIER)* dataType (":=" expression)? ";" ;
 
-	statement		->			sigAssign
-									| varAssign
+	statement		->			process
+									| instantiation 
+									| signalAssign
+									| generate
+									| assert
+									| procedureCall
+									| block
 
-	sigAssign		->			(LABEL ":")? IDENTIFIER "<=" expression ";" ; 
+	signalAssign	->			(LABEL ":")? IDENTIFIER "<=" expression ";" ; 
 	
 	expression 		->			expression binaryOp expression
 									| unaryOp expression
@@ -102,12 +107,40 @@
 #include "lexer.h"
 #include "parser.h"
 
-// I know this isn't portable, but I just love it so much 
-#define lambda(return_type, function_body) \
-({ \
-      return_type __fn__ function_body \
-          __fn__; \
-})
+typedef enum {
+	LOWEST_PREC =1,
+	LOGICAL_PREC, 		// and or xor nand nor xnor
+	RELATIONAL_PREC, 	// = /= < <= > >=
+	SHIFT_PREC, 		// sll srl sla sra rol ror
+	ADD_PREC, 			// + - &
+	MULTIPLY_PREC, 	// * / mod rem
+	PREFIX_PREC, 		// ** abs not
+	CALL_PREC, 			// function(x)
+} Precedence;
+
+typedef Expression* (*ParsePrefixFn)();
+typedef Expression* (*ParseInfixFn)(Expression*);
+
+typedef struct {
+	ParsePrefixFn prefix;
+	ParseInfixFn infix;
+	Precedence precedence;
+} ParseRule;
+
+//forward declarations
+static Expression* parseBinary(Expression* expr);
+static Expression* parseIdentifier();
+static Expression* parseCharlit();
+
+ParseRule rules[] = {
+	[TOKEN_AND] = {NULL, parseBinary, LOGICAL_PREC},
+	[TOKEN_IDENTIFIER] = {parseIdentifier, NULL, LOWEST_PREC},
+	[TOKEN_CHARLIT] = {parseCharlit, NULL, LOWEST_PREC},
+};
+
+static ParseRule* getRule(enum TOKEN_TYPE type){
+	return &rules[type];
+}
 
 struct parser {
 	Token currToken;
@@ -136,23 +169,104 @@ static bool match( enum TOKEN_TYPE type){
 	return p->currToken.type == type;
 }
 
+static bool peek( enum TOKEN_TYPE type){
+	return p->peekToken.type == type;
+}
+
 static bool validDataType(){
 	bool valid = false; 
 	
-	valid = 	match(STL) 		||	match(STLV) 	||
-				match(INTEGER) || match(STRING) 	||
-				match(BIT) 		|| match(BITV)		||
-				match(SIGNED)	|| match(UNSIGNED);
+	valid = 	match(TOKEN_STL) 		||	match(TOKEN_STLV) 	||
+				match(TOKEN_INTEGER) || match(TOKEN_STRING) 	||
+				match(TOKEN_BIT) 		|| match(TOKEN_BITV)		||
+				match(TOKEN_SIGNED)	|| match(TOKEN_UNSIGNED);
 
 	return valid;
 }
 
-static void* parseExpression(void){
-	return NULL;
+static Expression* parseExpression(Precedence precedence){
+	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
+	//PrintToken(p->currToken);
+	if(prefixRule == NULL){
+		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
+		return NULL;
+	}	
+	Expression* leftExp = prefixRule();
+
+	nextToken();	
+	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
+		ParseInfixFn infixRule = getRule(p->currToken.type)->infix;
+		//PrintToken(p->currToken);
+		if(infixRule == NULL){
+			return leftExp;
+		}
+
+		leftExp = infixRule(leftExp);
+	}
+
+	if(peek(TOKEN_SCOLON)){
+		nextToken();
+	}
+
+	return leftExp;
+}
+
+static Expression* parseIdentifier(){
+	Identifier* ident = calloc(1, sizeof(Identifier));
+#ifdef DEBUG
+	memcpy(&(ident->self.token), &(p->currToken), sizeof(Token));
+#endif
+
+	ident->self.type = NAME_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	ident->value = calloc(size, sizeof(char));
+	memcpy(ident->value, p->currToken.literal, size);
+	
+	return &(ident->self);
+}
+
+static Expression* parseCharlit(){
+	CharExpr* chexp = calloc(1, sizeof(CharExpr));
+#ifdef DEBUG
+	memcpy(&(chexp->self.token), &(p->currToken), sizeof(Token));
+#endif
+
+	chexp->self.type = CHAR_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	chexp->literal = calloc(size, sizeof(char));
+	memcpy(chexp->literal, p->currToken.literal, size);
+	
+	return &(chexp->self);
+}
+
+static Expression* parseBinary(Expression* expr){
+	BinaryExpr* biexp = calloc(1, sizeof(BinaryExpr));
+#ifdef DEBUG
+	memcpy(&(biexp->self.token), &(p->currToken), sizeof(Token));
+#endif
+
+	biexp->self.type = BINARY_EXPR;
+	biexp->left = expr;
+
+	int size = strlen(p->currToken.literal) + 1;
+	biexp->op = calloc(size, sizeof(char));
+	memcpy(biexp->op, p->currToken.literal, size);
+
+	Precedence precedence = getRule(p->currToken.type)->precedence;
+	nextToken();
+	
+	biexp->right = parseExpression(precedence);
+
+	return &(biexp->self);
 }
 
 static DataType* parseDataType(char* val){
 	DataType* dt = calloc(1, sizeof(DataType));
+#ifdef DEBUG
+	memcpy(&(dt->token), &(p->currToken), sizeof(Token));
+#endif
 
 	int size = strlen(val) + 1;
 	dt->value = calloc(size, sizeof(char));
@@ -163,6 +277,9 @@ static DataType* parseDataType(char* val){
 
 static PortMode* parsePortMode(char* val){
 	PortMode* pm = calloc(1, sizeof(PortMode));
+#ifdef DEBUG
+	memcpy(&(pm->token), &(p->currToken), sizeof(Token));
+#endif
 
 	int size = strlen(val) +1;
 	pm->value = calloc(size, sizeof(char));
@@ -171,33 +288,48 @@ static PortMode* parsePortMode(char* val){
 	return pm;
 }
 
-static Identifier* parseIdentifier(char* val){
-	Identifier* ident = calloc(1, sizeof(Identifier));
-
-	int size = strlen(val) + 1;
-	ident->value = calloc(size, sizeof(char));
-	memcpy(ident->value, val, size);
-	
-	return ident;
-}
-
 static Dba* parseArchBodyStatements(){
-	return NULL;
+	Dba* stmts = initBlockArray(sizeof(SignalAssign));
+	
+	while(!match(TOKEN_RBRACE)){
+		SignalAssign* stmt = calloc(1, sizeof(SignalAssign));
+
+		if(!match(TOKEN_IDENTIFIER)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}
+		stmt->target = (Identifier*)parseIdentifier();
+
+		nextToken();
+		if(!match(TOKEN_SASSIGN)){
+			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+		}
+		
+		nextToken();
+		stmt->expression = parseExpression(LOWEST_PREC);
+
+		if(!match(TOKEN_SCOLON)){
+			printf("Error: %s:%d -> Expected token: %d, but got %d\r\n", __func__, __LINE__, TOKEN_SCOLON, p->currToken.type);
+		}	
+		writeBlockArray(stmts, (char*)stmt);
+		free(stmt);
+	
+		nextToken();	
+	}
+
+	return stmts;
 }
 
 static Dba* parseArchBodyDeclarations(){
 	Dba* decls = initBlockArray(sizeof(SignalDecl));
 
-	nextToken();	
-	
-	while(match(SIG)){
+	while(match(TOKEN_SIG)){
 		SignalDecl* decl = calloc(1, sizeof(SignalDecl));
 
 		nextToken();
-		if(!match(IDENTIFIER)){
+		if(!match(TOKEN_IDENTIFIER)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		}	
-		decl->name = parseIdentifier(p->currToken.literal);
+		decl->name = (Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!validDataType()){
@@ -205,13 +337,13 @@ static Dba* parseArchBodyDeclarations(){
 		}	
 		decl->dtype = parseDataType(p->currToken.literal);
 		
-		if(p->peekToken.type == VASSIGN){
-			decl->expression = parseExpression();	
-		} else {
+		nextToken();
+		if(match(TOKEN_VASSIGN)){
 			nextToken();
+			decl->expression = parseExpression(LOWEST_PREC);	
 		}
 
-		if(!match(SCOLON)){
+		if(!match(TOKEN_SCOLON)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		}	
 		writeBlockArray(decls, (char*)decl);
@@ -228,16 +360,16 @@ static Dba* parsePortDecl(){
 
 	nextToken();
 
-	while(!match(RBRACE) && !match(EOP)){
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		PortDecl* port = malloc(sizeof(PortDecl));		
 
-		if(!match(IDENTIFIER)){
+		if(!match(TOKEN_IDENTIFIER)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		}	
-		port->name = parseIdentifier(p->currToken.literal);
+		port->name = (Identifier*)parseIdentifier();
 		
 		nextToken();
-		if(!match(INPUT) && !match(OUTPUT) && !match(INOUT)){
+		if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		}	
 		port->pmode = parsePortMode(p->currToken.literal);
@@ -249,7 +381,7 @@ static Dba* parsePortDecl(){
 		port->dtype = parseDataType(p->currToken.literal);
 		
 		nextToken();
-		if(!match(SCOLON)){
+		if(!match(TOKEN_SCOLON)){
 			printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		}	
 		writeBlockArray(ports, (char*)port);
@@ -267,40 +399,39 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 #endif
 	
 	nextToken();	
-	if(!match(IDENTIFIER)){
+	if(!match(TOKEN_IDENTIFIER)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
-	aDecl->archName = parseIdentifier(p->currToken.literal);
+	aDecl->archName = (Identifier*)parseIdentifier();
 	
 	nextToken();
-	if(!match(LPAREN)){
+	if(!match(TOKEN_LPAREN)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
 	nextToken();	
-	if(!match(IDENTIFIER)){
+	if(!match(TOKEN_IDENTIFIER)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
-	aDecl->entName = parseIdentifier(p->currToken.literal);
+	aDecl->entName = (Identifier*)parseIdentifier();
 	
 	nextToken();
-	if(!match(RPAREN)){
+	if(!match(TOKEN_RPAREN)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
 	nextToken();
-	if(!match(LBRACE)){
+	if(!match(TOKEN_LBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	if(p->peekToken.type != RBRACE){
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
 		aDecl->declarations = parseArchBodyDeclarations();	
 		aDecl->statements = parseArchBodyStatements();	
-	} else {
-		nextToken();
 	}
 
-	if(!match(RBRACE)){
+	if(!match(TOKEN_RBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 }
@@ -311,23 +442,23 @@ static void parseEntityDecl(EntityDecl* eDecl){
 #endif
 
 	nextToken();	
-	if(!match(IDENTIFIER)){
+	if(!match(TOKEN_IDENTIFIER)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
-	eDecl->name = parseIdentifier(p->currToken.literal);
+	eDecl->name = (Identifier*)parseIdentifier();
 
 	nextToken();
-	if(!match(LBRACE)){
+	if(!match(TOKEN_LBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 
-	if(p->peekToken.type != RBRACE){
+	if(!peek(TOKEN_RBRACE)){
 		eDecl->ports = parsePortDecl();	
 	} else {
 		nextToken();
 	}
 
-	if(!match(RBRACE)){
+	if(!match(TOKEN_RBRACE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 		printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
 	}
@@ -340,12 +471,12 @@ static UseStatement* parseUseStatement(){
 	memcpy(&(stmt->token), &(p->currToken), sizeof(Token));
 #endif
 
-	if(!match(USE)){
+	if(!match(TOKEN_USE)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 		
 	nextToken();	
-	if(!match(IDENTIFIER)){
+	if(!match(TOKEN_IDENTIFIER)){
 		printf("Error: %s:%d\r\n", __func__, __LINE__);		
 	}
 	
@@ -358,33 +489,35 @@ static UseStatement* parseUseStatement(){
 
 static DesignUnit* parseDesignUnit(){
 
+	DesignUnit* unit = calloc(1, sizeof(DesignUnit));
+
 	switch(p->currToken.type){
-		case ENT: { 
-			DesignUnit* unit = calloc(1, sizeof(DesignUnit));
+		case TOKEN_ENT: { 
 			unit->type = ENTITY;
-			parseEntityDecl(&(unit->decl.entity));
-			return unit;
+			parseEntityDecl(&(unit->as.entity));
+			break;
 		}
 
-		case ARCH: {
-			DesignUnit* unit = calloc(1, sizeof(DesignUnit));
+		case TOKEN_ARCH: {
 			unit->type = ARCHITECTURE;
-			parseArchitectureDecl(&(unit->decl.architecture));
-			return unit;
+			parseArchitectureDecl(&(unit->as.architecture));
+			break;
 		}
 
 		default:
+			free(unit);
+			unit = NULL;
 			break;
 	}
 
-	return NULL;
+	return unit;
 }
 
 Program* ParseProgram(){
 	Program* prog = calloc(1, sizeof(Program));
 
 	// first get the use statements
-	while(p->currToken.type == USE && p->currToken.type != EOP){
+	while(p->currToken.type == TOKEN_USE && p->currToken.type != TOKEN_EOP){
 		UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
 			if(prog->useStatements == NULL){
@@ -397,7 +530,7 @@ Program* ParseProgram(){
 	}
 
 	// next parse any design units
-	while(p->currToken.type != EOP){
+	while(p->currToken.type != TOKEN_EOP){
 		DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
 			if(prog->units == NULL){
@@ -412,6 +545,48 @@ Program* ParseProgram(){
 	return prog;
 }
 
+static void freeExpression(void* expr){
+   ExpressionType type = ((Expression*)expr)->type;
+
+   switch(type) {
+
+      case CHAR_EXPR: {
+         CharExpr* chexp = (CharExpr*)expr;
+         free(chexp->literal);
+			free(chexp);
+         break;
+      }
+
+      case BINARY_EXPR:{
+         BinaryExpr* bexp = (BinaryExpr*) expr;
+         freeExpression((void*)bexp->left);
+         free(bexp->op);
+         freeExpression((void*)bexp->right);
+			free(bexp);
+         break;
+      }
+
+      case NAME_EXPR: {
+         //NameExpr* nexp = (NameExpr*) expr;
+         //free(nexp->name->value);
+         Identifier* ident = (Identifier*)expr;
+         free(ident->value);
+         free(ident);
+         break;
+      }
+
+      default:
+         break;
+   }
+}
+
+// I know this isn't portable, but I just love it so much 
+#define lambda(return_type, function_body) \
+({ \
+      return_type __fn__ function_body \
+          __fn__; \
+})
+
 void FreeProgram(Program* prog){
 	
 	// setup block
@@ -422,6 +597,7 @@ void FreeProgram(Program* prog){
 	opBlk->doIdentifierOp	= lambda (void, (void* ident) { Identifier* id = (Identifier*)ident; if(id->value) free(id->value); free(id); });
 	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { PortMode* pm = (PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
 	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { DataType* dt = (DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
+	opBlk->doExpressionOp	= freeExpression;
 	
 	WalkTree(prog, opBlk);
 

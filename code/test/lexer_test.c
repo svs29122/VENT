@@ -12,7 +12,7 @@ void TestNextToken_SingleToken(CuTest *tc){
 
 	Token nt = NextToken();
 
-	const	char* expToken = TokenToString(PLUS);
+	const	char* expToken = TokenToString(TOKEN_PLUS);
 	const char* expLiteral = "+";
 
 	CuAssertStrEquals(tc, expToken, TokenToString(nt.type)); 
@@ -26,10 +26,10 @@ void TestNextToken_MultipleTokens(CuTest *tc){
 	char* input = strdup("():{},'/-+*=");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken[12] = {LPAREN,RPAREN,COLON, 
-											LBRACE,RBRACE,COMMA,
-											TICK,SLASH,MINUS,
-											PLUS,STAR,EQUAL};
+	enum TOKEN_TYPE expToken[12] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
+											TOKEN_LBRACE,TOKEN_RBRACE,TOKEN_COMMA,
+											TOKEN_TICK,TOKEN_SLASH,TOKEN_MINUS,
+											TOKEN_PLUS,TOKEN_STAR,TOKEN_EQUAL};
 	
 	char expLiteralArr[12] = {'(', ')', ':', 
 								 '{', '}',',',
@@ -56,7 +56,7 @@ void TestNextToken_SingleLineComment (CuTest *tc){
 								"+");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = STAR;
+	enum TOKEN_TYPE expToken = TOKEN_STAR;
 	char* expLiteral = "*";
 	
 	Token nt = NextToken();
@@ -65,7 +65,7 @@ void TestNextToken_SingleLineComment (CuTest *tc){
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
 	free(nt.literal);	
 	
-	expToken = PLUS;
+	expToken = TOKEN_PLUS;
 	char* expLiteral2 = "+";
 	
 	nt = NextToken();
@@ -87,7 +87,7 @@ important*/ \
 {*}");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken[6] = {LPAREN,PLUS,RPAREN,LBRACE,STAR,RBRACE};
+	enum TOKEN_TYPE expToken[6] = {TOKEN_LPAREN,TOKEN_PLUS,TOKEN_RPAREN,TOKEN_LBRACE,TOKEN_STAR,TOKEN_RBRACE};
 	char expLiteralArr[6] = {'(','+', ')', '{', '*', '}'}; 
 
 	for(int i=0; i<6; i++){
@@ -108,7 +108,7 @@ void TestNextToken_MultiLineCommentUnterminated (CuTest *tc){
 	char* input = strdup("+/**+");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken[2] = {PLUS,EOP};
+	enum TOKEN_TYPE expToken[2] = {TOKEN_PLUS,TOKEN_EOP};
 	char expLiteralArr[2] = {'+','\0'}; 
 	
 	
@@ -130,7 +130,7 @@ void TestNextToken_Number (CuTest *tc){
 	char* input = strdup("1.6E-20");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = NUMBERLIT;
+	enum TOKEN_TYPE expToken = TOKEN_NUMBERLIT;
 	char* expLiteral = "1.6E-20";
 
 	Token nt = NextToken();
@@ -146,7 +146,7 @@ void TestNextToken_Char (CuTest *tc){
 	char* input = strdup("'1'");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = CHARLIT;
+	enum TOKEN_TYPE expToken = TOKEN_CHARLIT;
 	char* expLiteral = "1";
 	
 	Token nt = NextToken();
@@ -162,7 +162,7 @@ void TestNextToken_BitString (CuTest *tc){
 	char* input = strdup("X\"1AFF\"");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = BSTRINGLIT;
+	enum TOKEN_TYPE expToken = TOKEN_BSTRINGLIT;
 	char* expLiteral = "X\"1AFF\"";
 	
 	Token nt = NextToken();
@@ -178,7 +178,7 @@ void TestNextToken_String (CuTest *tc){
 	char* input = strdup("\"HELLO\"");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = STRINGLIT;
+	enum TOKEN_TYPE expToken = TOKEN_STRINGLIT;
 	char* expLiteral = "\"HELLO\"";
 	
 	Token nt = NextToken();
@@ -194,7 +194,7 @@ void TestNextToken_Identifier (CuTest *tc){
 	char* input = strdup("myEntity{");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = IDENTIFIER;
+	enum TOKEN_TYPE expToken = TOKEN_IDENTIFIER;
 	char* expLiteral = "myEntity";
 	
 	Token nt = NextToken();
@@ -210,7 +210,7 @@ void TestNextToken_IdentifierSingleLetter (CuTest *tc){
 	char* input = strdup("a and");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = IDENTIFIER;
+	enum TOKEN_TYPE expToken = TOKEN_IDENTIFIER;
 	char* expLiteral = "a";
 	
 	Token nt = NextToken();
@@ -226,7 +226,7 @@ void TestNextToken_Entity (CuTest *tc){
 	char* input = strdup("ent");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = ENT;
+	enum TOKEN_TYPE expToken = TOKEN_ENT;
 	char* expLiteral = "ent";
 	
 	Token nt = NextToken();
@@ -242,7 +242,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	char* input = strdup("ent ander {\n}");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = ENT;
+	enum TOKEN_TYPE expToken = TOKEN_ENT;
 	char* expLiteral = "ent";
 	
 	Token nt = NextToken();
@@ -251,7 +251,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
 	free(nt.literal);	
 
-	expToken = IDENTIFIER;
+	expToken = TOKEN_IDENTIFIER;
 	char* expLiteral2 = "ander";
 
 	nt = NextToken();
@@ -260,7 +260,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	CuAssertStrEquals(tc, expLiteral2, nt.literal); 
 	free(nt.literal);	
 
-	expToken = LBRACE;
+	expToken = TOKEN_LBRACE;
 	char* expLiteral3 = "{";
 
 	nt = NextToken();
@@ -269,7 +269,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	CuAssertStrEquals(tc, expLiteral3, nt.literal); 
 	free(nt.literal);	
 
-	expToken = RBRACE;
+	expToken = TOKEN_RBRACE;
 	char* expLiteral4 = "}";
 
 	nt = NextToken();
@@ -285,7 +285,7 @@ void TestNextToken_PortDirections (CuTest *tc){
 	char* input = strdup("-> <- <->");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken = INPUT;
+	enum TOKEN_TYPE expToken = TOKEN_INPUT;
 	char* expLiteral = "->";
 	
 	Token nt = NextToken();
@@ -294,7 +294,7 @@ void TestNextToken_PortDirections (CuTest *tc){
 	CuAssertIntEquals(tc, expToken, nt.type);
 	free(nt.literal);	
 
-	expToken = OUTPUT;
+	expToken = TOKEN_OUTPUT;
 	char* expLiteral2 = "<-";
 	
 	nt = NextToken();
@@ -303,7 +303,7 @@ void TestNextToken_PortDirections (CuTest *tc){
 	CuAssertIntEquals(tc, expToken, nt.type);
 	free(nt.literal);	
 
-	expToken = INOUT;
+	expToken = TOKEN_INOUT;
 	char* expLiteral3 = "<->";
 	
 	nt = NextToken();
