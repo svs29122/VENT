@@ -212,6 +212,8 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "0", ((CharExpr*)(sAssign->expression))->literal);
 
+	//PrintProgram(prog);
+
 	FreeProgram(prog);
 	free(input);
 }
@@ -238,16 +240,75 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
 	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
-	SignalAssign* sAssign = (SignalAssign*)unit->as.architecture.statements->block;
 
-	
+	SignalAssign* sAssign = (SignalAssign*)unit->as.architecture.statements->block;
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_EntityWithArchitecture(CuTest *tc){
+	char* input = strdup(" \
+use ieee.std_logic_1164.all \
+ent ander { \
+a -> stl; \
+b -> stl; \
+y <- stl; \
+} \
+arch behavioral(ander){ \
+sig temp stl := '0'; \
+temp <= a and b; \
+y <= temp; \
+} \
+");
+
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	UseStatement* stmt = (UseStatement*)prog->useStatements->block;
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", stmt->value);
+
+	Dba* arr = prog->units;
+	DesignUnit* ent = (DesignUnit*)arr->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, ent->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", ent->as.entity.name->value);
+
+	DesignUnit* unit = (DesignUnit*)(arr->block + arr->blockSize);
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertPtrNotNullMsg(tc,"Arch declarations NULL!", unit->as.architecture.declarations);		
+
+	SignalDecl* sDecl = (SignalDecl*)unit->as.architecture.declarations->block;
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
+	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
+	CuAssertPtrNotNullMsg(tc,"Signal initialization expression NULL!", sDecl->expression);		
+	CuAssertStrEquals_Msg(tc,"Expression not to char literal!", "0", ((CharExpr*)(sDecl->expression))->literal);
+
+	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
+
+	SignalAssign* sAssign = (SignalAssign*)unit->as.architecture.statements->block;
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
+	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
+	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
+
+	//sAssign = (SignalAssign*)unit->as.architecture.statements->block + unit->as.architecture.statements->blockSize;
+	//CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", sAssign->target->value);
+	//CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
+	//CuAssertStrEquals_Msg(tc,"Expression not char literal!", "temp", ((Identifier*)(sAssign->expression))->value);
+
+	PrintProgram(prog);
+
+	FreeProgram(prog);	
 	free(input);
 }
 
@@ -271,6 +332,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalInit);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssign);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssignBinaryExpression);
+	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

@@ -1,4 +1,4 @@
-/*
+ /*
 	parser.c
 
 	This file contains all code used to parse the list of tokens 
@@ -186,7 +186,7 @@ static bool validDataType(){
 
 static Expression* parseExpression(Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
-	PrintToken(p->currToken);
+	//PrintToken(p->currToken);
 	if(prefixRule == NULL){
 		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
 		return NULL;
@@ -196,7 +196,7 @@ static Expression* parseExpression(Precedence precedence){
 	nextToken();	
 	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
 		ParseInfixFn infixRule = getRule(p->currToken.type)->infix;
-		PrintToken(p->currToken);
+		//PrintToken(p->currToken);
 		if(infixRule == NULL){
 			return leftExp;
 		}

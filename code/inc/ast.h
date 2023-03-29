@@ -7,6 +7,7 @@
 typedef struct Expression Expression;
 typedef struct BinaryExpr BinaryExpr;
 typedef struct CharExpr CharExpr;
+typedef struct NameExpr NameExpr;
 typedef struct Identifier Identifier;
 typedef struct DataType DataType;
 typedef struct Label Label;

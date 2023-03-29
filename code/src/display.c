@@ -143,14 +143,30 @@ static void printDataType(void* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((DataType*)dType)->value);
 }
 
-static void printExpression(void* expr){
+static void printSubExpression(void* expr){
 	ExpressionType type = ((Expression*)expr)->type;
-	
+
 	switch(type) {
 	
 		case CHAR_EXPR: {
 			CharExpr* chexp = (CharExpr*)expr;
-			printf("\e[0;35m""%cCharExpr: \'%s\'\r\n", shift(ishift), chexp->literal);
+			printf("%s", chexp->literal);
+			break;
+		}
+
+		case BINARY_EXPR:{
+			BinaryExpr* bexp = (BinaryExpr*) expr;
+			printSubExpression((void*)bexp->left);
+			printf(" %s ", bexp->op);
+			printSubExpression((void*)bexp->right);
+			break;
+		}
+
+		case NAME_EXPR: {
+			//NameExpr* nexp = (NameExpr*) expr;
+			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
+			Identifier* ident = (Identifier*)expr;
+			printf("%s", ident->value);
 			break;
 		}
 
@@ -158,6 +174,16 @@ static void printExpression(void* expr){
 			break;
 	}
 }
+
+static void printExpression(void* expr){
+	
+	printf("\e[0;35m""%cExpression: \'", shift(ishift));
+	
+	printSubExpression(expr);	
+
+	printf("\'\r\n");
+}
+
 
 void PrintProgram(Program * prog){
 	
