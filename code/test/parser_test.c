@@ -46,6 +46,23 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_EntityDeclarationSyntaxError(CuTest *tc){
+	char* input = strdup("ent ^ ander {\n}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	DesignUnit* unit = (DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
+	
+	FreeProgram(prog);	
+	free(input);
+}
+
 void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all\n\nent ander {\n}");
 	setup(input);
@@ -269,18 +286,21 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 
 void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	char* input = strdup(" \
-use ieee.std_logic_1164.all \
-ent ander { \
-a -> stl; \
-b -> stl; \
-y <- stl; \
-} \
-arch behavioral(ander){ \
-sig temp stl := '0'; \
-temp <= a and b; \
-y <= temp; \
-} \
-");
+		use ieee.std_logic_1164.all \
+		\
+		ent ander { \
+			a -> stl; \
+			b -> stl; \
+			y <- stl; \
+		} \
+		\
+		arch behavioral(ander){ \
+			sig temp stl := '0'; \
+		\
+			temp <= a and b; \
+			y <= temp; \
+		} \
+	");
 
 	setup(input);
 
@@ -339,9 +359,48 @@ y <= temp; \
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "temp", ((Identifier*)(sAssign->expression))->value);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);	
+	free(input);
+}
+
+#include <time.h>
+void TestParseProgram_LoopedProgramParsing(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all \
+		\
+		ent ander { \
+			a -> stl; \
+			b -> stl; \
+			y <- stl; \
+		} \
+		\
+		arch behavioral(ander){ \
+			sig temp stl := '0'; \
+		\
+			temp <= a and b; \
+			y <= temp; \
+		} \
+	");
+
+	float timeA = (float)clock()/CLOCKS_PER_SEC;
+	for(int i = 0; i < 10000; i++){
+		setup(input);
+		
+		Program* prog = ParseProgram();
+		
+		CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+		CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+		CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+		FreeProgram(prog);	
+	}
+	float timeB = (float)clock()/CLOCKS_PER_SEC;
+	
+	//Note: on an Intel Core i7-7700 @3.60GHz this takes ~0.128877 seconds
+	CuAssert(tc, "Parsing 10,000 VENT files took longer than a second!", (timeB-timeA) < 1.0);
+
 	free(input);
 }
 
@@ -357,6 +416,7 @@ CuSuite* ParserTestGetSuite(){
 
 	SUITE_ADD_TEST(suite, TestParseProgram_UseDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationNoPorts);
+	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationSyntaxError);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseWithEntityDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseEntityWithPorts);
@@ -366,6 +426,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssign);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssignBinaryExpression);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
+	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
