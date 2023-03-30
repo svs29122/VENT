@@ -104,6 +104,7 @@
 #include <stdbool.h>
 
 #include "token.h"
+#include "error.h"
 #include "lexer.h"
 #include "parser.h"
 
@@ -165,12 +166,23 @@ static Token nextToken(){
 	p->peekToken = NextToken();
 }
 
-static bool match( enum TOKEN_TYPE type){
+static bool match(enum TOKEN_TYPE type){
 	return p->currToken.type == type;
 }
 
-static bool peek( enum TOKEN_TYPE type){
+static bool peek(enum TOKEN_TYPE type){
 	return p->peekToken.type == type;
+}
+
+static void consume(enum TOKEN_TYPE type, const char* msg){
+	if(!match(type)){
+		error(p->currToken.lineNumber, p->currToken.literal, msg);
+	}
+}
+
+static void consumeNext(enum TOKEN_TYPE type, const char* msg){
+	nextToken();
+	consume(type, msg);
 }
 
 static bool validDataType(){
@@ -363,27 +375,22 @@ static Dba* parsePortDecl(){
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		PortDecl* port = malloc(sizeof(PortDecl));		
 
-		if(!match(TOKEN_IDENTIFIER)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}	
+		consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
 		port->name = (Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
 		}	
 		port->pmode = parsePortMode(p->currToken.literal);
 		
 		nextToken();
 		if(!validDataType()){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
 		}	
 		port->dtype = parseDataType(p->currToken.literal);
 		
-		nextToken();
-		if(!match(TOKEN_SCOLON)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}	
+		consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
 		writeBlockArray(ports, (char*)port);
 		free(port);
 		
@@ -440,17 +447,11 @@ static void parseEntityDecl(EntityDecl* eDecl){
 #ifdef DEBUG
 	memcpy(&(eDecl->token), &(p->currToken), sizeof(Token));
 #endif
-
-	nextToken();	
-	if(!match(TOKEN_IDENTIFIER)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after ent keyword");
 	eDecl->name = (Identifier*)parseIdentifier();
-
-	nextToken();
-	if(!match(TOKEN_LBRACE)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	
+	consumeNext(TOKEN_LBRACE, "Expect { after entity identifier");
 
 	if(!peek(TOKEN_RBRACE)){
 		eDecl->ports = parsePortDecl();	
@@ -458,10 +459,7 @@ static void parseEntityDecl(EntityDecl* eDecl){
 		nextToken();
 	}
 
-	if(!match(TOKEN_RBRACE)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		printf("TokenDump: %d %s\r\n", p->currToken.type ,p->currToken.literal);		
-	}
+	consume(TOKEN_RBRACE, "Expect } at the end of entity declaration");
 }
 
 static UseStatement* parseUseStatement(){
@@ -471,14 +469,7 @@ static UseStatement* parseUseStatement(){
 	memcpy(&(stmt->token), &(p->currToken), sizeof(Token));
 #endif
 
-	if(!match(TOKEN_USE)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
-		
-	nextToken();	
-	if(!match(TOKEN_IDENTIFIER)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
 	
 	int size = strlen(p->currToken.literal) + 1;
 	stmt->value = malloc(sizeof(char) * size);

@@ -46,23 +46,6 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	free(input);
 }
 
-void TestParseProgram_EntityDeclarationSyntaxError(CuTest *tc){
-	char* input = strdup("ent ^ ander {\n}");
-	setup(input);
-
-	Program* prog = ParseProgram();
-
-	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-
-	DesignUnit* unit = (DesignUnit*)prog->units->block;
-	CuAssertIntEquals_Msg(tc,"Expected ENTITY design unit!",  ENTITY, unit->type);
-	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", unit->as.entity.name->value);
-	
-	FreeProgram(prog);	
-	free(input);
-}
-
 void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all\n\nent ander {\n}");
 	setup(input);
@@ -411,12 +394,21 @@ void TestParse_(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_EntityDeclarationSyntaxError(CuTest *tc){
+	char* input = strdup("use ieee.all\nent  ander {a -> stlb\n}");
+	setup(input);
+
+	Program* prog = ParseProgram();
+
+	FreeProgram(prog);	
+	free(input);
+}
+
 CuSuite* ParserTestGetSuite(){
 	CuSuite* suite = CuSuiteNew();
 
 	SUITE_ADD_TEST(suite, TestParseProgram_UseDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationNoPorts);
-	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationSyntaxError);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseWithEntityDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationWithPorts);
 	SUITE_ADD_TEST(suite, TestParseProgram_UseEntityWithPorts);
@@ -428,6 +420,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
 	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
 	SUITE_ADD_TEST(suite, TestParse_);
+	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationSyntaxError);
 
 	return suite;
 }

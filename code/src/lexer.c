@@ -46,6 +46,8 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 	Token tok;
 
 	tok.type = type;
+	tok.lineNumber = l->line;
+
 	tok.literal = (char*)malloc(sizeof(char) * 2);
 	tok.literal[0] = literal;
 	tok.literal[1] = '\0';
@@ -74,6 +76,7 @@ static Token newMultiCharToken(enum TOKEN_TYPE type, int len){
 	tok.literal[lSize-1] = '\0';
 
 	tok.type = type;
+	tok.lineNumber = l->line;
 
 	return tok;
 }
@@ -208,6 +211,7 @@ static Token readIdentifier(){
 	printf("DEBUG: identifer == %s\r\n", tok.literal); 
 #endif
 	tok.type = getIdentifierType(lSize-1, tok.literal);
+	tok.lineNumber = l->line;
 
 	return tok;
 }
@@ -232,6 +236,7 @@ static Token readStringLiteral(){
 	}
 
 	tok.type = TOKEN_STRINGLIT;
+	tok.lineNumber = l->line;
 	
 	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
@@ -267,6 +272,7 @@ static Token readBitStringLiteral(){
 	}
 
 	tok.type = TOKEN_BSTRINGLIT;
+	tok.lineNumber = l->line;
 	
 	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
@@ -291,6 +297,7 @@ static Token readNumericLiteral(){
 	}	
 
 	tok.type = TOKEN_NUMBERLIT;
+	tok.lineNumber = l->line;
 		
 	int lSize = sizeof(char) * (int)(end-start) + 2;
 	tok.literal = (char*)malloc(lSize);
