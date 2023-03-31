@@ -177,6 +177,15 @@ static bool peek(enum TOKEN_TYPE type){
 static void consume(enum TOKEN_TYPE type, const char* msg){
 	if(!match(type)){
 		error(p->currToken.lineNumber, p->currToken.literal, msg);
+		
+		// if the next token is the one we expect move to it
+		if(peek(type)) {
+			nextToken();
+		} else {
+			while(!peek(TOKEN_RBRACE) && !peek(TOKEN_EOP) && !match(TOKEN_EOP)){
+				nextToken();
+			}
+		}
 	}
 }
 
@@ -303,25 +312,18 @@ static PortMode* parsePortMode(char* val){
 static Dba* parseArchBodyStatements(){
 	Dba* stmts = initBlockArray(sizeof(SignalAssign));
 	
-	while(!match(TOKEN_RBRACE)){
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		SignalAssign* stmt = calloc(1, sizeof(SignalAssign));
 
-		if(!match(TOKEN_IDENTIFIER)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}
+		consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 		stmt->target = (Identifier*)parseIdentifier();
 
-		nextToken();
-		if(!match(TOKEN_SASSIGN)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}
+		consumeNext(TOKEN_SASSIGN, "Expect expect <= after identifier");
 		
 		nextToken();
 		stmt->expression = parseExpression(LOWEST_PREC);
 
-		if(!match(TOKEN_SCOLON)){
-			printf("Error: %s:%d -> Expected token: %d, but got %d\r\n", __func__, __LINE__, TOKEN_SCOLON, p->currToken.type);
-		}	
+		consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
 		writeBlockArray(stmts, (char*)stmt);
 		free(stmt);
 	

@@ -13,6 +13,7 @@ TODIR=$(TDIR)/obj
 
 CC=gcc
 CFLAGS=-I$(IDIR) -g
+#CFLAGS=-I$(IDIR) -pg
 
 _DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h error.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
