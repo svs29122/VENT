@@ -42,8 +42,8 @@ void InitLexer(char* in){
 	readChar();
 }
 
-static Token newToken(enum TOKEN_TYPE type, char literal){
-	Token tok;
+static struct Token newToken(enum TOKEN_TYPE type, char literal){
+	struct Token tok;
 
 	tok.type = type;
 	tok.lineNumber = l->line;
@@ -55,8 +55,8 @@ static Token newToken(enum TOKEN_TYPE type, char literal){
 	return tok;
 }
 
-static Token newMultiCharToken(enum TOKEN_TYPE type, int len){
-	Token tok = {TOKEN_ILLEGAL, 0};
+static struct Token newMultiCharToken(enum TOKEN_TYPE type, int len){
+	struct Token tok = {TOKEN_ILLEGAL, 0};
 
 	//we've already passed the first char of token  so start at currPos-1
 	char *start = &(l->input[l->currPos-1]);
@@ -169,8 +169,8 @@ static char readChar(){
 	return l->ch;
 }
 
-static Token readIdentifier(){
-	Token tok = {TOKEN_ILLEGAL, 0};
+static struct Token readIdentifier(){
+	struct Token tok = {TOKEN_ILLEGAL, 0};
 
 	//we've already passed the first char of
 	//identifier  so start at currPos-1
@@ -216,8 +216,8 @@ static Token readIdentifier(){
 	return tok;
 }
 
-static Token readStringLiteral(){
-	Token tok = {TOKEN_ILLEGAL, 0};
+static struct Token readStringLiteral(){
+	struct Token tok = {TOKEN_ILLEGAL, 0};
 
 	//we've already passed the first " of the string
 	// so start at currPos-1
@@ -246,8 +246,8 @@ static Token readStringLiteral(){
 	return tok;
 }
 
-static Token readBitStringLiteral(){
-	Token tok = {TOKEN_ILLEGAL, 0};
+static struct Token readBitStringLiteral(){
+	struct Token tok = {TOKEN_ILLEGAL, 0};
 
 	//we've already passed the first base char of 
 	//the bitstring so start at currPos-1
@@ -282,8 +282,8 @@ static Token readBitStringLiteral(){
 	return tok;
 }
 
-static Token readNumericLiteral(){
-	Token tok = {TOKEN_ILLEGAL, 0};
+static struct Token readNumericLiteral(){
+	struct Token tok = {TOKEN_ILLEGAL, 0};
 
 	//we've already passed the first char of number so start at currPos-1
 	char *start = &(l->input[l->currPos-1]);
@@ -307,10 +307,10 @@ static Token readNumericLiteral(){
 	return tok;
 }
 
-static Token readCharLiteral(){
+static struct Token readCharLiteral(){
 	
 	char literal = peek();
-	Token tok = newToken(TOKEN_CHARLIT, literal);		
+	struct Token tok = newToken(TOKEN_CHARLIT, literal);		
 	
 	//move lexer past literal and '
 	readChar();
@@ -376,7 +376,7 @@ static void skipWhiteSpace(){
 	}
 }
 
-Token NextToken() {
+struct Token NextToken() {
 	
 	skipWhiteSpace();
 
@@ -494,6 +494,6 @@ const char* TokenToString(enum TOKEN_TYPE type){
 	}
 }
 
-void PrintToken(Token t){
+void PrintToken(struct Token t){
 	printf("\e[0;35mtype:\e[0m %10s, \e[0;33mliteral:\e[0m %s\n", TokenToString(t.type), t.literal);
 }

@@ -4,28 +4,13 @@
 #include "token.h"
 #include "dba.h"
 
-typedef struct Expression Expression;
-typedef struct BinaryExpr BinaryExpr;
-typedef struct CharExpr CharExpr;
-typedef struct NameExpr NameExpr;
-typedef struct Identifier Identifier;
-typedef struct DataType DataType;
-typedef struct Label Label;
-typedef struct PortMode PortMode;
-typedef struct SignalAssign SignalAssign;
-typedef struct SignalDecl SignalDecl;
-typedef struct ArchitectureDecl ArchitectureDecl;
-typedef struct PortDecl PortDecl;
-typedef struct EntityDecl EntityDecl;
-typedef struct DesignUnit DesignUnit;
-typedef struct UseStatement UseStatement;
-typedef struct Program Program;
-typedef struct OperationBlock OperationBlock; 
+struct Program;
+
 typedef void (*astNodeOpPtr) (void*);
 
 void noOp(void*);
-OperationBlock* initOperationBlock(void);
-void WalkTree(Program*, OperationBlock*);
+struct OperationBlock* initOperationBlock(void);
+void WalkTree(struct Program* prog, struct OperationBlock* op);
 
 struct OperationBlock {
 	astNodeOpPtr doProgOp;

@@ -119,8 +119,8 @@ typedef enum {
 	CALL_PREC, 			// function(x)
 } Precedence;
 
-typedef Expression* (*ParsePrefixFn)();
-typedef Expression* (*ParseInfixFn)(Expression*);
+typedef struct Expression* (*ParsePrefixFn)();
+typedef struct Expression* (*ParseInfixFn)(struct Expression*);
 
 typedef struct {
 	ParsePrefixFn prefix;
@@ -129,9 +129,9 @@ typedef struct {
 } ParseRule;
 
 //forward declarations
-static Expression* parseBinary(Expression* expr);
-static Expression* parseIdentifier();
-static Expression* parseCharlit();
+static struct Expression* parseBinary(struct Expression* expr);
+static struct Expression* parseIdentifier();
+static struct Expression* parseCharlit();
 
 ParseRule rules[] = {
 	[TOKEN_AND] = {NULL, parseBinary, LOGICAL_PREC},
@@ -144,8 +144,8 @@ static ParseRule* getRule(enum TOKEN_TYPE type){
 }
 
 struct parser {
-	Token currToken;
-	Token peekToken;
+	struct Token currToken;
+	struct Token peekToken;
 } static parser;
 
 static struct parser *p = &parser;
@@ -158,7 +158,7 @@ void InitParser(){
 	p->peekToken = NextToken();	
 }
 
-static Token nextToken(){	
+static struct Token nextToken(){	
 	
 	free(p->currToken.literal);
 
@@ -205,14 +205,14 @@ static bool validDataType(){
 	return valid;
 }
 
-static Expression* parseExpression(Precedence precedence){
+static struct Expression* parseExpression(Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
 
 	if(prefixRule == NULL){
 		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
 		return NULL;
 	}	
-	Expression* leftExp = prefixRule();
+	struct Expression* leftExp = prefixRule();
 
 	nextToken();	
 	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
@@ -232,10 +232,10 @@ static Expression* parseExpression(Precedence precedence){
 	return leftExp;
 }
 
-static Expression* parseIdentifier(){
-	Identifier* ident = calloc(1, sizeof(Identifier));
+static struct Expression* parseIdentifier(){
+	struct Identifier* ident = calloc(1, sizeof(struct Identifier));
 #ifdef DEBUG
-	memcpy(&(ident->self.token), &(p->currToken), sizeof(Token));
+	memcpy(&(ident->self.token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	ident->self.type = NAME_EXPR;
@@ -247,10 +247,10 @@ static Expression* parseIdentifier(){
 	return &(ident->self);
 }
 
-static Expression* parseCharlit(){
-	CharExpr* chexp = calloc(1, sizeof(CharExpr));
+static struct Expression* parseCharlit(){
+	struct CharExpr* chexp = calloc(1, sizeof(struct CharExpr));
 #ifdef DEBUG
-	memcpy(&(chexp->self.token), &(p->currToken), sizeof(Token));
+	memcpy(&(chexp->self.token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	chexp->self.type = CHAR_EXPR;
@@ -262,10 +262,10 @@ static Expression* parseCharlit(){
 	return &(chexp->self);
 }
 
-static Expression* parseBinary(Expression* expr){
-	BinaryExpr* biexp = calloc(1, sizeof(BinaryExpr));
+static struct Expression* parseBinary(struct Expression* expr){
+	struct BinaryExpr* biexp = calloc(1, sizeof(struct BinaryExpr));
 #ifdef DEBUG
-	memcpy(&(biexp->self.token), &(p->currToken), sizeof(Token));
+	memcpy(&(biexp->self.token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	biexp->self.type = BINARY_EXPR;
@@ -283,10 +283,10 @@ static Expression* parseBinary(Expression* expr){
 	return &(biexp->self);
 }
 
-static DataType* parseDataType(char* val){
-	DataType* dt = calloc(1, sizeof(DataType));
+static struct DataType* parseDataType(char* val){
+	struct DataType* dt = calloc(1, sizeof(struct DataType));
 #ifdef DEBUG
-	memcpy(&(dt->token), &(p->currToken), sizeof(Token));
+	memcpy(&(dt->token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	int size = strlen(val) + 1;
@@ -296,10 +296,10 @@ static DataType* parseDataType(char* val){
 	return dt;
 }
 
-static PortMode* parsePortMode(char* val){
-	PortMode* pm = calloc(1, sizeof(PortMode));
+static struct PortMode* parsePortMode(char* val){
+	struct PortMode* pm = calloc(1, sizeof(struct PortMode));
 #ifdef DEBUG
-	memcpy(&(pm->token), &(p->currToken), sizeof(Token));
+	memcpy(&(pm->token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	int size = strlen(val) +1;
@@ -310,13 +310,13 @@ static PortMode* parsePortMode(char* val){
 }
 
 static Dba* parseArchBodyStatements(){
-	Dba* stmts = initBlockArray(sizeof(SignalAssign));
+	Dba* stmts = initBlockArray(sizeof(struct SignalAssign));
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
-		SignalAssign* stmt = calloc(1, sizeof(SignalAssign));
+		struct SignalAssign* stmt = calloc(1, sizeof(struct SignalAssign));
 
 		consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
-		stmt->target = (Identifier*)parseIdentifier();
+		stmt->target = (struct Identifier*)parseIdentifier();
 
 		consumeNext(TOKEN_SASSIGN, "Expect expect <= after identifier");
 		
@@ -334,13 +334,13 @@ static Dba* parseArchBodyStatements(){
 }
 
 static Dba* parseArchBodyDeclarations(){
-	Dba* decls = initBlockArray(sizeof(SignalDecl));
+	Dba* decls = initBlockArray(sizeof(struct SignalDecl));
 
 	while(match(TOKEN_SIG)){
-		SignalDecl* decl = calloc(1, sizeof(SignalDecl));
+		struct SignalDecl* decl = calloc(1, sizeof(struct SignalDecl));
 
 		consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
-		decl->name = (Identifier*)parseIdentifier();
+		decl->name = (struct Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!validDataType()){
@@ -365,15 +365,15 @@ static Dba* parseArchBodyDeclarations(){
 }
 
 static Dba* parsePortDecl(){
-	Dba* ports = initBlockArray(sizeof(PortDecl)); 	
+	Dba* ports = initBlockArray(sizeof(struct PortDecl)); 	
 
 	nextToken();
 
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
-		PortDecl* port = malloc(sizeof(PortDecl));		
+		struct PortDecl* port = malloc(sizeof(struct PortDecl));		
 
 		consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
-		port->name = (Identifier*)parseIdentifier();
+		port->name = (struct Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
@@ -397,18 +397,18 @@ static Dba* parsePortDecl(){
 	return ports;
 }
 
-static void parseArchitectureDecl(ArchitectureDecl* aDecl){
+static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 #ifdef DEBUG
-	memcpy(&(aDecl->token), &(p->currToken), sizeof(Token));
+	memcpy(&(aDecl->token), &(p->currToken), sizeof(struct Token));
 #endif
 	
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after keywordk arch");
-	aDecl->archName = (Identifier*)parseIdentifier();
+	aDecl->archName = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_LPAREN, "Expect ( after architecture identifier");
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect entity identifier after ( in architecture declaration");
-	aDecl->entName = (Identifier*)parseIdentifier();
+	aDecl->entName = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_RPAREN, "Expect ) after entity identifier in architecture declaration");
 	consumeNext(TOKEN_LBRACE, "Expect { after architecture identifier declaration and before architecture body");  
@@ -422,13 +422,13 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 	consume(TOKEN_RBRACE, "Expect } after architecture body");
 }
 
-static void parseEntityDecl(EntityDecl* eDecl){
+static void parseEntityDecl(struct EntityDecl* eDecl){
 #ifdef DEBUG
-	memcpy(&(eDecl->token), &(p->currToken), sizeof(Token));
+	memcpy(&(eDecl->token), &(p->currToken), sizeof(struct Token));
 #endif
 	
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after ent keyword");
-	eDecl->name = (Identifier*)parseIdentifier();
+	eDecl->name = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_LBRACE, "Expect { after entity identifier");
 
@@ -441,11 +441,11 @@ static void parseEntityDecl(EntityDecl* eDecl){
 	consume(TOKEN_RBRACE, "Expect } at the end of entity declaration");
 }
 
-static UseStatement* parseUseStatement(){
-	UseStatement* stmt = malloc(sizeof(UseStatement));
+static struct UseStatement* parseUseStatement(){
+	struct UseStatement* stmt = malloc(sizeof(struct UseStatement));
 
 #ifdef DEBUG	
-	memcpy(&(stmt->token), &(p->currToken), sizeof(Token));
+	memcpy(&(stmt->token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
@@ -457,9 +457,9 @@ static UseStatement* parseUseStatement(){
 	return stmt;
 }
 
-static DesignUnit* parseDesignUnit(){
+static struct DesignUnit* parseDesignUnit(){
 
-	DesignUnit* unit = calloc(1, sizeof(DesignUnit));
+	struct DesignUnit* unit = calloc(1, sizeof(struct DesignUnit));
 
 	switch(p->currToken.type){
 		case TOKEN_ENT: { 
@@ -483,15 +483,15 @@ static DesignUnit* parseDesignUnit(){
 	return unit;
 }
 
-Program* ParseProgram(){
-	Program* prog = calloc(1, sizeof(Program));
+struct Program* ParseProgram(){
+	struct Program* prog = calloc(1, sizeof(struct Program));
 
 	// first get the use statements
 	while(p->currToken.type == TOKEN_USE && p->currToken.type != TOKEN_EOP){
-		UseStatement* stmt = parseUseStatement();
+		struct UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
 			if(prog->useStatements == NULL){
-				prog->useStatements = initBlockArray(sizeof(UseStatement));
+				prog->useStatements = initBlockArray(sizeof(struct UseStatement));
 			}
 			writeBlockArray(prog->useStatements, (char*)stmt);
 			free(stmt);
@@ -501,10 +501,10 @@ Program* ParseProgram(){
 
 	// next parse any design units
 	while(p->currToken.type != TOKEN_EOP){
-		DesignUnit* unit = parseDesignUnit();
+		struct DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
 			if(prog->units == NULL){
-				prog->units = initBlockArray(sizeof(DesignUnit));	
+				prog->units = initBlockArray(sizeof(struct DesignUnit));	
 			}
 			writeBlockArray(prog->units, (char*)unit);
 			free(unit);
@@ -516,19 +516,19 @@ Program* ParseProgram(){
 }
 
 static void freeExpression(void* expr){
-   ExpressionType type = ((Expression*)expr)->type;
+   ExpressionType type = ((struct Expression*)expr)->type;
 
    switch(type) {
 
       case CHAR_EXPR: {
-         CharExpr* chexp = (CharExpr*)expr;
+         struct CharExpr* chexp = (struct CharExpr*)expr;
          free(chexp->literal);
 			free(chexp);
          break;
       }
 
       case BINARY_EXPR:{
-         BinaryExpr* bexp = (BinaryExpr*) expr;
+         struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
          freeExpression((void*)bexp->left);
          free(bexp->op);
          freeExpression((void*)bexp->right);
@@ -539,7 +539,7 @@ static void freeExpression(void* expr){
       case NAME_EXPR: {
          //NameExpr* nexp = (NameExpr*) expr;
          //free(nexp->name->value);
-         Identifier* ident = (Identifier*)expr;
+         struct Identifier* ident = (struct Identifier*)expr;
          free(ident->value);
          free(ident);
          break;
@@ -557,16 +557,16 @@ static void freeExpression(void* expr){
           __fn__; \
 })
 
-void FreeProgram(Program* prog){
+void FreeProgram(struct Program* prog){
 	
 	// setup block
-	OperationBlock* opBlk = initOperationBlock();
-	opBlk->doProgOp 			= lambda (void, (void* prog) 	{ Program* pg = (Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
-	opBlk->doUseStatementOp = lambda (void, (void* stmt) 	{ UseStatement* st = (UseStatement*)stmt; if(st->value) free(st->value); });
+	struct OperationBlock* opBlk = initOperationBlock();
+	opBlk->doProgOp 			= lambda (void, (void* prog) 	{ struct Program* pg = (struct Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
+	opBlk->doUseStatementOp = lambda (void, (void* stmt) 	{ struct UseStatement* st = (struct UseStatement*)stmt; if(st->value) free(st->value); });
 	opBlk->doBlockArrayOp 	= lambda (void, (void* arr) 	{ freeBlockArray((Dba*)arr); });
-	opBlk->doIdentifierOp	= lambda (void, (void* ident) { Identifier* id = (Identifier*)ident; if(id->value) free(id->value); free(id); });
-	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { PortMode* pm = (PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
-	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { DataType* dt = (DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
+	opBlk->doIdentifierOp	= lambda (void, (void* ident) { struct Identifier* id = (struct Identifier*)ident; if(id->value) free(id->value); free(id); });
+	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { struct PortMode* pm = (struct PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
+	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { struct DataType* dt = (struct DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
 	opBlk->doExpressionOp	= freeExpression;
 	
 	WalkTree(prog, opBlk);

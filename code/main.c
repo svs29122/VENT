@@ -7,7 +7,6 @@
 #include "display.h"
 
 static void doTranspile(char* fileName);
-static void doRevTranspile(char* fileName);
 
 int main(int argc, char* argv[]) {
 
@@ -56,7 +55,7 @@ static void doTranspile(char* fileName){
 		char* ventSrc = readFile(fileName);
 		InitLexer(ventSrc);
 		
-		Token t = NextToken();
+		struct Token t = NextToken();
 		while(t.type != TOKEN_ILLEGAL && t.type != TOKEN_EOP){
 			PrintToken(t);
 			free(t.literal);

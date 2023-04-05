@@ -76,10 +76,10 @@ enum TOKEN_TYPE {
 	TOKEN_ILLEGAL,			
 };
 
-typedef struct token {
+struct Token {
 	enum TOKEN_TYPE type;	
 	int lineNumber;
 	char *literal;
-} Token;
+};
 
 #endif // INC_TOKEN_H

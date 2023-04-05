@@ -6,7 +6,7 @@
 
 void InitParser();
 
-Program* ParseProgram();
-void FreeProgram(Program *prog);
+struct Program* ParseProgram();
+void FreeProgram(struct Program *prog);
 
 #endif // INC_PARSER_H

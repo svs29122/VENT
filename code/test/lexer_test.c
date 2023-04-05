@@ -10,7 +10,7 @@ void TestNextToken_SingleToken(CuTest *tc){
 	char* input = strdup("+");
 	InitLexer(input);
 
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	const	char* expToken = TokenToString(TOKEN_PLUS);
 	const char* expLiteral = "+";
@@ -37,7 +37,7 @@ void TestNextToken_MultipleTokens(CuTest *tc){
 								  '+', '*','='};
 
 	for(int i=0; i<12; i++){
-		Token nt = NextToken();
+		struct Token nt = NextToken();
 	
 		char* expLiteral = strdup((char[2]){expLiteralArr[i], '\0'});
 		CuAssertIntEquals(tc, expToken[i], nt.type);
@@ -59,7 +59,7 @@ void TestNextToken_SingleLineComment (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_STAR;
 	char* expLiteral = "*";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -91,7 +91,7 @@ important*/ \
 	char expLiteralArr[6] = {'(','+', ')', '{', '*', '}'}; 
 
 	for(int i=0; i<6; i++){
-		Token nt = NextToken();
+		struct Token nt = NextToken();
 	
 		char* expLiteral = strdup((char[2]){expLiteralArr[i], '\0'});
 		CuAssertIntEquals(tc, expToken[i], nt.type);
@@ -113,7 +113,7 @@ void TestNextToken_MultiLineCommentUnterminated (CuTest *tc){
 	
 	
 	for(int i=0; i<2; i++){
-		Token nt = NextToken();
+		struct Token nt = NextToken();
 	
 		char* expLiteral = strdup((char[2]){expLiteralArr[i], '\0'});
 		CuAssertIntEquals(tc, expToken[i], nt.type);
@@ -133,7 +133,7 @@ void TestNextToken_Number (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_NUMBERLIT;
 	char* expLiteral = "1.6E-20";
 
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -149,7 +149,7 @@ void TestNextToken_Char (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_CHARLIT;
 	char* expLiteral = "1";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -165,7 +165,7 @@ void TestNextToken_BitString (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_BSTRINGLIT;
 	char* expLiteral = "X\"1AFF\"";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -181,7 +181,7 @@ void TestNextToken_String (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_STRINGLIT;
 	char* expLiteral = "\"HELLO\"";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -197,7 +197,7 @@ void TestNextToken_Identifier (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_IDENTIFIER;
 	char* expLiteral = "myEntity";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -213,7 +213,7 @@ void TestNextToken_IdentifierSingleLetter (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_IDENTIFIER;
 	char* expLiteral = "a";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -229,7 +229,7 @@ void TestNextToken_Entity (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_ENT;
 	char* expLiteral = "ent";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -245,7 +245,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_ENT;
 	char* expLiteral = "ent";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertIntEquals(tc, expToken, nt.type);
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
@@ -288,7 +288,7 @@ void TestNextToken_PortDirections (CuTest *tc){
 	enum TOKEN_TYPE expToken = TOKEN_INPUT;
 	char* expLiteral = "->";
 	
-	Token nt = NextToken();
+	struct Token nt = NextToken();
 
 	CuAssertStrEquals(tc, expLiteral, nt.literal); 
 	CuAssertIntEquals(tc, expToken, nt.type);

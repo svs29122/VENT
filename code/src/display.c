@@ -99,7 +99,7 @@ static void printProg(){
 }
 
 static void printUseStatement(void* stmt){
-	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), ((UseStatement*)stmt)->value);
+	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), ((struct UseStatement*)stmt)->value);
 }
 
 static void printDesignUnit(void* unit){
@@ -117,7 +117,7 @@ static void printArchDecl(void* eDecl){
 }
 
 static void printIdentifier(void* ident){
-	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((Identifier*)ident)->value);
+	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((struct Identifier*)ident)->value);
 }
 
 static void printPortDecl(void* pDecl){
@@ -136,26 +136,26 @@ static void printSignalAssign(void* sAssign){
 }
 
 static void printPortMode(void* pMode){
-	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((PortMode*)pMode)->value);
+	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((struct PortMode*)pMode)->value);
 }
 
 static void printDataType(void* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((DataType*)dType)->value);
+	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((struct DataType*)dType)->value);
 }
 
 static void printSubExpression(void* expr){
-	ExpressionType type = ((Expression*)expr)->type;
+	ExpressionType type = ((struct Expression*)expr)->type;
 
 	switch(type) {
 	
 		case CHAR_EXPR: {
-			CharExpr* chexp = (CharExpr*)expr;
+			struct CharExpr* chexp = (struct CharExpr*)expr;
 			printf("%s", chexp->literal);
 			break;
 		}
 
 		case BINARY_EXPR:{
-			BinaryExpr* bexp = (BinaryExpr*) expr;
+			struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
 			printSubExpression((void*)bexp->left);
 			printf(" %s ", bexp->op);
 			printSubExpression((void*)bexp->right);
@@ -165,7 +165,7 @@ static void printSubExpression(void* expr){
 		case NAME_EXPR: {
 			//NameExpr* nexp = (NameExpr*) expr;
 			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
-			Identifier* ident = (Identifier*)expr;
+			struct Identifier* ident = (struct Identifier*)expr;
 			printf("%s", ident->value);
 			break;
 		}
@@ -185,10 +185,10 @@ static void printExpression(void* expr){
 }
 
 
-void PrintProgram(Program * prog){
+void PrintProgram(struct Program * prog){
 	
 	// setup block
-	OperationBlock* opBlk = initOperationBlock();
+	struct OperationBlock* opBlk = initOperationBlock();
 	opBlk->doUseStatementOp = printUseStatement;	
 	opBlk->doDesignUnitOp = printDesignUnit;
 	opBlk->doEntityDeclOp = printEntityDecl;
