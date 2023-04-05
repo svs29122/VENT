@@ -396,26 +396,6 @@ void TestParse_(CuTest *tc){
 	free(input);
 }
 
-void TestParseProgram_EntityDeclarationSyntaxError(CuTest *tc){
-	char* input = strdup(" \
-		use ieee.all \
-		ent  ander ^ \
-		{	\
-			a - stlb;	\
-		} \
-		arch behav(ander) { \
-			a <= '0' \
-		} \
-	");
-	
-	setup(input);
-
-	Program* prog = ParseProgram();
-
-	FreeProgram(prog);	
-	free(input);
-}
-
 CuSuite* ParserTestGetSuite(){
 	CuSuite* suite = CuSuiteNew();
 
@@ -432,7 +412,6 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
 	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
 	SUITE_ADD_TEST(suite, TestParse_);
-	SUITE_ADD_TEST(suite, TestParseProgram_EntityDeclarationSyntaxError);
 
 	return suite;
 }

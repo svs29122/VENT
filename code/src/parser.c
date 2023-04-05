@@ -207,7 +207,7 @@ static bool validDataType(){
 
 static Expression* parseExpression(Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
-	//PrintToken(p->currToken);
+
 	if(prefixRule == NULL){
 		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
 		return NULL;
@@ -217,7 +217,7 @@ static Expression* parseExpression(Precedence precedence){
 	nextToken();	
 	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
 		ParseInfixFn infixRule = getRule(p->currToken.type)->infix;
-		//PrintToken(p->currToken);
+
 		if(infixRule == NULL){
 			return leftExp;
 		}
@@ -339,10 +339,7 @@ static Dba* parseArchBodyDeclarations(){
 	while(match(TOKEN_SIG)){
 		SignalDecl* decl = calloc(1, sizeof(SignalDecl));
 
-		nextToken();
-		if(!match(TOKEN_IDENTIFIER)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}	
+		consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
 		decl->name = (Identifier*)parseIdentifier();
 		
 		nextToken();
@@ -357,9 +354,7 @@ static Dba* parseArchBodyDeclarations(){
 			decl->expression = parseExpression(LOWEST_PREC);	
 		}
 
-		if(!match(TOKEN_SCOLON)){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
-		}	
+		consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
 		writeBlockArray(decls, (char*)decl);
 		free(decl);
 	
@@ -407,32 +402,16 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 	memcpy(&(aDecl->token), &(p->currToken), sizeof(Token));
 #endif
 	
-	nextToken();	
-	if(!match(TOKEN_IDENTIFIER)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after keywordk arch");
 	aDecl->archName = (Identifier*)parseIdentifier();
 	
-	nextToken();
-	if(!match(TOKEN_LPAREN)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consumeNext(TOKEN_LPAREN, "Expect ( after architecture identifier");
 
-	nextToken();	
-	if(!match(TOKEN_IDENTIFIER)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consumeNext(TOKEN_IDENTIFIER, "Expect entity identifier after ( in architecture declaration");
 	aDecl->entName = (Identifier*)parseIdentifier();
 	
-	nextToken();
-	if(!match(TOKEN_RPAREN)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
-
-	nextToken();
-	if(!match(TOKEN_LBRACE)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consumeNext(TOKEN_RPAREN, "Expect ) after entity identifier in architecture declaration");
+	consumeNext(TOKEN_LBRACE, "Expect { after architecture identifier declaration and before architecture body");  
 
 	nextToken();
 	if(!match(TOKEN_RBRACE)){
@@ -440,9 +419,7 @@ static void parseArchitectureDecl(ArchitectureDecl* aDecl){
 		aDecl->statements = parseArchBodyStatements();	
 	}
 
-	if(!match(TOKEN_RBRACE)){
-		printf("Error: %s:%d\r\n", __func__, __LINE__);		
-	}
+	consume(TOKEN_RBRACE, "Expect } after architecture body");
 }
 
 static void parseEntityDecl(EntityDecl* eDecl){
