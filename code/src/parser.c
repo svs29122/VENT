@@ -108,7 +108,7 @@
 #include "lexer.h"
 #include "parser.h"
 
-typedef enum {
+enum Precedence{
 	LOWEST_PREC =1,
 	LOGICAL_PREC, 		// and or xor nand nor xnor
 	RELATIONAL_PREC, 	// = /= < <= > >=
@@ -117,29 +117,29 @@ typedef enum {
 	MULTIPLY_PREC, 	// * / mod rem
 	PREFIX_PREC, 		// ** abs not
 	CALL_PREC, 			// function(x)
-} Precedence;
+};
 
 typedef struct Expression* (*ParsePrefixFn)();
 typedef struct Expression* (*ParseInfixFn)(struct Expression*);
 
-typedef struct {
+struct ParseRule{
 	ParsePrefixFn prefix;
 	ParseInfixFn infix;
-	Precedence precedence;
-} ParseRule;
+	enum Precedence precedence;
+};
 
 //forward declarations
 static struct Expression* parseBinary(struct Expression* expr);
 static struct Expression* parseIdentifier();
 static struct Expression* parseCharlit();
 
-ParseRule rules[] = {
+struct ParseRule rules[] = {
 	[TOKEN_AND] = {NULL, parseBinary, LOGICAL_PREC},
 	[TOKEN_IDENTIFIER] = {parseIdentifier, NULL, LOWEST_PREC},
 	[TOKEN_CHARLIT] = {parseCharlit, NULL, LOWEST_PREC},
 };
 
-static ParseRule* getRule(enum TOKEN_TYPE type){
+static struct ParseRule* getRule(enum TOKEN_TYPE type){
 	return &rules[type];
 }
 
@@ -205,7 +205,7 @@ static bool validDataType(){
 	return valid;
 }
 
-static struct Expression* parseExpression(Precedence precedence){
+static struct Expression* parseExpression(enum Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
 
 	if(prefixRule == NULL){
@@ -275,7 +275,7 @@ static struct Expression* parseBinary(struct Expression* expr){
 	biexp->op = calloc(size, sizeof(char));
 	memcpy(biexp->op, p->currToken.literal, size);
 
-	Precedence precedence = getRule(p->currToken.type)->precedence;
+	enum Precedence precedence = getRule(p->currToken.type)->precedence;
 	nextToken();
 	
 	biexp->right = parseExpression(precedence);
@@ -516,7 +516,7 @@ struct Program* ParseProgram(){
 }
 
 static void freeExpression(void* expr){
-   ExpressionType type = ((struct Expression*)expr)->type;
+   enum ExpressionType type = ((struct Expression*)expr)->type;
 
    switch(type) {
 

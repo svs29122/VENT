@@ -28,7 +28,7 @@ struct OperationBlock {
 	astNodeOpPtr doExpressionOp;
 };
 
-typedef enum {
+enum ExpressionType{
 		BINARY_EXPR,
 		UNARY_EXPR,
 		GROUPED_EXPR,
@@ -40,13 +40,13 @@ typedef enum {
 		Q_EXPR,
 		NEW_EXPR,
 		CALL_EXPR,
-} ExpressionType;
+};
 
 struct Expression {
 #ifdef DEBUG
 	Token token;
 #endif
-	ExpressionType type;
+	enum ExpressionType type;
 };
 
 struct BinaryExpr {

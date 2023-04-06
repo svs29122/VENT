@@ -144,7 +144,7 @@ static void printDataType(void* dType){
 }
 
 static void printSubExpression(void* expr){
-	ExpressionType type = ((struct Expression*)expr)->type;
+	enum ExpressionType type = ((struct Expression*)expr)->type;
 
 	switch(type) {
 	
