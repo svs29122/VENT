@@ -15,13 +15,13 @@ CC=gcc
 CFLAGS=-I$(IDIR) -g
 #CFLAGS=-I$(IDIR) -pg
 
-_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h error.h
+_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h error.h transpile.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = parser.o dba.o lexer.o display.o ast.o error.o
+_OBJ = parser.o dba.o lexer.o display.o ast.o error.o transpile.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
-_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o
+_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o transpile_test.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
 # this is the executable to run all tests

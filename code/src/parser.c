@@ -461,6 +461,8 @@ static struct UseStatement* parseUseStatement(){
 	int size = strlen(p->currToken.literal) + 1;
 	stmt->value = malloc(sizeof(char) * size);
 	memcpy(stmt->value, p->currToken.literal, size);
+	
+	consumeNext(TOKEN_SCOLON, "Expect ; at end of use statment");
 
 	return stmt;
 }

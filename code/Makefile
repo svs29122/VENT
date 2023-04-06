@@ -9,10 +9,10 @@ CC=gcc
 CFLAGS?=-I$(IDIR)
 DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 
-_DEPS = display.h error.h lexer.h token.h dba.h ast.h parser.h
+_DEPS = display.h error.h lexer.h token.h dba.h ast.h parser.h transpile.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = display.o error.o lexer.o dba.o parser.o ast.o
+_OBJ = display.o error.o lexer.o dba.o parser.o ast.o transpile.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 MAIN=$(ODIR)/main.o

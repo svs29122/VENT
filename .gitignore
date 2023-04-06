@@ -11,6 +11,8 @@ code/test/obj
 
 code/sandbox
 
+code/a.vhdl
+
 docs/*.png
 
 vgcore*
