@@ -98,7 +98,6 @@
 		-> "tempSig <= a and b;"
 */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -107,6 +106,8 @@
 #include "error.h"
 #include "lexer.h"
 #include "parser.h"
+
+bool printTokenFlag = false;
 
 enum Precedence{
 	LOWEST_PREC =1,
@@ -146,6 +147,7 @@ static struct ParseRule* getRule(enum TOKEN_TYPE type){
 struct parser {
 	struct Token currToken;
 	struct Token peekToken;
+	bool printTokenFlag;
 } static parser;
 
 static struct parser *p = &parser;
@@ -158,8 +160,14 @@ void InitParser(){
 	p->peekToken = NextToken();	
 }
 
+void SetPrintTokenFlag(){
+	printTokenFlag = true;
+}
+
 static struct Token nextToken(){	
 	
+	if(printTokenFlag) PrintToken(p->currToken);
+
 	free(p->currToken.literal);
 
 	p->currToken = p->peekToken;
@@ -209,7 +217,7 @@ static struct Expression* parseExpression(enum Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
 
 	if(prefixRule == NULL){
-		printf("Error: expected expression yet token type ==  %d\n", p->currToken.type);
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect l-value expression");
 		return NULL;
 	}	
 	struct Expression* leftExp = prefixRule();
@@ -310,7 +318,7 @@ static struct PortMode* parsePortMode(char* val){
 }
 
 static Dba* parseArchBodyStatements(){
-	Dba* stmts = initBlockArray(sizeof(struct SignalAssign));
+	Dba* stmts = InitBlockArray(sizeof(struct SignalAssign));
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		struct SignalAssign* stmt = calloc(1, sizeof(struct SignalAssign));
@@ -318,13 +326,13 @@ static Dba* parseArchBodyStatements(){
 		consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 		stmt->target = (struct Identifier*)parseIdentifier();
 
-		consumeNext(TOKEN_SASSIGN, "Expect expect <= after identifier");
+		consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
 		
 		nextToken();
 		stmt->expression = parseExpression(LOWEST_PREC);
 
 		consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
-		writeBlockArray(stmts, (char*)stmt);
+		WriteBlockArray(stmts, (char*)stmt);
 		free(stmt);
 	
 		nextToken();	
@@ -334,7 +342,7 @@ static Dba* parseArchBodyStatements(){
 }
 
 static Dba* parseArchBodyDeclarations(){
-	Dba* decls = initBlockArray(sizeof(struct SignalDecl));
+	Dba* decls = InitBlockArray(sizeof(struct SignalDecl));
 
 	while(match(TOKEN_SIG)){
 		struct SignalDecl* decl = calloc(1, sizeof(struct SignalDecl));
@@ -344,7 +352,7 @@ static Dba* parseArchBodyDeclarations(){
 		
 		nextToken();
 		if(!validDataType()){
-			printf("Error: %s:%d\r\n", __func__, __LINE__);		
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
 		}	
 		decl->dtype = parseDataType(p->currToken.literal);
 		
@@ -355,7 +363,7 @@ static Dba* parseArchBodyDeclarations(){
 		}
 
 		consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
-		writeBlockArray(decls, (char*)decl);
+		WriteBlockArray(decls, (char*)decl);
 		free(decl);
 	
 		nextToken();	
@@ -365,7 +373,7 @@ static Dba* parseArchBodyDeclarations(){
 }
 
 static Dba* parsePortDecl(){
-	Dba* ports = initBlockArray(sizeof(struct PortDecl)); 	
+	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
 
 	nextToken();
 
@@ -388,7 +396,7 @@ static Dba* parsePortDecl(){
 		port->dtype = parseDataType(p->currToken.literal);
 		
 		consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
-		writeBlockArray(ports, (char*)port);
+		WriteBlockArray(ports, (char*)port);
 		free(port);
 		
 		nextToken();
@@ -475,6 +483,7 @@ static struct DesignUnit* parseDesignUnit(){
 		}
 
 		default:
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid design unit type");
 			free(unit);
 			unit = NULL;
 			break;
@@ -491,9 +500,9 @@ struct Program* ParseProgram(){
 		struct UseStatement* stmt = parseUseStatement();
 		if(stmt != NULL){
 			if(prog->useStatements == NULL){
-				prog->useStatements = initBlockArray(sizeof(struct UseStatement));
+				prog->useStatements = InitBlockArray(sizeof(struct UseStatement));
 			}
-			writeBlockArray(prog->useStatements, (char*)stmt);
+			WriteBlockArray(prog->useStatements, (char*)stmt);
 			free(stmt);
 		}
 		nextToken();
@@ -504,10 +513,12 @@ struct Program* ParseProgram(){
 		struct DesignUnit* unit = parseDesignUnit();
 		if(unit != NULL){
 			if(prog->units == NULL){
-				prog->units = initBlockArray(sizeof(struct DesignUnit));	
+				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
 			}
-			writeBlockArray(prog->units, (char*)unit);
+			WriteBlockArray(prog->units, (char*)unit);
 			free(unit);
+		} else {
+			break;
 		}
 		nextToken();
 	}
@@ -560,10 +571,10 @@ static void freeExpression(void* expr){
 void FreeProgram(struct Program* prog){
 	
 	// setup block
-	struct OperationBlock* opBlk = initOperationBlock();
+	struct OperationBlock* opBlk = InitOperationBlock();
 	opBlk->doProgOp 			= lambda (void, (void* prog) 	{ struct Program* pg = (struct Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
 	opBlk->doUseStatementOp = lambda (void, (void* stmt) 	{ struct UseStatement* st = (struct UseStatement*)stmt; if(st->value) free(st->value); });
-	opBlk->doBlockArrayOp 	= lambda (void, (void* arr) 	{ freeBlockArray((Dba*)arr); });
+	opBlk->doBlockArrayOp 	= lambda (void, (void* arr) 	{ FreeBlockArray((Dba*)arr); });
 	opBlk->doIdentifierOp	= lambda (void, (void* ident) { struct Identifier* id = (struct Identifier*)ident; if(id->value) free(id->value); free(id); });
 	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { struct PortMode* pm = (struct PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
 	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { struct DataType* dt = (struct DataType*)dtype; if(dt->value) free(dt->value); free(dt); });

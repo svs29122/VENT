@@ -8,8 +8,7 @@ struct Program;
 
 typedef void (*astNodeOpPtr) (void*);
 
-void noOp(void*);
-struct OperationBlock* initOperationBlock(void);
+struct OperationBlock* InitOperationBlock(void);
 void WalkTree(struct Program* prog, struct OperationBlock* op);
 
 struct OperationBlock {

@@ -5,6 +5,7 @@
 #include "dba.h"
 
 void InitParser();
+void SetPrintTokenFlag();
 
 struct Program* ParseProgram();
 void FreeProgram(struct Program *prog);

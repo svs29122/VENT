@@ -3,9 +3,9 @@
 
 #include "ast.h"
 
-void noOp(void* p){return;}
+static void noOp(void* p){return;}
 
-struct OperationBlock* initOperationBlock(void){
+struct OperationBlock* InitOperationBlock(void){
 	struct OperationBlock* op = malloc(sizeof(struct OperationBlock));	
 
 	op->doProgOp 						= noOp;

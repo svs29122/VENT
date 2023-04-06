@@ -7,8 +7,9 @@
 void PrintUsage(void){
 	printf("Usage:\n"
 			" tvt -i (interactive menu)\n"
-			" tvt -t adder.vent (perform transpilation)\n"
-			" tvt -r adder.vhdl (perform reverse transpilation\n"
+			" tvt adder.vent (perform transpilation)\n"
+			" tvt adder.vent --print-tokens\n"
+			" tvt adder.vent --print-ast\n"
 		);
 }
 
@@ -188,7 +189,7 @@ static void printExpression(void* expr){
 void PrintProgram(struct Program * prog){
 	
 	// setup block
-	struct OperationBlock* opBlk = initOperationBlock();
+	struct OperationBlock* opBlk = InitOperationBlock();
 	opBlk->doUseStatementOp = printUseStatement;	
 	opBlk->doDesignUnitOp = printDesignUnit;
 	opBlk->doEntityDeclOp = printEntityDecl;

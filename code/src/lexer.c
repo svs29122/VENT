@@ -354,6 +354,7 @@ static void skipWhiteSpace(){
 				if(peekNext() == '/') {
 					// handle single-line comment
 					while(peek() != '\n' && peek() != '\0'){
+						l->line++;
 						 readChar();
 					}
 				} else if (peekNext() == '*'){
@@ -361,6 +362,7 @@ static void skipWhiteSpace(){
 					readChar();
 					readChar();
 					while((peek() != '*' || peekNext() != '/') && peek() != '\0'){
+						if(peek() == '\n') l->line++;
 						readChar();
 					}
 					readChar();
@@ -380,6 +382,7 @@ struct Token NextToken() {
 	
 	skipWhiteSpace();
 
+	
 	char ch = l->ch;
 	if(ch == '\0') return newToken(TOKEN_EOP, ch);
 
@@ -495,5 +498,5 @@ const char* TokenToString(enum TOKEN_TYPE type){
 }
 
 void PrintToken(struct Token t){
-	printf("\e[0;35mtype:\e[0m %10s, \e[0;33mliteral:\e[0m %s\n", TokenToString(t.type), t.literal);
+	printf("\e[0;35mtype:\e[0m %-20s \e[0;33mliteral:\e[0m %s\n", TokenToString(t.type), t.literal);
 }
