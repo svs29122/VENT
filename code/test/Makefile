@@ -13,11 +13,12 @@ TODIR=$(TDIR)/obj
 
 CC=gcc
 CFLAGS=-I$(IDIR) -g
+#CFLAGS=-I$(IDIR) -pg
 
-_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h
+_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h error.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = parser.o dba.o lexer.o display.o ast.o
+_OBJ = parser.o dba.o lexer.o display.o ast.o error.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
 _TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o

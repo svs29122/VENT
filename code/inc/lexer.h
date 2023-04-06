@@ -4,9 +4,9 @@
 #include "token.h"
 
 void InitLexer(char* in);
-Token NextToken();
+struct Token NextToken();
 const char* TokenToString(enum TOKEN_TYPE type);
-void PrintToken(Token t);
+void PrintToken(struct Token t);
 
 
 #endif // INC_LEXER_H

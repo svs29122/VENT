@@ -7,8 +7,9 @@
 void PrintUsage(void){
 	printf("Usage:\n"
 			" tvt -i (interactive menu)\n"
-			" tvt -t adder.vent (perform transpilation)\n"
-			" tvt -r adder.vhdl (perform reverse transpilation\n"
+			" tvt adder.vent (perform transpilation)\n"
+			" tvt adder.vent --print-tokens\n"
+			" tvt adder.vent --print-ast\n"
 		);
 }
 
@@ -99,7 +100,7 @@ static void printProg(){
 }
 
 static void printUseStatement(void* stmt){
-	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), ((UseStatement*)stmt)->value);
+	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), ((struct UseStatement*)stmt)->value);
 }
 
 static void printDesignUnit(void* unit){
@@ -111,8 +112,13 @@ static void printEntityDecl(void* eDecl){
 	ishift = 3;
 }
 
+static void printArchDecl(void* eDecl){
+	printf("\e[0;32m""%cArchDecl\r\n", shift(2));
+	ishift = 3;
+}
+
 static void printIdentifier(void* ident){
-	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((Identifier*)ident)->value);
+	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((struct Identifier*)ident)->value);
 }
 
 static void printPortDecl(void* pDecl){
@@ -120,25 +126,81 @@ static void printPortDecl(void* pDecl){
 	ishift = 4;
 }
 
+static void printSignalDecl(void* sDecl){
+	printf("\e[0;32m""%cSignalDecl\r\n", shift(3));
+	ishift = 4;
+}
+
+static void printSignalAssign(void* sAssign){
+	printf("\e[0;32m""%cSignalAssign\r\n", shift(3));
+	ishift = 4;
+}
+
 static void printPortMode(void* pMode){
-	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((PortMode*)pMode)->value);
+	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((struct PortMode*)pMode)->value);
 }
 
 static void printDataType(void* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((DataType*)dType)->value);
+	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((struct DataType*)dType)->value);
 }
 
-void PrintProgram(Program * prog){
+static void printSubExpression(void* expr){
+	enum ExpressionType type = ((struct Expression*)expr)->type;
+
+	switch(type) {
+	
+		case CHAR_EXPR: {
+			struct CharExpr* chexp = (struct CharExpr*)expr;
+			printf("%s", chexp->literal);
+			break;
+		}
+
+		case BINARY_EXPR:{
+			struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
+			printSubExpression((void*)bexp->left);
+			printf(" %s ", bexp->op);
+			printSubExpression((void*)bexp->right);
+			break;
+		}
+
+		case NAME_EXPR: {
+			//NameExpr* nexp = (NameExpr*) expr;
+			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
+			struct Identifier* ident = (struct Identifier*)expr;
+			printf("%s", ident->value);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
+static void printExpression(void* expr){
+	
+	printf("\e[0;35m""%cExpression: \'", shift(ishift));
+	
+	printSubExpression(expr);	
+
+	printf("\'\r\n");
+}
+
+
+void PrintProgram(struct Program * prog){
 	
 	// setup block
-	OperationBlock* opBlk = initOperationBlock();
+	struct OperationBlock* opBlk = InitOperationBlock();
 	opBlk->doUseStatementOp = printUseStatement;	
 	opBlk->doDesignUnitOp = printDesignUnit;
 	opBlk->doEntityDeclOp = printEntityDecl;
+	opBlk->doArchDeclOp = printArchDecl;
 	opBlk->doPortDeclOp = printPortDecl;
+	opBlk->doSignalDeclOp = printSignalDecl;
+	opBlk->doSignalAssignOp = printSignalAssign;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;
+	opBlk->doExpressionOp = printExpression;
 	
 	printProg();	
 	WalkTree(prog, opBlk);

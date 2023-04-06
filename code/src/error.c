@@ -3,12 +3,7 @@
 
 bool hadError;
 
-void report(int line, char* where, char* message){
-	printf("[line %d] Error%s: %s\n", line, where, message);
+void error(int line, char* where, const char* message){
+	fprintf(stderr, "\e[0;31m[line %d] Error at \'%s\': %s\n\e[0m", line, where, message);
 	hadError = true;
 } 
-
-void error(int line, char* message){
-	report(line, "", message);
-}
-

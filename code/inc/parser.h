@@ -5,10 +5,9 @@
 #include "dba.h"
 
 void InitParser();
+void SetPrintTokenFlag();
 
-Program* ParseProgram();
-
-void FreeProgram(Program *prog);
-//void PrintProgram(Program*);
+struct Program* ParseProgram();
+void FreeProgram(struct Program *prog);
 
 #endif // INC_PARSER_H

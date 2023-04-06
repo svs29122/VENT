@@ -4,7 +4,7 @@
 
 #include "dba.h"
 
-Dba* initBlockArray(size_t bsize){	
+Dba* InitBlockArray(size_t bsize){	
 	Dba* arr = malloc(sizeof(Dba));	
 	if(arr == NULL){
 		printf("Error: Unable to allocated Block Array\r\n");
@@ -19,7 +19,7 @@ Dba* initBlockArray(size_t bsize){
 	return arr;
 } 
 
-void freeBlockArray(Dba* arr){
+void FreeBlockArray(Dba* arr){
 	arr->count = 0;
 	arr->capacity = 0;
 	arr->blockSize = 0;
@@ -30,7 +30,7 @@ void freeBlockArray(Dba* arr){
 	free(arr);
 }
 
-void writeBlockArray(Dba* arr, char* block){
+void WriteBlockArray(Dba* arr, char* block){
 	if(arr == NULL) {
 		printf("Error: Block Array Ptr NULL\r\n");
 		return;

@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "lexer.h"
+#include "parser.h"
 #include "display.h"
 
-static void doTranspile(char* fileName);
-static void doRevTranspile(char* fileName);
+static void doTranspile(char* fileName, bool printProgramTree);
 
 int main(int argc, char* argv[]) {
 
@@ -16,10 +17,25 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}	
 
+	bool skipTranspilation = false;
+	bool printProgramTree = false;
+
 	if(argc == 2){
-		doTranspile(argv[1]);
-	} else if(strcmp("-i", argv[1]) == 0){
-		 DoMenu();
+		if(strcmp("-i", argv[1]) == 0){
+			DoMenu();
+			skipTranspilation = true;
+		}
+	} 
+	if(argc == 3){
+		if(strcmp("--print-tokens", argv[2]) == 0){
+			SetPrintTokenFlag();
+		} else if(strcmp("--print-ast", argv[2]) == 0){
+			printProgramTree = true;
+		}
+	}
+	
+	if(!skipTranspilation){
+		doTranspile(argv[1], printProgramTree);
 	}
 
 	return 0;
@@ -52,24 +68,24 @@ static char* readFile(const char* path){
 	return buffer;
 }
 
-static void doTranspile(char* fileName){
+extern bool hadError;
+
+static void doTranspile(char* fileName, bool printProgramTree){
 		char* ventSrc = readFile(fileName);
 		InitLexer(ventSrc);
+		InitParser();
 		
-		Token t = NextToken();
-		while(t.type != ILLEGAL && t.type != EOP){
-			PrintToken(t);
-			free(t.literal);
-
-			t = NextToken();
+		struct Program* prog = ParseProgram();
+		if(printProgramTree){
+			PrintProgram(prog);
 		}
 		
-		if(t.type == ILLEGAL) PrintToken(t);
-		free(t.literal);
-		
+		printf("Transpilation complete");
+		if(hadError){
+			printf(" with errors");
+		}
+		printf("!\r\n");		
+
+		FreeProgram(prog);
 		free(ventSrc);
 }
-
-static void doRevTranspile(char* fileName){
-}
-

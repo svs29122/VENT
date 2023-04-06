@@ -8,8 +8,8 @@ typedef struct DynamicBlockArray {
 	char* block;
 } Dba;
 
-Dba* initBlockArray(size_t bsize);
-void freeBlockArray(Dba* arr);
-void writeBlockArray(Dba* arr, char* block);
+Dba* InitBlockArray(size_t bsize);
+void FreeBlockArray(Dba* arr);
+void WriteBlockArray(Dba* arr, char* block);
 
 #endif 

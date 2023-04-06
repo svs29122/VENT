@@ -4,173 +4,81 @@
 enum TOKEN_TYPE {
 	
 	//delmiters
-	LPAREN = 1,
-	RPAREN, 
-	COLON, 
-	SCOLON, 
-	LBRACE, 			//5 
-	RBRACE, 
-	COMMA, 
-	TICK,
+	TOKEN_LPAREN = 1,
+	TOKEN_RPAREN, 
+	TOKEN_COLON, 
+	TOKEN_SCOLON, 
+	TOKEN_LBRACE, 			//5 
+	TOKEN_RBRACE, 
+	TOKEN_COMMA, 
+	TOKEN_TICK,
 
 	//operators
-	SLASH, 
-	STAR, 			//10 
-	MINUS,
-	PLUS, 
-	EQUAL, 
-	NOT_EQUAL, 
-	GREATER, 		//15 
-	GREATER_EQUAL,
-	LESS, 
-	LESS_EQUAL, 
-	AND, 
-	OR, 				//20
-	XOR, 
-	NOT,
+	TOKEN_SLASH, 
+	TOKEN_STAR, 			//10 
+	TOKEN_MINUS,
+	TOKEN_PLUS, 
+	TOKEN_EQUAL, 
+	TOKEN_NOT_EQUAL, 
+	TOKEN_GREATER, 		//15 
+	TOKEN_GREATER_EQUAL,
+	TOKEN_LESS, 
+	TOKEN_LESS_EQUAL, 
+	TOKEN_AND, 
+	TOKEN_OR, 				//20
+	TOKEN_XOR, 
+	TOKEN_NOT,
 
 	//assignment and declaration
-	INPUT, 
-	OUTPUT, 
-	INOUT,			//25 
-	SASSIGN, 
-	VASSIGN, 
-	AASSIGN,
-	SIG, 
-	VAR, 
+	TOKEN_INPUT, 
+	TOKEN_OUTPUT, 
+	TOKEN_INOUT,			//25 
+	TOKEN_SASSIGN, 
+	TOKEN_VASSIGN, 
+	TOKEN_AASSIGN, //aggregate assignment e.g. (others => '0')
+	TOKEN_SIG, 
+	TOKEN_VAR, 
 
 	//types
-	STL, 
-	STLV, 			
-	INTEGER, 
-	STRING, 
-	BIT,				 
-	BITV,
-	SIGNED,
-	UNSIGNED,
+	TOKEN_STL, 
+	TOKEN_STLV, 			
+	TOKEN_INTEGER, 
+	TOKEN_STRING, 
+	TOKEN_BIT,				 
+	TOKEN_BITV,
+	TOKEN_SIGNED,
+	TOKEN_UNSIGNED,
 
 	//literals
-	IDENTIFIER, 
-	CHARLIT,
-	NUMBERLIT,
-	STRINGLIT,		
-	BSTRINGLIT,
+	TOKEN_IDENTIFIER, 
+	TOKEN_CHARLIT,
+	TOKEN_NUMBERLIT,
+	TOKEN_STRINGLIT,		
+	TOKEN_BSTRINGLIT,
 
 	//keywords
-	ENT, 
-	ARCH, 			
-	GEN, 
-	COMP, 			
-	MAP, 
-	PROC,
-	OTHER,			
-	IF, 
-	ELSIF, 			
-	ELSE, 
-	FOR, 
-	USE,
-	WHILE,			 
-	WAIT,
+	TOKEN_ENT, 
+	TOKEN_ARCH, 			
+	TOKEN_GEN, 
+	TOKEN_COMP, 			
+	TOKEN_MAP, 
+	TOKEN_PROC,
+	TOKEN_OTHER,			
+	TOKEN_IF, 
+	TOKEN_ELSIF, 			
+	TOKEN_ELSE, 
+	TOKEN_FOR, 
+	TOKEN_USE,
+	TOKEN_WHILE,			 
+	TOKEN_WAIT,
 
-	EOP, // end of program			
-	ILLEGAL,			
+	TOKEN_EOP, // end of program			
+	TOKEN_ILLEGAL,			
 };
 
-typedef struct token {
+struct Token {
 	enum TOKEN_TYPE type;	
-	char *literal;
-} Token;
-
-enum VHD_TOKEN {
-	
-	//punctuation
-	VHD_LPAREN,
-	VHD_RPAREN,
-	VHD_COLON,
-	VHD_SEMI_COLON,
-	VHD_COMMA,
-
-	//operators
-	VHD_ABS,
-	VHD_XNOR,
-	VHD_AND,
-	VHD_MOD,
-	VHD_NAND,
-	VHD_NOR,
-	VHD_NOT,
-	VHD_OR,
-	VHD_REM,
-	VHD_ROL,
-	VHD_ROR,
-	VHD_SLA,
-	VHD_SLL,
-	VHD_SRA,
-	VHD_SRL,
-	VHD_XOR,
-	VHD_EQUAL,
-	VHD_NEQUAL,
-	VHD_LESS_THAN,
-	VHD_LESS_THAN_EQ,
-	VHD_VAR_ASSIGN,
-	VHD_ASSIGN,
-	VHD_GREATER_THAN,
-	VHD_GREATER_THAN_EQ,
-	VHD_ADD,
-	VHD_SUB,
-	VHD_CONCAT,
-	VHD_MULT,
-	VHD_DIV,
-	VHD_EXP,
-
-	//data types
-	VHD_BIT,
-	VHD_BIT_VECTOR,
-	VHD_BOOLEAN,
-	VHD_INTEGER,
-	VHD_REAL,
-	VHD_TIME,
-	VHD_STD_LOGIC,
-	VHD_STD_LOGIC_VECTOR,
-	
-	//keywords:
-	VHD_ALL,
-	VHD_BEGIN,
-	VHD_CONST,
-	VHD_ELSE,
-	VHD_ELSIF,
-	VHD_END,
-	VHD_ENTITY,
-	VHD_IF,
-	VHD_IN,
-	VHD_INOUT,
-	VHD_IS,
-	VHD_LIBRARY,
-	VHD_MAP,
-	VHD_OF,
-	VHD_OUT,
-	VHD_PORT,
-	VHD_PROCESS,
-	VHD_RANGE,
-	VHD_TO,
-	VHD_SIGNAL,
-	VHD_USE,
-	VHD_VARIABLE,
-	VHD_WHEN,
-	
-	//literals
-	VHD_CHAR_LIT,
-	VHD_STR_LIT,
-	VHD_BIT_LIT,
-	VHD_NUM_LIT,
-	VHD_BASE_LIT,
-	VHD_PHY_LIT,
-
-	//other
-	VHD_IDENT,
-};
-
-struct revToken {
-	enum VHD_TOKEN type;	
+	int lineNumber;
 	char *literal;
 };
 

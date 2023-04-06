@@ -3,23 +3,23 @@ This is a TODO list for VENT work:
 I) AST ToDo
 ### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
 ### DONE ###	2) Wrap AST token declarations in DEBUG macros
-	3) Thinking it might be nice to have a walkTree method instead of forcing the parser to do it multiple times
-		i) the transpiler will also have to walk the tree to emit VHDL 
-		ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
-			- this way a caller wanting to print could set handleEntityDecl equal to some print function
-				, while the parser may set handleEntityDecl equal to some function that frees mallocs
-			- this is something like the well-known strategy pattern 
+### DONE ###	3) Thinking it might be nice to have a walkTree method instead of forcing the parser to do it multiple times
+	### DONE ###	i) the transpiler will also have to walk the tree to emit VHDL 
+	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
+			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
+			 ###			- this is something like the well-known strategy pattern 
 			
 			
 II) Parser ToDo
-	1) Unit tests for basic parser functions
-		i) flesh this out fully for ents before adding much more functionality
+### DONE ###	1) Unit tests for basic parser functions
+### DONE ###		i) flesh this out fully for ents before adding much more functionality
 		ii) thinking I want a set of tests for the public API and for the private
 			e.g. parser_test.c for public
 				 parser_test_internals.c for private
 	2) Implement error strategy e.g. the wrong token follows an ent decl
-	
+### DONE ###   3) Begin implementing Architecture parsing functionality	
+### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
 	
 III) Refactor ToDo
-	1) Go through Valgrind output and fix memory leaks
+### DONE ###	1) Go through Valgrind output and fix memory leaks

@@ -6,6 +6,6 @@
 void PrintUsage(void);
 void DoMenu(void);
 
-void PrintProgram(Program *);
+void PrintProgram(struct Program *);
 
 #endif //INC_DISPLAY_H

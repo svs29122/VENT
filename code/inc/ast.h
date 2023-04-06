@@ -4,24 +4,12 @@
 #include "token.h"
 #include "dba.h"
 
-typedef struct DataType DataType;
-typedef struct Identifier Identifier;
-typedef struct Label Label;
-typedef struct PortMode PortMode;
-typedef struct SignalAssignment SignalAssignment;
-typedef struct SignalDecl SignalDecl;
-typedef struct ArchitectureDecl ArchitectureDecl;
-typedef struct PortDecl PortDecl;
-typedef struct EntityDecl EntityDecl;
-typedef struct DesignUnit DesignUnit;
-typedef struct UseStatement UseStatement;
-typedef struct Program Program;
-typedef struct OperationBlock OperationBlock; 
+struct Program;
+
 typedef void (*astNodeOpPtr) (void*);
 
-void noOp(void*);
-OperationBlock* initOperationBlock(void);
-void WalkTree(Program*, OperationBlock*);
+struct OperationBlock* InitOperationBlock(void);
+void WalkTree(struct Program* prog, struct OperationBlock* op);
 
 struct OperationBlock {
 	astNodeOpPtr doProgOp;
@@ -29,20 +17,66 @@ struct OperationBlock {
 	astNodeOpPtr doUseStatementOp;
 	astNodeOpPtr doDesignUnitOp;
 	astNodeOpPtr doEntityDeclOp;
+	astNodeOpPtr doArchDeclOp;
 	astNodeOpPtr doPortDeclOp;
+	astNodeOpPtr doSignalDeclOp;
+	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
+	astNodeOpPtr doExpressionOp;
 };
 
-struct DataType {
+enum ExpressionType{
+		BINARY_EXPR,
+		UNARY_EXPR,
+		GROUPED_EXPR,
+		NAME_EXPR,
+		PHYLIT_EXPR,
+		CHAR_EXPR,
+		STRING_EXPR,
+		AGGREGATE_EXPR,
+		Q_EXPR,
+		NEW_EXPR,
+		CALL_EXPR,
+};
+
+struct Expression {
 #ifdef DEBUG
 	Token token;
 #endif
-	char* value;
+	enum ExpressionType type;
+};
+
+struct BinaryExpr {
+	struct Expression self;
+	struct Expression* left;
+	struct Expression* right;
+	char* op;
+};
+
+struct UnaryExpr {
+	struct Expression self;
+	struct Expression* right;
+	char* op;
+};
+
+struct NameExpr {
+	struct Expression self;
+	struct Identifier* name;
+};
+
+struct CharExpr {
+	struct Expression self;
+	char* literal;
 };
 
 struct Identifier {
+	struct Expression self;
+	char* value;
+};
+
+struct DataType {
 #ifdef DEBUG
 	Token token;
 #endif
@@ -63,32 +97,33 @@ struct PortMode {
 	char* value;
 };
 
-struct SignalAssignment {
+struct SignalAssign {
 #ifdef DEBUG
 	Token token; // the "<=" operator
 #endif
 	struct Label label;
-	struct Identifier target;
-	void* expression;
+	struct Identifier* target;
+	struct Expression* expression;
 };
 
 struct SignalDecl {
 #ifdef DEBUG
 	Token token; // the sig keyword
 #endif
-	struct Identifier *names;
-	struct DataType dtype;
-	void* expression;
+	//need to add support for , separated identifier list
+	struct Identifier *name;
+	struct DataType* dtype;
+	struct Expression* expression;
 };
 
 struct ArchitectureDecl {
 #ifdef DEBUG
 	Token token; //the arch keyword
 #endif
-	struct Identifier archName;
-	struct Identifier entName;
-	void* declarations;
-	void* statements;
+	struct Identifier* archName;
+	struct Identifier* entName;
+	struct DynamicBlockArray* declarations;
+	struct DynamicBlockArray* statements;
 };
 
 struct PortDecl {
@@ -120,7 +155,7 @@ struct DesignUnit{
 		//PackageDecl;
 		//PackageBodyDecl;
 		//ConfigurationDecl; 
-	} decl;
+	} as;
 };
 
 struct UseStatement {
