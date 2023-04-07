@@ -17,8 +17,11 @@ struct OperationBlock {
 	astNodeOpPtr doUseStatementOp;
 	astNodeOpPtr doDesignUnitOp;
 	astNodeOpPtr doEntityDeclOp;
+	astNodeOpPtr doEntityDeclCloseOp;
 	astNodeOpPtr doArchDeclOp;
 	astNodeOpPtr doPortDeclOp;
+	astNodeOpPtr doPortDeclOpenOp;
+	astNodeOpPtr doPortDeclCloseOp;
 	astNodeOpPtr doSignalDeclOp;
 	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doIdentifierOp;
