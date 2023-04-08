@@ -7,7 +7,7 @@
 
 */
 
-use ieee.std_logic_1164.all
+use ieee.std_logic_1164.all;
 
 ent ander {
 	a -> stl;
@@ -22,28 +22,3 @@ arch behavioral(ander) {
 	temp <= a and b;
 	y <= temp;
 } 
-
-//This should be transpiled to the following:
-/*
-library ieee;
-use ieee.std_logic_1164.all
-
-entity ander is 
-	port(
-		a: in std_logic;
-		b: in std_logic;
-		y: out std_logic;
-	);
-end ander;
-
-architecture behavioral of ander is
-
-	signal temp: std_logic := '0';
-
-begin
-
-	temp <= a and b;
-	y <= temp;
-
-end architecture;
-*/

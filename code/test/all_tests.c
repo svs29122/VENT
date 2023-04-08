@@ -5,11 +5,12 @@
 
 // convenience macros
 //#define TEST_LEXER
-#define TEST_PARSER
-
+//#define TEST_PARSER
+//#define TEST_TRANSPILE
 
 CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
+CuSuite* TranspileTestGetSuite();
 
 void RunAllTests(void){
 	CuString *output = CuStringNew();
@@ -24,6 +25,8 @@ void RunAllTests(void){
 	CuSuite* parserTestSuite = ParserTestGetSuite();
 	CuSuiteAddSuite(masterSuite, parserTestSuite);
 #endif
+	CuSuite* transpileTestSuite = TranspileTestGetSuite();
+	CuSuiteAddSuite(masterSuite, transpileTestSuite);
 
 	// run those babies!
 	CuSuiteRun(masterSuite);
@@ -34,6 +37,7 @@ void RunAllTests(void){
 	CuStringDelete(output);
 
 	// cleanup all test cases and suites
+	CuSuiteDelete(transpileTestSuite);
 #ifdef TEST_PARSER
 	CuSuiteDelete(parserTestSuite);
 #endif

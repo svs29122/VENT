@@ -107,7 +107,7 @@
 #include "lexer.h"
 #include "parser.h"
 
-bool printTokenFlag = false;
+static bool printTokenFlag = false;
 
 enum Precedence{
 	LOWEST_PREC =1,
@@ -147,7 +147,6 @@ static struct ParseRule* getRule(enum TOKEN_TYPE type){
 struct parser {
 	struct Token currToken;
 	struct Token peekToken;
-	bool printTokenFlag;
 } static parser;
 
 static struct parser *p = &parser;
@@ -461,6 +460,8 @@ static struct UseStatement* parseUseStatement(){
 	int size = strlen(p->currToken.literal) + 1;
 	stmt->value = malloc(sizeof(char) * size);
 	memcpy(stmt->value, p->currToken.literal, size);
+	
+	consumeNext(TOKEN_SCOLON, "Expect ; at end of use statment");
 
 	return stmt;
 }

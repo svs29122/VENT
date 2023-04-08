@@ -8,7 +8,7 @@
 #include "parser.h"
 #include "display.h"
 
-void setup(char* in){
+static void setup(char* in){
 	InitLexer(in);
 	InitParser();
 }

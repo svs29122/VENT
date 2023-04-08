@@ -13,8 +13,13 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doUseStatementOp				= noOp;
 	op->doDesignUnitOp				= noOp;
 	op->doEntityDeclOp				= noOp;
+	op->doEntityDeclCloseOp			= noOp;
 	op->doArchDeclOp					= noOp;
+	op->doArchDeclOpenOp				= noOp;
+	op->doArchDeclCloseOp			= noOp;
 	op->doPortDeclOp					= noOp;
+	op->doPortDeclOpenOp				= noOp;
+	op->doPortDeclCloseOp			= noOp;
 	op->doSignalDeclOp				= noOp;
 	op->doSignalAssignOp				= noOp;
 	op->doIdentifierOp 				= noOp;
@@ -51,6 +56,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 						}
 						if(entDecl->ports){
 							Dba* ports = entDecl->ports;
+							op->doPortDeclOpenOp((void*)ports);
 							for(int j=0; j < ports->count; j++){
 								struct PortDecl* portDecl = (struct PortDecl*)(ports->block + (j * ports->blockSize));
 								op->doPortDeclOp((void*)portDecl);
@@ -64,8 +70,10 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 									op->doDataTypeOp((void*)portDecl->dtype);
 								}	
 							}
+							op->doPortDeclCloseOp((void*)ports);
 							op->doBlockArrayOp((void*)ports);	
 						}
+						op->doEntityDeclCloseOp((void*)entDecl);
 						break;
 					}
 					case ARCHITECTURE: {					
@@ -94,6 +102,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 							}
 							op->doBlockArrayOp((void*)decls);
 						}
+						op->doArchDeclOpenOp((void*)archDecl);
 						if(archDecl->statements){
 							Dba* stmts = archDecl->statements;
 							for(int j=0; j < stmts->count; j++){
@@ -108,6 +117,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 							}
 							op->doBlockArrayOp((void*)stmts);
 						}
+						op->doArchDeclCloseOp((void*)archDecl);
 						break;
 					}
 					default:
