@@ -7,6 +7,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "display.h"
+#include "transpile.h"
 
 static void doTranspile(char* fileName, bool printProgramTree);
 
@@ -80,6 +81,8 @@ static void doTranspile(char* fileName, bool printProgramTree){
 			PrintProgram(prog);
 		}
 		
+		TranspileProgram(prog, NULL);
+
 		printf("Transpilation complete");
 		if(hadError){
 			printf(" with errors");

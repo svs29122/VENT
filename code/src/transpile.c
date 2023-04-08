@@ -5,10 +5,10 @@
 
 #include "ast.h"
 
-FILE* vhdlFile;
+static FILE* vhdlFile;
 
-bool incomingExpression = false;
-char assignmentOp[4];
+static bool incomingExpression = false;
+static char assignmentOp[4];
 
 static void emitUseStatement(void* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;

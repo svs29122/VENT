@@ -36,7 +36,7 @@ void TestTranspileProgram_Simple(CuTest *tc){
 
 	struct Program* prog = ParseProgram();
 
-	TranspileProgram(prog,fileName);
+	TranspileProgram(prog, fileName);
 
 	FreeProgram(prog);
 	free(input);

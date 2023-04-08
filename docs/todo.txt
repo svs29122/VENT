@@ -16,10 +16,14 @@ II) Parser ToDo
 		ii) thinking I want a set of tests for the public API and for the private
 			e.g. parser_test.c for public
 				 parser_test_internals.c for private
-	2) Implement error strategy e.g. the wrong token follows an ent decl
+### DONE ###   2) Implement error strategy e.g. the wrong token follows an ent decl
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
+III) Transpiler ToDo
+	1) Need to add validation to transpile_test.c
+		i) we currently only produce a file with 0 asserting or checking
 	
-III) Refactor ToDo
-### DONE ###	1) Go through Valgrind output and fix memory leaks
+IV) Refactor ToDo
+### DONE ###  	1) Go through Valgrind output and fix memory leaks
+### DONE ###  	2) Go add static keyword to any variables that should be static
