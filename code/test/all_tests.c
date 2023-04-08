@@ -4,9 +4,9 @@
 #include "cutest.h"
 
 // convenience macros
-//#define TEST_LEXER
-//#define TEST_PARSER
-//#define TEST_TRANSPILE
+#define TEST_LEXER
+#define TEST_PARSER
+#define TEST_TRANSPILE
 
 CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
@@ -25,8 +25,10 @@ void RunAllTests(void){
 	CuSuite* parserTestSuite = ParserTestGetSuite();
 	CuSuiteAddSuite(masterSuite, parserTestSuite);
 #endif
+#ifdef TEST_TRANSPILE
 	CuSuite* transpileTestSuite = TranspileTestGetSuite();
 	CuSuiteAddSuite(masterSuite, transpileTestSuite);
+#endif
 
 	// run those babies!
 	CuSuiteRun(masterSuite);
@@ -37,7 +39,9 @@ void RunAllTests(void){
 	CuStringDelete(output);
 
 	// cleanup all test cases and suites
+#ifdef TEST_TRANSPILE
 	CuSuiteDelete(transpileTestSuite);
+#endif
 #ifdef TEST_PARSER
 	CuSuiteDelete(parserTestSuite);
 #endif

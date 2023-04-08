@@ -14,7 +14,7 @@ static void setup(char* in){
 }
 
 void TestParseProgram_UseDeclaration(CuTest *tc){
-	char* input = strdup("use ieee.std_logic_1164.all");
+	char* input = strdup("use ieee.std_logic_1164.all;");
 	setup(input);
 
 	struct Program* prog = ParseProgram();
@@ -47,7 +47,7 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 }
 
 void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
-	char* input = strdup("use ieee.std_logic_1164.all\n\nent ander {\n}");
+	char* input = strdup("use ieee.std_logic_1164.all;\n\nent ander {\n}");
 	setup(input);
 
 	struct Program* prog = ParseProgram();
@@ -87,7 +87,7 @@ void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
 
 void TestParseProgram_UseEntityWithPorts(CuTest *tc){
 	char* input = strdup(" \
-use ieee.std_logic_1164.all \
+use ieee.std_logic_1164.all; \
 ent ander { \
 a -> stl; \
 b -> stl; \
@@ -269,7 +269,7 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 
 void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	char* input = strdup(" \
-		use ieee.std_logic_1164.all \
+		use ieee.std_logic_1164.all; \
 		\
 		ent ander { \
 			a -> stl; \
@@ -351,7 +351,7 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 #include <time.h>
 void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 	char* input = strdup(" \
-		use ieee.std_logic_1164.all \
+		use ieee.std_logic_1164.all; \
 		\
 		ent ander { \
 			a -> stl; \

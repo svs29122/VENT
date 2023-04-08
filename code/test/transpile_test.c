@@ -15,7 +15,6 @@ static void setup(char* in){
 }
 
 void TestTranspileProgram_Simple(CuTest *tc){
-	char* fileName = strdup("ander.vent");
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all; \
 		\
@@ -36,11 +35,11 @@ void TestTranspileProgram_Simple(CuTest *tc){
 
 	struct Program* prog = ParseProgram();
 
-	TranspileProgram(prog, fileName);
+	TranspileProgram(prog, NULL);
 
 	FreeProgram(prog);
 	free(input);
-	free(fileName);
+	remove("./a.vhdl");
 }
 
 CuSuite* TranspileTestGetSuite(){
