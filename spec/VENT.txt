@@ -8,35 +8,28 @@ L e   r
       e
 
 
-TVT - The VENT Transpiler
-      
-      
+VENT Syntax Guide < WORK-IN-PROGRESS >
+
+
 KeyWords / Equivalents
 --------------------------------
 bool	/	boolean
 break	/ 	exit
 comp	/	component
 cont	/	next
-ent		/	entity
-gen		/ 	generic
-int		/	integer
-port	/ 	port
+ent	/	entity
+gen	/ 	generic
+int	/	integer
 proc	/ 	process
 sig 	/	signal
 signed	/	signed				
-stl		/	std_logic
+stl	/	std_logic
 stlv	/ 	std_logic_vector
 string 	/	string			
-use		/	use
+use	/	use
 unsigned/	unsigned
-var		/ 	variable
-{}		/	others
-
-
-New Keywords
--------------------------------
-fsm		( for declaring simple Finite State Machines )
-vhdl	( for declaring VHDL directly in VAST )	
+var	/ 	variable
+{}	/	others
 
 
 Dead Keywords
@@ -51,166 +44,134 @@ generate
 Code Blocks / Equivalents
 ------------------------------------------------------------------------
 
-entity <x> is					/ 		ent <x> {
-	port(						/			a -> stl;
-		a: in std_logic;		/			b -> stl;
-		b: in std_logic;		/			y <- stl;
-		y: out std_logic		/		}
-	);							/
-end <x>;						/
+entity <x> is				/ 	ent <x> {
+	port(				/		a -> stl;
+		a: in std_logic;	/		b -> stl;
+		b: in std_logic;	/		y <- stl;
+		y: out std_logic	/	}
+	);				/
+end <x>;				/
 
 
-architecture <a> of <x> is		/		arch <a> (x) {
-begin							/			y <= a or b;
-	y <= a or b;				/		}
-end architecture;				/
+architecture <a> of <x> is		/	arch <a> (x) {
+begin					/		y <= a or b;
+	y <= a or b;			/	}
+end architecture;			/
 
 
-architecture <p> of <t> is		/		arch <p> (t) {
-	signal q: std_logic;		/			sig q stl;
-	signal r: std_logic;		/			sig r stl;
-	signal s: std_logiic;		/			sig s stl;
-begin							/			
-	s <= q and r;				/			s <= q and r;
-end architecture;				/		}
+architecture <p> of <t> is		/	arch <p> (t) {
+	signal q: std_logic;		/		sig q stl;
+	signal r: std_logic;		/		sig r stl;
+	signal s: std_logiic;		/		sig s stl;
+begin					/			
+	s <= q and r;			/		s <= q and r;
+end architecture;			/	}
 
 
-entity <g> is					/ 		ent <g> {
-	generic (					/			
-		bcd: std_logic;			/			gen stl bcd;	
-		efg: integer;			/			gen int efg;
-		hij: string				/			gen str hij;
-	);							/
-	port(						/			stl -> a;
-		a: in std_logic;		/			stl -> b;
-		b: in std_logic;		/			stl <- y;
-		y: out std_logic		/		}
-	);							/
-end <g>;						/
+entity <g> is				/ 	ent <g> {
+	generic (			/		gen {
+		bcd: std_logic;		/			bcd stl;	
+		efg: integer;		/			efg int;
+		hij: string		/			hij string;
+	);				/		}
+end <g>;				/	}
 
 
-port (							/		
-	a: inout std_logic := '1'	/			stl <-> a := 1;		
-	b: out std_logic;			/			stl <- b;
-);								/		
-
-if () then 						/		if() {}
-elsif () then					/		elsif () {}
-else							/		else {}
-end if;							/
-
-if () then 						/		(<condition>) ? <result1> : <result2>
-else							/		
-end if;							/		(<condition>) ? {} : {}
-else							/
-
-process (clk)					/		proc(clk)
-begin							/		{
-	if(rising_edge(clk) then	/			if(clk'up) {
-		a <= '1';				/				a <= 1; 
-	elsif(falling_edge(clk))then/			elsif(clk'down) 
-		a <= '0';				/				a <= 0;
-	else						/			else
-		a <= 'X';				/				a <= X;
-	end if;						/			}
-end process;					/		}
-
-process (clk)					/		proc(clk)
-begin							/		{
-	if(rising_edge(clk) then	/			(clk'up) ? a <= '1' : a <= 'Z';
-		a <= '1';				/		}
-	else						/
-		a <= 'Z';				/
-	end if;						/
-end process;					/
+entity <g> is				/ 	ent <g> {
+	generic (			/
+		bcd: std_logic;		/		gen bcd stl;	
+		efg: integer;		/		gen efg int;
+		hij: string		/		gen hij string;
+	);				/
+	port(				/		a -> stl;
+		a: in std_logic;	/		b -> stl;
+		b: in std_logic;	/		y <- stl;
+		y: out std_logic	/	}
+	);				/
+end <g>;				/
 
 
-if (rising_edge(clk)) then		/		if(clk'up) 
-if (falling_edge(clk)) then		/		if(clk'down)   
+port (					/		
+	a: inout std_logic := '1'	/	a <-> stl := 1;		
+	b: out std_logic;		/	b <- stl;
+);					/		
+
+if () then 				/	if() {}
+elsif () then				/	elsif () {}
+else					/	else {}
+end if;					/
+
+if () then 				/	(<condition>) ? <result1> : <result2>
+else					/		
+end if;					/	(<condition>) ? {} : {}
+else					/
+
+process (clk)				/	proc(clk)
+begin					/	{
+	if(rising_edge(clk) then	/		if(clk'up) {
+		a <= '1';		/			a <= 1; 
+	elsif(falling_edge(clk))then	/	elsif(clk'down) 
+		a <= '0';		/			a <= 0;
+	else				/		else
+		a <= 'X';		/			a <= X;
+	end if;				/		}
+end process;				/	}
+
+process (clk)				/	proc(clk)
+begin					/	{
+	if(rising_edge(clk) then	/		(clk'up) ? a <= '1' : a <= 'Z';
+		a <= '1';		/	}
+	else				/
+		a <= 'Z';		/
+	end if;				/
+end process;				/
 
 
-std_logic_vector(7 downto 0)	/		stlv(7:0)
+if (rising_edge(clk)) then		/	if(clk'up) 
+if (falling_edge(clk)) then		/	if(clk'down)   
 
 
-lbl: for i in 1 to 10 loop		/		for (i in 1:10 ){
-	bitarray[i] <= i;			/			bitarray[i] <= i;
-end loop;						/		}
+std_logic_vector(7 downto 0)		/	stlv(7:0)
 
 
-lbl: for i in 1 to 10 generate	/		for (i in 1:10 ){
-	bitarray[i] <= i;			/			bitarray[i] <= i;
-end loop;						/		}
+lbl: for i in 1 to 10 loop		/	for (i in 1:10 ){
+	bitarray[i] <= i;		/		bitarray[i] <= i;
+end loop;				/	}
 
 
-process is						/		proc() {
-    variable i : integer := 0;	/			var int i := 0;
-begin							/			
-	while i < 10 loop			/			while(i < 10) {
-	    i := i + 2;				/				i := i + 2;
-	end loop;					/			}
-	wait;						/			wait;
-end process;					/		}
+lbl: for i in 1 to 10 generate		/	for (i in 1:10 ){
+	bitarray[i] <= i;		/		bitarray[i] <= i;
+end loop;				/	}
 
 
-component mux is				/		comp mux {
-	port (						/			bit -> a, b, sel;
-		a, b, sel: in bit;		/			bit <- x;
-		x: out bit				/		}
-	);							/
-end component;					/
+process is				/	proc() {
+    variable i : integer := 0;		/		var int i := 0;
+begin					/		
+	while i < 10 loop		/		while(i < 10) {
+	    i := i + 2;			/			i := i + 2;
+	end loop;			/		}
+	wait;				/		wait;
+end process;				/	}
 
 
-architecture <a> of <x> is		/		arch a(x) {
-	signal in1 : std_logic;		/			sig stl in1;
-	signal in2 : std_logic;		/			sig stl in2;
-	signal mySel : std_logic;	/			sig stl mySel;
-	signal out1 : std_logic;	/			sig stl out1;
-begin							/			
-	mux1: mux port map (		/			map	mux1(mux) {
-		in1 => a,				/				in1 => a,
-		in2 => b,				/				in2 => b,
-		mySel => sel,			/				mySel => sel,
-		out1 => x				/				out1 => x
-	);							/			}
-end architecture;				/		}
+component mux is			/	comp mux {
+	port (				/		bit -> a, b, sel;
+		a, b, sel: in bit;	/		bit <- x;
+		x: out bit		/	}
+	);				/
+end component;				/
 
 
-
-New Constructs
----------------------------------------------------------------
-
-vhdl {
-	... vhdl code ...
-}
-
-
-prog {
-	... c-like code ...
-}
-
-
-fsm (reset, clk, next) {
-	input:
-		state1:
-			if(A = '1') next <= state2;
-			else next <= state1;
-		state2:
-			if(B= '1') next <= state3;
-			else next <= state2;
-		state3:
-			if(C = '1') next <= state1;
-			else next <= state3
-			
-	output:
-		state1:
-			B <= '0';
-			C <= '0';
-		state2:
-			A <= '0';
-			C <= '0';		
-		state3:
-			A <= '0';
-			B <= '0';
-}
-
-
+architecture <a> of <x> is		/	arch a(x) {
+	signal in1 : std_logic;		/		sig in1 stl;
+	signal in2 : std_logic;		/		sig in2 stl;
+	signal mySel : std_logic;	/		sig mySel stl;
+	signal out1 : std_logic;	/		sig out1 stl;
+begin					/	
+	mux1: mux port map (		/		map	mux1(mux) {
+		in1 => a,		/			in1 => a,
+		in2 => b,		/			in2 => b,
+		mySel => sel,		/			mySel => sel,
+		out1 => x		/			out1 => x
+	);				/		}
+end architecture;			/	}
