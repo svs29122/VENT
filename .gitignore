@@ -11,7 +11,7 @@ code/test/obj
 
 code/sandbox
 
-code/a.vhdl
+code/*.vhdl
 
 docs/*.png
 

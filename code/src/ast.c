@@ -15,6 +15,8 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doEntityDeclOp				= noOp;
 	op->doEntityDeclCloseOp			= noOp;
 	op->doArchDeclOp					= noOp;
+	op->doArchDeclOpenOp				= noOp;
+	op->doArchDeclCloseOp			= noOp;
 	op->doPortDeclOp					= noOp;
 	op->doPortDeclOpenOp				= noOp;
 	op->doPortDeclCloseOp			= noOp;
@@ -100,6 +102,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 							}
 							op->doBlockArrayOp((void*)decls);
 						}
+						op->doArchDeclOpenOp((void*)archDecl);
 						if(archDecl->statements){
 							Dba* stmts = archDecl->statements;
 							for(int j=0; j < stmts->count; j++){
@@ -114,6 +117,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 							}
 							op->doBlockArrayOp((void*)stmts);
 						}
+						op->doArchDeclCloseOp((void*)archDecl);
 						break;
 					}
 					default:
