@@ -81,7 +81,7 @@ static void doTranspile(char* fileName, bool printProgramTree){
 			PrintProgram(prog);
 		}
 		
-		TranspileProgram(prog, NULL);
+		TranspileProgram(prog, fileName);
 
 		printf("Transpilation complete");
 		if(hadError){

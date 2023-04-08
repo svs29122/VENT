@@ -33,11 +33,11 @@ would be transpiled to the following VHDL: <br/>
     use ieee.std_logic_1164.all;
     
     entity ander is
-    port(
-        a: in std_logic;
-        b: in std_logic;
-        y: out std_logic
-    );
+        port(
+            a: in std_logic;
+            b: in std_logic;
+            y: out std_logic
+        );
     end ander;
     
     architecture behavioral of ander is
@@ -61,7 +61,7 @@ TVT is the program used to transpile VENT into VHDL. TVT is written in pure C an
 ![Image](/spec/stage2.png)
 
 ### Build & Run
-To build TVT just run `make` in the code directory. Run `make help` for more options e.g. cleaning or running the unit tests. TVT uses the CuTest unit testing framework. <br/>
+To build TVT just run `make` in the code directory. Run `make help` for more options e.g. cleaning or running the unit tests. TVT uses GCC and the CuTest unit testing framework. <br/>
 
 Once built, run TVT against a VENT file: <br/>
 `./tvt ander.vent`<br/>

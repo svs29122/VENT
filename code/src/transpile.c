@@ -209,12 +209,21 @@ void TranspileProgram(struct Program* prog, char* fileName){
 	op->doExpressionOp = emitExpression;
 	
 	//setup filename
-	char* newName = NULL;
 	if(fileName != NULL){
-		newName = strtok(fileName, ".");
-		if(newName != NULL){
-			strcat(newName, ".vhdl");
-			vhdlFile = fopen(newName, "w");
+		char* prevTok = NULL;
+		char* currTok = NULL;
+		char* nextTok = NULL;
+
+		nextTok  = strtok(fileName, "./");
+		while(nextTok != NULL){
+			prevTok = currTok;
+			currTok = nextTok;
+			nextTok = strtok(NULL, "./");
+		}
+
+		if(prevTok != NULL && strcmp(currTok, "vent") == 0){
+			strcat(prevTok, ".vhdl");
+			vhdlFile = fopen(prevTok, "w");
 		} else {
 			vhdlFile = fopen("./a.vhdl", "w");
 		}
