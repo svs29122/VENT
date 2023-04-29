@@ -399,6 +399,8 @@ void TestParseProgram_ProcessDeclaration(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(ander){ \
 		\
+			tmp <= a and b; \
+			\
 			proc (clk) { \
 			} \
 		} \
@@ -414,7 +416,7 @@ void TestParseProgram_ProcessDeclaration(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

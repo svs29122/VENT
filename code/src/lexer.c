@@ -112,7 +112,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			break;
 		case 'e': return checkKeyword(1, 2, size, lit, "nt", TOKEN_ENT);
 		case 'i': return checkKeyword(1, 2, size, lit, "nt", TOKEN_INTEGER);
-		case 'p': return checkKeyword(1,3, size, lit, "roc", TOKEN_PROC);
+		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
 		case 's': 
 			if(size > 1){
 				switch(lit[1]){

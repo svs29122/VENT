@@ -323,7 +323,7 @@ static void parseProcessStatement(struct Process* proc){
 #endif
 
 	consume(TOKEN_PROC, "expect proc keyword at start of process");
-	consumeNext(TOKEN_LPAREN, "expect '(' after proc keywork");
+	consumeNext(TOKEN_LPAREN, "expect '(' after proc keyword");
 	
 	if(peek(TOKEN_IDENTIFIER)){
 		consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
@@ -396,26 +396,25 @@ static Dba* parseArchBodyDeclarations(){
 	Dba* decls = InitBlockArray(sizeof(struct SignalDecl));
 
 	while(match(TOKEN_SIG)){
-		struct SignalDecl* decl = calloc(1, sizeof(struct SignalDecl));
+		struct SignalDecl decl;
 
 		consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
-		decl->name = (struct Identifier*)parseIdentifier();
+		decl.name = (struct Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!validDataType()){
 			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
 		}	
-		decl->dtype = parseDataType(p->currToken.literal);
+		decl.dtype = parseDataType(p->currToken.literal);
 		
 		nextToken();
 		if(match(TOKEN_VASSIGN)){
 			nextToken();
-			decl->expression = parseExpression(LOWEST_PREC);	
+			decl.expression = parseExpression(LOWEST_PREC);	
 		}
 
 		consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
-		WriteBlockArray(decls, (char*)decl);
-		free(decl);
+		WriteBlockArray(decls, (char*)(&decl));
 	
 		nextToken();	
 	}
@@ -429,26 +428,25 @@ static Dba* parsePortDecl(){
 	nextToken();
 
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
-		struct PortDecl* port = malloc(sizeof(struct PortDecl));		
+		struct PortDecl port;		
 
 		consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
-		port->name = (struct Identifier*)parseIdentifier();
+		port.name = (struct Identifier*)parseIdentifier();
 		
 		nextToken();
 		if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
 			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
 		}	
-		port->pmode = parsePortMode(p->currToken.literal);
+		port.pmode = parsePortMode(p->currToken.literal);
 		
 		nextToken();
 		if(!validDataType()){
 			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
 		}	
-		port->dtype = parseDataType(p->currToken.literal);
+		port.dtype = parseDataType(p->currToken.literal);
 		
 		consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
-		WriteBlockArray(ports, (char*)port);
-		free(port);
+		WriteBlockArray(ports, (char*)(&port));
 		
 		nextToken();
 	}
@@ -500,18 +498,18 @@ static void parseEntityDecl(struct EntityDecl* eDecl){
 	consume(TOKEN_RBRACE, "Expect } at the end of entity declaration");
 }
 
-static struct UseStatement* parseUseStatement(){
-	struct UseStatement* stmt = malloc(sizeof(struct UseStatement));
+static struct UseStatement parseUseStatement(){
+	struct UseStatement stmt;
 
 #ifdef DEBUG	
-	memcpy(&(stmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(stmt.token), &(p->currToken), sizeof(struct Token));
 #endif
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
 	
 	int size = strlen(p->currToken.literal) + 1;
-	stmt->value = malloc(sizeof(char) * size);
-	memcpy(stmt->value, p->currToken.literal, size);
+	stmt.value = malloc(sizeof(char) * size);
+	memcpy(stmt.value, p->currToken.literal, size);
 	
 	consumeNext(TOKEN_SCOLON, "Expect ; at end of use statment");
 
@@ -550,20 +548,21 @@ struct Program* ParseProgram(){
 
 	// first get the use statements
 	while(p->currToken.type == TOKEN_USE && p->currToken.type != TOKEN_EOP){
-		struct UseStatement* stmt = parseUseStatement();
-		if(stmt != NULL){
-			if(prog->useStatements == NULL){
-				prog->useStatements = InitBlockArray(sizeof(struct UseStatement));
-			}
-			WriteBlockArray(prog->useStatements, (char*)stmt);
-			free(stmt);
+		struct UseStatement stmt = parseUseStatement();
+	
+		if(prog->useStatements == NULL){
+			prog->useStatements = InitBlockArray(sizeof(struct UseStatement));
 		}
+		WriteBlockArray(prog->useStatements, (char*)(&stmt));
 		nextToken();
 	}
 
 	// next parse any design units
 	while(p->currToken.type != TOKEN_EOP){
+		// Design units can be arbitrarily large,so putting this temporary
+		//	struct on the heap just to be safe 
 		struct DesignUnit* unit = parseDesignUnit();
+		
 		if(unit != NULL){
 			if(prog->units == NULL){
 				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
