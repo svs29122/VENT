@@ -136,6 +136,11 @@ static void printSignalAssign(void* sAssign){
 	ishift = 4;
 }
 
+static void printProcessStatement(void* proc){
+	printf("\e[0;32m""%cProcess\r\n", shift(3));
+	ishift = 4;
+}
+
 static void printPortMode(void* pMode){
 	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((struct PortMode*)pMode)->value);
 }
@@ -197,6 +202,7 @@ void PrintProgram(struct Program * prog){
 	opBlk->doPortDeclOp = printPortDecl;
 	opBlk->doSignalDeclOp = printSignalDecl;
 	opBlk->doSignalAssignOp = printSignalAssign;
+	opBlk->doProcessOp = printProcessStatement;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;

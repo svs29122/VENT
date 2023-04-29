@@ -26,6 +26,7 @@ struct OperationBlock {
 	astNodeOpPtr doPortDeclCloseOp;
 	astNodeOpPtr doSignalDeclOp;
 	astNodeOpPtr doSignalAssignOp;
+	astNodeOpPtr doProcessOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
@@ -79,6 +80,9 @@ struct CharExpr {
 struct Identifier {
 	struct Expression self;
 	char* value;
+	//TODO: perhaps identifiers can have pointers to other identifiers?
+	//this would be an easy way to implement comma separated lists of 
+	//identifiers e.g. in portDecls and proc sensitivity lists
 };
 
 struct DataType {
@@ -102,6 +106,16 @@ struct PortMode {
 	char* value;
 };
 
+struct SignalDecl {
+#ifdef DEBUG
+	Token token; // the sig keyword
+#endif
+	//need to add support for , separated identifier list
+	struct Identifier *name;
+	struct DataType* dtype;
+	struct Expression* expression;
+};
+
 struct SignalAssign {
 #ifdef DEBUG
 	Token token; // the "<=" operator
@@ -111,14 +125,30 @@ struct SignalAssign {
 	struct Expression* expression;
 };
 
-struct SignalDecl {
+struct Process {
 #ifdef DEBUG
-	Token token; // the sig keyword
+	Token token; // the proc keyword
 #endif
-	//need to add support for , separated identifier list
-	struct Identifier *name;
-	struct DataType* dtype;
-	struct Expression* expression;
+	struct Label label;
+	struct Identifier* sensitivityList;
+	struct DynamicBlockArray* declarations;
+	struct DynamicBlockArray* statements;
+};
+
+struct ConcurrentStatement {
+	enum {
+		PROCESS,
+		//INSTANTIATION,
+		SIGNAL_ASSIGNMENT,
+		//GENERATE,
+		//ASSERT,
+		//PROCEDURE_CALL,
+		//BLOCK,
+	} type;
+	union {
+		struct Process process;
+		struct SignalAssign signalAssignment;
+	} as;
 };
 
 struct ArchitectureDecl {

@@ -224,9 +224,10 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
 	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
-	struct SignalAssign* sAssign = (struct SignalAssign*)unit->as.architecture.statements->block;
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal assignment statement!", SIGNAL_ASSIGNMENT, cstmt->type);
 
-	
+	struct SignalAssign* sAssign = &(cstmt->as.signalAssignment);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "0", ((struct CharExpr*)(sAssign->expression))->literal);
@@ -257,8 +258,10 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
 	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal assignment statement!", SIGNAL_ASSIGNMENT, cstmt->type);
 
-	struct SignalAssign* sAssign = (struct SignalAssign*)unit->as.architecture.statements->block;
+	struct SignalAssign* sAssign = &(cstmt->as.signalAssignment);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
@@ -331,13 +334,16 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Expression not to char literal!", "0", ((struct CharExpr*)(sDecl->expression))->literal);
 
 	CuAssertPtrNotNullMsg(tc,"Arch statements NULL!", unit->as.architecture.statements);
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal assignment statement!", SIGNAL_ASSIGNMENT, cstmt->type);
 
-	struct SignalAssign* sAssign = (struct SignalAssign*)unit->as.architecture.statements->block;
+	struct SignalAssign* sAssign = &(cstmt->as.signalAssignment);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
 
-	sAssign = (struct SignalAssign*)(unit->as.architecture.statements->block + unit->as.architecture.statements->blockSize);
+	cstmt = (struct ConcurrentStatement*)(unit->as.architecture.statements->block + unit->as.architecture.statements->blockSize);
+	sAssign = &(cstmt->as.signalAssignment);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", sAssign->target->value);
 	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
 	CuAssertStrEquals_Msg(tc,"Expression not char literal!", "temp", ((struct Identifier*)(sAssign->expression))->value);
@@ -389,8 +395,35 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ProcessDeclaration(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(ander){ \
+		\
+			proc (clk) { \
+			} \
+		} \
+	");
+	setup(input);
+
+	struct Program* prog = ParseProgram();
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
+
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
-	char* input = strdup("ent ander {}");
+	char* input = strdup(" \
+		\
+	");
 	//setup(input);
 
 	free(input);
@@ -411,6 +444,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssignBinaryExpression);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
 	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessDeclaration);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

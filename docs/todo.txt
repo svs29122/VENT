@@ -11,7 +11,7 @@ II) AST ToDo
 	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
 			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
 			 ###			- this is something like the well-known strategy pattern 
-	4) Add node for generics
+	4) Refactor Walk Tree into readable units
 			
 			
 III) Parser ToDo
@@ -50,5 +50,6 @@ V) Refactor ToDo
 
 VI) Overall ToDO
 	1) Need to implement basic functionality including proc, comp, map, if, when, loop
-
-
+		i) need to do work to handle comma separated lists of identifiers
+		ii) need to handle labels and decide if they are treated differently than identifiers by the lexer
+	2) Need to go and add NULL checks to all of my heap allocations especially in the parser duh...

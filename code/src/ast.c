@@ -22,6 +22,7 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doPortDeclCloseOp			= noOp;
 	op->doSignalDeclOp				= noOp;
 	op->doSignalAssignOp				= noOp;
+	op->doProcessOp					= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
@@ -106,13 +107,31 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 						if(archDecl->statements){
 							Dba* stmts = archDecl->statements;
 							for(int j=0; j < stmts->count; j++){
-								struct SignalAssign* sigAssign = (struct SignalAssign*)(stmts->block + (j * stmts->blockSize));
-								op->doSignalAssignOp((void*)sigAssign);
-								if(sigAssign->target){
-									op->doIdentifierOp((void*)sigAssign->target);
-								}
-								if(sigAssign->expression){
-									op->doExpressionOp((void*)sigAssign->expression);
+								struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)(stmts->block + (j * stmts->blockSize));
+								switch(cstmt->type) {
+									case SIGNAL_ASSIGNMENT: {
+										struct SignalAssign* sigAssign = &(cstmt->as.signalAssignment); 
+										op->doSignalAssignOp((void*)sigAssign);
+										if(sigAssign->target){
+											op->doIdentifierOp((void*)sigAssign->target);
+										}
+										if(sigAssign->expression){
+											op->doExpressionOp((void*)sigAssign->expression);
+										}
+										break;
+									}
+
+									case PROCESS: {
+										struct Process* proc = &(cstmt->as.process);
+										op->doProcessOp((void*)proc);
+										if(proc->sensitivityList){
+											op->doIdentifierOp((void*)proc->sensitivityList);
+										}
+										break;
+									}
+
+									default:
+										break;
 								}
 							}
 							op->doBlockArrayOp((void*)stmts);

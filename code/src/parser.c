@@ -101,6 +101,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "token.h"
 #include "error.h"
@@ -316,24 +317,75 @@ static struct PortMode* parsePortMode(char* val){
 	return pm;
 }
 
+static void parseProcessStatement(struct Process* proc){
+#ifdef DEBUG
+	memcpy(&(proc->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	consume(TOKEN_PROC, "expect proc keyword at start of process");
+	consumeNext(TOKEN_LPAREN, "expect '(' after proc keywork");
+	
+	if(peek(TOKEN_IDENTIFIER)){
+		consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
+		proc->sensitivityList = (struct Identifier*)parseIdentifier();
+	}
+	
+	consumeNext(TOKEN_RPAREN, "expect ')' after proc sensitivity list");
+	consumeNext(TOKEN_LBRACE, "expect '{' after proc sensitivity list");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		//TODO: handle declarations in process statement
+		//proc->declarations = parseProcessBodyDeclarations();	
+		//proc->statements = parseProcessBodyStatements();	
+	}
+
+	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
+}
+
+static void parseSignalAssignment(struct SignalAssign *sigAssign){
+#ifdef DEBUG
+	memcpy(&(sigAssign->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
+	sigAssign->target = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
+	
+	nextToken();
+	sigAssign->expression = parseExpression(LOWEST_PREC);
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
+}
+
 static Dba* parseArchBodyStatements(){
-	Dba* stmts = InitBlockArray(sizeof(struct SignalAssign));
+	Dba* stmts = InitBlockArray(sizeof(struct ConcurrentStatement));
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
-		struct SignalAssign* stmt = calloc(1, sizeof(struct SignalAssign));
-
-		consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
-		stmt->target = (struct Identifier*)parseIdentifier();
-
-		consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
 		
-		nextToken();
-		stmt->expression = parseExpression(LOWEST_PREC);
-
-		consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
-		WriteBlockArray(stmts, (char*)stmt);
-		free(stmt);
+		struct ConcurrentStatement conStmt = {0};
+		
+		switch(p->currToken.type){
+			case TOKEN_IDENTIFIER: { 
+				//TODO: this may need some work depending on what we do with labels
+				conStmt.type = SIGNAL_ASSIGNMENT;
+				parseSignalAssignment(&(conStmt.as.signalAssignment));
+				break;
+			}
 	
+			case TOKEN_PROC: {
+				conStmt.type = PROCESS;
+				parseProcessStatement(&(conStmt.as.process));
+				break;
+			}
+	
+			default:
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				break;
+		}
+
+		WriteBlockArray(stmts, (char*)(&conStmt));
 		nextToken();	
 	}
 
@@ -409,7 +461,7 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 	memcpy(&(aDecl->token), &(p->currToken), sizeof(struct Token));
 #endif
 	
-	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after keywordk arch");
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after keyword arch");
 	aDecl->archName = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_LPAREN, "Expect ( after architecture identifier");
