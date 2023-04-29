@@ -1,0 +1,10 @@
+** Active Bug List **
+
+Bug 0001: When parsing a port direction mode if there are no spaces between the port identifier or type the everything will be parsed as a single token
+--
+
+Bug 0002:
+--
+
+Bug 00XX:
+--

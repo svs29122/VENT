@@ -315,6 +315,39 @@ void TestNextToken_PortDirections (CuTest *tc){
 	free(input);
 }
 
+void TestNextToken_ProcessDeclaration (CuTest *tc){
+	char* input = strdup("proc (clk) { }");
+	InitLexer(input);
+
+	struct Token nt = NextToken();
+	CuAssertStrEquals(tc, "proc", nt.literal); 
+	CuAssertStrEquals(tc, TokenToString(TOKEN_PROC), TokenToString(nt.type));
+	free(nt.literal);	
+
+	nt = NextToken();
+	CuAssertIntEquals(tc, TOKEN_LPAREN, nt.type);
+	free(nt.literal);	
+
+	nt = NextToken();
+	CuAssertStrEquals(tc, "clk", nt.literal); 
+	CuAssertStrEquals(tc, TokenToString(TOKEN_IDENTIFIER), TokenToString(nt.type));
+	free(nt.literal);	
+
+	nt = NextToken();
+	CuAssertIntEquals(tc, TOKEN_RPAREN, nt.type);
+	free(nt.literal);	
+
+	nt = NextToken();
+	CuAssertIntEquals(tc, TOKEN_LBRACE, nt.type);
+	free(nt.literal);	
+
+	nt = NextToken();
+	CuAssertIntEquals(tc, TOKEN_RBRACE, nt.type);
+	free(nt.literal);	
+
+	free(input);
+}
+
 void TestNextToken_ (CuTest *tc){
 	char* input = strdup("");
 	InitLexer(input);
@@ -341,6 +374,7 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_Entity);
 	SUITE_ADD_TEST(suite, TestNextToken_EntityDeclaration);
 	SUITE_ADD_TEST(suite, TestNextToken_PortDirections);
+	SUITE_ADD_TEST(suite, TestNextToken_ProcessDeclaration);
 
 	return suite;
 }
