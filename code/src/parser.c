@@ -500,32 +500,28 @@ static Dba* parseArchBodyStatements(){
 }
 
 static Dba* parseArchBodyDeclarations(){
-	Dba* decls = InitBlockArray(sizeof(struct SignalDecl));
+	Dba* decls = InitBlockArray(sizeof(struct Declaration));
 
-	while(match(TOKEN_SIG)){
-		struct SignalDecl decl = {0};
+	while(thereAreDeclarations()){
+		
+		struct Declaration decl = {0};
 
-		consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
-		decl.name = (struct Identifier*)parseIdentifier();
-		
-		nextToken();
-		if(!validDataType()){
-			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
-		}	
-		decl.dtype = parseDataType(p->currToken.literal);
-		
-		nextToken();
-		if(match(TOKEN_VASSIGN)){
-			nextToken();
-			decl.expression = parseExpression(LOWEST_PREC);	
+		switch(p->currToken.type){
+			case TOKEN_SIG: {
+				decl.type = SIGNAL_DECLARATION;
+				parseSignalDeclaration(&(decl.as.signalDeclaration));
+				break;
+			}
+
+			default:
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				break;
 		}
 
-		consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
 		WriteBlockArray(decls, (char*)(&decl));
-	
 		nextToken();	
 	}
-	
+
 	return decls;
 }
 

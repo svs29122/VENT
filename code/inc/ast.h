@@ -152,7 +152,7 @@ struct VariableAssign {
 #ifdef DEBUG
 	struct Token token; // the ":=" operator
 #endif
-	struct Label label;
+	struct Label* label;
 	struct Identifier* target;
 	struct Expression* expression;
 };
@@ -161,7 +161,7 @@ struct SignalAssign {
 #ifdef DEBUG
 	struct Token token; // the "<=" operator
 #endif
-	struct Label label;
+	struct Label* label;
 	struct Identifier* target;
 	struct Expression* expression;
 };

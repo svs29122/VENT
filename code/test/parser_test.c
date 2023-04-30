@@ -166,8 +166,11 @@ void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->as.architecture.declarations);		
-	struct SignalDecl* sDecl = (struct SignalDecl*)unit->as.architecture.declarations->block;
+	CuAssertPtrNotNullMsg(tc,"Arch body declarations NULL!", unit->as.architecture.declarations);		
+	struct Declaration* decl = (struct Declaration*)unit->as.architecture.declarations->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);
+		
+	struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
 
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
@@ -192,8 +195,10 @@ void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
 	CuAssertPtrNotNullMsg(tc,"Signal declarations NULL!", unit->as.architecture.declarations);		
-	struct SignalDecl* sDecl = (struct SignalDecl*)unit->as.architecture.declarations->block;
-
+	struct Declaration* decl = (struct Declaration*)unit->as.architecture.declarations->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);
+		
+	struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
@@ -220,8 +225,10 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
 	CuAssertPtrNotNullMsg(tc,"Arch declarations NULL!", unit->as.architecture.declarations);		
-	struct SignalDecl* sDecl = (struct SignalDecl*)unit->as.architecture.declarations->block;
-
+	struct Declaration* decl = (struct Declaration*)unit->as.architecture.declarations->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);
+		
+	struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
@@ -254,8 +261,10 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
 	CuAssertPtrNotNullMsg(tc,"Arch declarations NULL!", unit->as.architecture.declarations);		
-	struct SignalDecl* sDecl = (struct SignalDecl*)unit->as.architecture.declarations->block;
-
+	struct Declaration* decl = (struct Declaration*)unit->as.architecture.declarations->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);
+		
+	struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 
@@ -329,7 +338,10 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertPtrNotNullMsg(tc,"Arch declarations NULL!", unit->as.architecture.declarations);		
 
-	struct SignalDecl* sDecl = (struct SignalDecl*)unit->as.architecture.declarations->block;
+	struct Declaration* decl = (struct Declaration*)unit->as.architecture.declarations->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);
+		
+	struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", sDecl->name->value);
 	CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", "stl", sDecl->dtype->value);
 	CuAssertPtrNotNullMsg(tc,"Signal initialization expression NULL!", sDecl->expression);		
@@ -451,6 +463,8 @@ void TestParseProgram_ProcessStatement(CuTest *tc){
 void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(ander){ \
+			sig u stl := '0'; \
+			\
 			proc () { \
 				sig s stl := '0'; \
 				var i int; \

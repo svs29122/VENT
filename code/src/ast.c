@@ -33,19 +33,48 @@ struct OperationBlock* InitOperationBlock(void){
 	return op;
 }
 
+static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
+	op->doVariableDeclOp((void*)varDecl);
+	if(varDecl->name){
+		op->doIdentifierOp((void*)varDecl->name);
+	}
+	if(varDecl->dtype){
+		op->doDataTypeOp((void*)varDecl->dtype);
+	}	
+	if(varDecl->expression){
+		op->doExpressionOp((void*)varDecl->expression);
+	}
+}
+
+static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBlock* op){
+	op->doSignalDeclOp((void*)sigDecl);
+	if(sigDecl->name){
+		op->doIdentifierOp((void*)sigDecl->name);
+	}
+	if(sigDecl->dtype){
+		op->doDataTypeOp((void*)sigDecl->dtype);
+	}	
+	if(sigDecl->expression){
+		op->doExpressionOp((void*)sigDecl->expression);
+	}
+}
+
+static void walkSignalAssignment(struct SignalAssign* sigAssign, struct OperationBlock* op){
+	op->doSignalAssignOp((void*)sigAssign);
+	if(sigAssign->target){
+		op->doIdentifierOp((void*)sigAssign->target);
+	}
+	if(sigAssign->expression){
+		op->doExpressionOp((void*)sigAssign->expression);
+	}
+}
+
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 	for(int j=0; j < stmts->count; j++){
 		struct SequentialStatement* qstmt = (struct SequentialStatement*)(stmts->block + (j * stmts->blockSize));
 		switch(qstmt->type) {
 			case SEQ_SIGNAL_ASSIGNMENT: {
-				struct SignalAssign* sigAssign = &(qstmt->as.signalAssignment); 
-				op->doSignalAssignOp((void*)sigAssign);
-				if(sigAssign->target){
-					op->doIdentifierOp((void*)sigAssign->target);
-				}
-				if(sigAssign->expression){
-					op->doExpressionOp((void*)sigAssign->expression);
-				}
+				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
 				break;
 			}
 		
@@ -56,37 +85,17 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 	op->doBlockArrayOp((void*)stmts);
 }
 
-static void walkDeclarationsTmp(Dba* decls, struct OperationBlock* op){
+static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 	for(int j=0; j < decls->count; j++){
 		struct Declaration* decl = (struct Declaration*)(decls->block + (j * decls->blockSize));
 		switch (decl->type){
 			case SIGNAL_DECLARATION: {
-				struct SignalDecl* sigDecl = (struct SignalDecl*)(&(decl->as.signalDeclaration));
-				op->doSignalDeclOp((void*)sigDecl);
-				if(sigDecl->name){
-					op->doIdentifierOp((void*)sigDecl->name);
-				}
-				if(sigDecl->dtype){
-					op->doDataTypeOp((void*)sigDecl->dtype);
-				}	
-				if(sigDecl->expression){
-					op->doExpressionOp((void*)sigDecl->expression);
-				}
+				walkSignalDeclaration(&(decl->as.signalDeclaration), op);
 				break;
 			}		
 
 			case VARIABLE_DECLARATION: {
-				struct VariableDecl* varDecl = (struct VariableDecl*)(&(decl->as.variableDeclaration));
-				op->doVariableDeclOp((void*)varDecl);
-				if(varDecl->name){
-					op->doIdentifierOp((void*)varDecl->name);
-				}
-				if(varDecl->dtype){
-					op->doDataTypeOp((void*)varDecl->dtype);
-				}	
-				if(varDecl->expression){
-					op->doExpressionOp((void*)varDecl->expression);
-				}
+				walkVariableDeclaration(&(decl->as.variableDeclaration), op);
 				break;
 			}
 	
@@ -97,35 +106,31 @@ static void walkDeclarationsTmp(Dba* decls, struct OperationBlock* op){
 	op->doBlockArrayOp((void*)decls);
 }
 
+static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
+	op->doProcessOp((void*)proc);
+	if(proc->sensitivityList){
+		op->doIdentifierOp((void*)proc->sensitivityList);
+	}
+	if(proc->declarations){
+		walkDeclarations(proc->declarations, op);
+	}
+	if(proc->statements){
+		walkSequentialStatements(proc->statements, op);
+	}
+	op->doProcessCloseOp((void*)proc);
+}
+
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 	for(int j=0; j < stmts->count; j++){
 		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)(stmts->block + (j * stmts->blockSize));
 		switch(cstmt->type) {
 			case SIGNAL_ASSIGNMENT: {
-				struct SignalAssign* sigAssign = &(cstmt->as.signalAssignment); 
-				op->doSignalAssignOp((void*)sigAssign);
-				if(sigAssign->target){
-					op->doIdentifierOp((void*)sigAssign->target);
-				}
-				if(sigAssign->expression){
-					op->doExpressionOp((void*)sigAssign->expression);
-				}
+				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
 				break;
 			}
 		
 			case PROCESS: {
-				struct Process* proc = &(cstmt->as.process);
-				op->doProcessOp((void*)proc);
-				if(proc->sensitivityList){
-					op->doIdentifierOp((void*)proc->sensitivityList);
-				}
-				if(proc->declarations){
-					walkDeclarationsTmp(proc->declarations, op);
-				}
-				if(proc->statements){
-					walkSequentialStatements(proc->statements, op);
-				}
-				op->doProcessCloseOp((void*)proc);
+				walkProcessStatement(&(cstmt->as.process), op);
 				break;
 			}
 
@@ -134,23 +139,6 @@ static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 		}
 	}
 	op->doBlockArrayOp((void*)stmts);
-}
-
-static void walkDeclarations(Dba* decls, struct OperationBlock* op){
-	for(int j=0; j < decls->count; j++){
-		struct SignalDecl* sigDecl = (struct SignalDecl*)(decls->block + (j * decls->blockSize));
-		op->doSignalDeclOp((void*)sigDecl);
-		if(sigDecl->name){
-			op->doIdentifierOp((void*)sigDecl->name);
-		}
-		if(sigDecl->dtype){
-			op->doDataTypeOp((void*)sigDecl->dtype);
-		}	
-		if(sigDecl->expression){
-			op->doExpressionOp((void*)sigDecl->expression);
-		}
-	}
-	op->doBlockArrayOp((void*)decls);
 }
 
 static void walkArchitecture(struct ArchitectureDecl* archDecl, struct OperationBlock* op){

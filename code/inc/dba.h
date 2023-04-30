@@ -13,6 +13,8 @@
 		use a list instead
 */
 
+//TODO: add some sort of iterator interface to this structure
+
 typedef struct DynamicBlockArray {
 	int count; 
 	int capacity; 
