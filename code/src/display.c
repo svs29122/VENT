@@ -129,8 +129,25 @@ static void printPortDecl(void* pDecl){
 }
 
 static void printSignalDecl(void* sDecl){
-	printf("\e[0;32m""%cSignalDecl\r\n", shift(3));
-	ishift = 4;
+	int shiftVal = 3;
+	
+	if(inProcess){
+		shiftVal++;
+	}
+
+	printf("\e[0;32m""%cSignalDecl\r\n", shift(shiftVal));
+	ishift = shiftVal+1;
+}
+
+static void printVariableDecl(void* vDecl){
+	int shiftVal = 3;
+	
+	if(inProcess){
+		shiftVal++;
+	}
+
+	printf("\e[0;32m""%cVariableDecl\r\n", shift(shiftVal));
+	ishift = shiftVal+1;
 }
 
 static void printSignalAssign(void* sAssign){
@@ -160,7 +177,7 @@ static void printPortMode(void* pMode){
 }
 
 static void printDataType(void* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(4), ((struct DataType*)dType)->value);
+	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(ishift), ((struct DataType*)dType)->value);
 }
 
 static void printSubExpression(void* expr){
@@ -215,6 +232,7 @@ void PrintProgram(struct Program * prog){
 	opBlk->doArchDeclOp = printArchDecl;
 	opBlk->doPortDeclOp = printPortDecl;
 	opBlk->doSignalDeclOp = printSignalDecl;
+	opBlk->doVariableDeclOp = printVariableDecl;
 	opBlk->doSignalAssignOp = printSignalAssign;
 	opBlk->doProcessOp = printProcessStatement;
 	opBlk->doProcessCloseOp = printProcessClose;

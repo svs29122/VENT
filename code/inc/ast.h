@@ -25,6 +25,7 @@ struct OperationBlock {
 	astNodeOpPtr doPortDeclOpenOp;
 	astNodeOpPtr doPortDeclCloseOp;
 	astNodeOpPtr doSignalDeclOp;
+	astNodeOpPtr doVariableDeclOp;
 	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doProcessOp;
 	astNodeOpPtr doProcessCloseOp;
@@ -107,6 +108,16 @@ struct PortMode {
 	char* value;
 };
 
+struct VariableDecl {
+#ifdef DEBUG
+	struct Token token; // the sig keyword
+#endif
+	//TODO: need to add support for , separated identifier list
+	struct Identifier *name;
+	struct DataType* dtype;
+	struct Expression* expression;
+};
+
 struct SignalDecl {
 #ifdef DEBUG
 	struct Token token; // the sig keyword
@@ -115,6 +126,26 @@ struct SignalDecl {
 	struct Identifier *name;
 	struct DataType* dtype;
 	struct Expression* expression;
+};
+
+struct Declaration {
+	enum {
+		//PROCEDURE_DECLARATION,
+		//PROCEDURE_BODY,
+		//FUNCTION_DECLARATION,
+		//FUNCTION_BODY,
+		//TYPE_DECLARATION,
+		//SUBTYPE_DECLARATION,
+		//CONSTANT_DECLARATION,
+		SIGNAL_DECLARATION,
+		VARIABLE_DECLARATION,
+		//FILE_DECLARATION,
+		//COMPONENT_DECLARATION,
+	} type;
+	union {
+		struct SignalDecl signalDeclaration;
+		struct VariableDecl variableDeclaration;
+	} as;
 };
 
 struct VariableAssign {

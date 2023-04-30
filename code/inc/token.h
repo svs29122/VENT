@@ -29,15 +29,21 @@ enum TOKEN_TYPE {
 	TOKEN_XOR, 
 	TOKEN_NOT,
 
-	//assignment and declaration
+	//port direction modes
 	TOKEN_INPUT, 
 	TOKEN_OUTPUT, 
 	TOKEN_INOUT,			//25 
+
+	//assignment
 	TOKEN_SASSIGN, 
 	TOKEN_VASSIGN, 
 	TOKEN_AASSIGN, //aggregate assignment e.g. (others => '0')
+	
+	//declarations
 	TOKEN_SIG, 
 	TOKEN_VAR, 
+	TOKEN_FILE,
+	TOKEN_COMP, 			
 
 	//types
 	TOKEN_STL, 
@@ -60,7 +66,6 @@ enum TOKEN_TYPE {
 	TOKEN_ENT, 
 	TOKEN_ARCH, 			
 	TOKEN_GEN, 
-	TOKEN_COMP, 			
 	TOKEN_MAP, 
 	TOKEN_PROC,
 	TOKEN_OTHER,			

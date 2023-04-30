@@ -21,6 +21,7 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doPortDeclOpenOp				= noOp;
 	op->doPortDeclCloseOp			= noOp;
 	op->doSignalDeclOp				= noOp;
+	op->doVariableDeclOp				= noOp;
 	op->doSignalAssignOp				= noOp;
 	op->doProcessOp					= noOp;
 	op->doProcessCloseOp				= noOp;
@@ -55,6 +56,47 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 	op->doBlockArrayOp((void*)stmts);
 }
 
+static void walkDeclarationsTmp(Dba* decls, struct OperationBlock* op){
+	for(int j=0; j < decls->count; j++){
+		struct Declaration* decl = (struct Declaration*)(decls->block + (j * decls->blockSize));
+		switch (decl->type){
+			case SIGNAL_DECLARATION: {
+				struct SignalDecl* sigDecl = (struct SignalDecl*)(&(decl->as.signalDeclaration));
+				op->doSignalDeclOp((void*)sigDecl);
+				if(sigDecl->name){
+					op->doIdentifierOp((void*)sigDecl->name);
+				}
+				if(sigDecl->dtype){
+					op->doDataTypeOp((void*)sigDecl->dtype);
+				}	
+				if(sigDecl->expression){
+					op->doExpressionOp((void*)sigDecl->expression);
+				}
+				break;
+			}		
+
+			case VARIABLE_DECLARATION: {
+				struct VariableDecl* varDecl = (struct VariableDecl*)(&(decl->as.variableDeclaration));
+				op->doVariableDeclOp((void*)varDecl);
+				if(varDecl->name){
+					op->doIdentifierOp((void*)varDecl->name);
+				}
+				if(varDecl->dtype){
+					op->doDataTypeOp((void*)varDecl->dtype);
+				}	
+				if(varDecl->expression){
+					op->doExpressionOp((void*)varDecl->expression);
+				}
+				break;
+			}
+	
+			default:
+				break;
+		}
+	}
+	op->doBlockArrayOp((void*)decls);
+}
+
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 	for(int j=0; j < stmts->count; j++){
 		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)(stmts->block + (j * stmts->blockSize));
@@ -76,6 +118,9 @@ static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 				op->doProcessOp((void*)proc);
 				if(proc->sensitivityList){
 					op->doIdentifierOp((void*)proc->sensitivityList);
+				}
+				if(proc->declarations){
+					walkDeclarationsTmp(proc->declarations, op);
 				}
 				if(proc->statements){
 					walkSequentialStatements(proc->statements, op);
