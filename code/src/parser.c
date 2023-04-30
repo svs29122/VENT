@@ -64,8 +64,9 @@
 									| unaryOp expression
 									| (expression)
 									| name
-									| number
-									| phyLiteral
+									| numericLiteral
+									| basedLiteral
+									| physicalLiteral
 									| CHAR
 									| STRING 
 									| aggregate
@@ -81,6 +82,8 @@
 	unaryOp			->			"+" | "-" | "abs" | "not" 
 
 	name				->			IDENTIFIER
+	
+	numericLiteral	->			INTEGER | REAL
 
 */
 ////////////////////////////////////////////////////////////////
@@ -133,12 +136,14 @@ struct ParseRule{
 //forward declarations
 static struct Expression* parseBinary(struct Expression* expr);
 static struct Expression* parseIdentifier();
-static struct Expression* parseCharlit();
+static struct Expression* parseCharLiteral();
+static struct Expression* parseNumericLiteral();
 
 struct ParseRule rules[] = {
-	[TOKEN_AND] = {NULL, parseBinary, LOGICAL_PREC},
-	[TOKEN_IDENTIFIER] = {parseIdentifier, NULL, LOWEST_PREC},
-	[TOKEN_CHARLIT] = {parseCharlit, NULL, LOWEST_PREC},
+	[TOKEN_AND] 			= {NULL						, parseBinary		, LOGICAL_PREC},
+	[TOKEN_IDENTIFIER] 	= {parseIdentifier		, NULL				, LOWEST_PREC},
+	[TOKEN_CHARLIT] 		= {parseCharLiteral		, NULL				, LOWEST_PREC},
+	[TOKEN_NUMBERLIT] 	= {parseNumericLiteral	, NULL				, LOWEST_PREC},
 };
 
 static struct ParseRule* getRule(enum TOKEN_TYPE type){
@@ -264,7 +269,7 @@ static struct Expression* parseIdentifier(){
 	return &(ident->self);
 }
 
-static struct Expression* parseCharlit(){
+static struct Expression* parseCharLiteral(){
 	struct CharExpr* chexp = calloc(1, sizeof(struct CharExpr));
 #ifdef DEBUG
 	memcpy(&(chexp->self.token), &(p->currToken), sizeof(struct Token));
@@ -277,6 +282,21 @@ static struct Expression* parseCharlit(){
 	memcpy(chexp->literal, p->currToken.literal, size);
 	
 	return &(chexp->self);
+}
+
+static struct Expression* parseNumericLiteral(){
+	struct NumExpr* nexp = calloc(1, sizeof(struct NumExpr));
+#ifdef DEBUG
+	memcpy(&(nexp->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	nexp->self.type = NUM_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	nexp->literal = calloc(size, sizeof(char));
+	memcpy(nexp->literal, p->currToken.literal, size);
+
+	return &(nexp->self);
 }
 
 static struct Expression* parseBinary(struct Expression* expr){
@@ -681,6 +701,13 @@ static void freeExpression(void* expr){
          struct CharExpr* chexp = (struct CharExpr*)expr;
          free(chexp->literal);
 			free(chexp);
+         break;
+      }
+
+      case NUM_EXPR: {
+         struct NumExpr* nexp = (struct NumExpr*)expr;
+         free(nexp->literal);
+			free(nexp);
          break;
       }
 

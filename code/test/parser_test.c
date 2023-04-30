@@ -462,22 +462,53 @@ void TestParseProgram_ProcessStatement(CuTest *tc){
 
 void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 	char* input = strdup(" \
+		arch behavioral(ander){ \n \
+			sig u stl := '0'; \n \
+			\n \
+			proc () { \n \
+				sig s stl := '0'; \n \
+				var i int := 123456; \n \
+				\n \
+			} \n \
+		} \n \
+	");
+	setup(input);
+
+	struct Program* prog = ParseProgram();
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
+
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
+
+	struct Process* proc = (struct Process*)(&(cstmt->as.process));
+
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithWhileWait(CuTest *tc){
+	char* input = strdup(" \
 		arch behavioral(ander){ \
-			sig u stl := '0'; \
 			\
 			proc () { \
 				sig s stl := '0'; \
 				var i int; \
 				\
-			} \
-		} \
-	");
-/*
 				while(i < 10) { \
 					i := i + 2; \
 				} \
 				wait; \
-*/
+			} \
+		} \
+	");
 	setup(input);
 
 	struct Program* prog = ParseProgram();

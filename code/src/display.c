@@ -191,6 +191,12 @@ static void printSubExpression(void* expr){
 			break;
 		}
 
+		case NUM_EXPR: {
+			struct NumExpr* nexp = (struct NumExpr*)expr;
+			printf("%s", nexp->literal);
+			break;
+		}
+
 		case BINARY_EXPR:{
 			struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
 			printSubExpression((void*)bexp->left);

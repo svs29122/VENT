@@ -291,17 +291,16 @@ static struct Token readNumericLiteral(){
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
-	//TODO: assuming a space following the number?
-	// no way that's correct
-	while(peek() != ' ' && peek() != '\0'){
+	//TODO: What about operators following numbers without spaces?
+	while(peek() != ' ' && peek() != '\0' && peek() != ';'){
 		readChar();
 		end++;
 	}	
 
 	tok.type = TOKEN_NUMBERLIT;
 	tok.lineNumber = l->line;
-		
-	int lSize = sizeof(char) * (int)(end-start) + 2;
+	
+	int lSize = sizeof(char) * (int)(end-start) + 1; //add 1 for NULL termination
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
 	tok.literal[lSize-1] = '\0';

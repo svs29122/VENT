@@ -40,6 +40,7 @@ enum ExpressionType{
 		UNARY_EXPR,
 		GROUPED_EXPR,
 		NAME_EXPR,
+		NUM_EXPR,
 		PHYLIT_EXPR,
 		CHAR_EXPR,
 		STRING_EXPR,
@@ -75,6 +76,11 @@ struct NameExpr {
 };
 
 struct CharExpr {
+	struct Expression self;
+	char* literal;
+};
+
+struct NumExpr {
 	struct Expression self;
 	char* literal;
 };
