@@ -396,7 +396,7 @@ static Dba* parseArchBodyDeclarations(){
 	Dba* decls = InitBlockArray(sizeof(struct SignalDecl));
 
 	while(match(TOKEN_SIG)){
-		struct SignalDecl decl;
+		struct SignalDecl decl = {0};
 
 		consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
 		decl.name = (struct Identifier*)parseIdentifier();
@@ -499,7 +499,7 @@ static void parseEntityDecl(struct EntityDecl* eDecl){
 }
 
 static struct UseStatement parseUseStatement(){
-	struct UseStatement stmt;
+	struct UseStatement stmt = {0};
 
 #ifdef DEBUG	
 	memcpy(&(stmt.token), &(p->currToken), sizeof(struct Token));
@@ -516,27 +516,24 @@ static struct UseStatement parseUseStatement(){
 	return stmt;
 }
 
-static struct DesignUnit* parseDesignUnit(){
-
-	struct DesignUnit* unit = calloc(1, sizeof(struct DesignUnit));
+static struct DesignUnit parseDesignUnit(){
+	struct DesignUnit unit = {0};
 
 	switch(p->currToken.type){
 		case TOKEN_ENT: { 
-			unit->type = ENTITY;
-			parseEntityDecl(&(unit->as.entity));
+			unit.type = ENTITY;
+			parseEntityDecl(&(unit.as.entity));
 			break;
 		}
 
 		case TOKEN_ARCH: {
-			unit->type = ARCHITECTURE;
-			parseArchitectureDecl(&(unit->as.architecture));
+			unit.type = ARCHITECTURE;
+			parseArchitectureDecl(&(unit.as.architecture));
 			break;
 		}
 
 		default:
 			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid design unit type");
-			free(unit);
-			unit = NULL;
 			break;
 	}
 
@@ -559,19 +556,12 @@ struct Program* ParseProgram(){
 
 	// next parse any design units
 	while(p->currToken.type != TOKEN_EOP){
-		// Design units can be arbitrarily large,so putting this temporary
-		//	struct on the heap just to be safe 
-		struct DesignUnit* unit = parseDesignUnit();
+		struct DesignUnit unit = parseDesignUnit();
 		
-		if(unit != NULL){
-			if(prog->units == NULL){
-				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
-			}
-			WriteBlockArray(prog->units, (char*)unit);
-			free(unit);
-		} else {
-			break;
+		if(prog->units == NULL){
+			prog->units = InitBlockArray(sizeof(struct DesignUnit));	
 		}
+		WriteBlockArray(prog->units, (char*)(&unit));
 		nextToken();
 	}
 	
@@ -579,7 +569,8 @@ struct Program* ParseProgram(){
 }
 
 static void freeExpression(void* expr){
-   enum ExpressionType type = ((struct Expression*)expr)->type;
+   enum ExpressionType type = {0};
+	type = ((struct Expression*)expr)->type;
 
    switch(type) {
 

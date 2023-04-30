@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
+#include "valgrind.h"
 #include "cutest.h"
 #include "lexer.h"
 #include "parser.h"
@@ -384,12 +386,15 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 		CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
 		FreeProgram(prog);	
+
+		//break early if runing on Valgrind
+		if(RUNNING_ON_VALGRIND) break;
 	}
 	float timeB = (float)clock()/CLOCKS_PER_SEC;
 	
 	//Note: on an Intel Core i7-7700 @3.60GHz this takes ~0.128877 seconds
 	if((timeB-timeA) > 1.0){
-		printf("Parsing 10,000 VENT files took longer than a second: ~%fs\r\n", timeB-timeA);
+		printf("Parsing 10,000 VENT programs took longer than a second: ~%fs\r\n", timeB-timeA);
 	}
 
 	free(input);

@@ -14,7 +14,7 @@ static void emitUseStatement(void* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;
 	
 	int libCnt = -1;
-	char currChar;
+	char currChar = 0;
 	while(currChar != '.'){
 		libCnt++;
 		currChar = useStmt->value[libCnt];
