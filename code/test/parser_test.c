@@ -400,14 +400,12 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 	free(input);
 }
 
-void TestParseProgram_ProcessDeclaration(CuTest *tc){
+void TestParseProgram_ProcessStatement(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(ander){ \
 			sig a stl := '0'; \
 			sig b stl; \
 			sig y stl := '0'; \
-			\
-			a <= '1'; \
 			\
 			proc (clk) { \
 					y <= a and b; \
@@ -424,6 +422,63 @@ void TestParseProgram_ProcessDeclaration(CuTest *tc){
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
+
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
+
+	struct Process* proc = (struct Process*)(&(cstmt->as.process));
+	CuAssertStrEquals_Msg(tc,"Expected clk signal in sensitivity list!", "clk", proc->sensitivityList->value);
+	
+	struct SequentialStatement* qstmt = (struct SequentialStatement*)proc->statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected signal assignment in process body!", SEQ_SIGNAL_ASSIGNMENT, qstmt->type);
+
+	struct SignalAssign* sAssign = (struct SignalAssign*)(&(qstmt->as.signalAssignment));
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", sAssign->target->value);
+	CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
+
+	struct BinaryExpr* bExp = (struct BinaryExpr*) sAssign->expression;
+	CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, bExp->self.type);
+	CuAssertIntEquals_Msg(tc,"Expected identifier!", NAME_EXPR, ((struct Identifier*)bExp->left)->self.type);
+	CuAssertIntEquals_Msg(tc,"Expected identifier!", NAME_EXPR, ((struct Identifier*)bExp->right)->self.type);
+	CuAssertStrEquals_Msg(tc,"Expected and operation!", "and", bExp->op);
+
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(ander){ \
+			proc () { \
+				sig s stl := '0'; \
+				var i int; \
+				\
+			} \
+		} \
+	");
+/*
+				while(i < 10) { \
+					i := i + 2; \
+				} \
+				wait; \
+*/
+	setup(input);
+
+	struct Program* prog = ParseProgram();
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+
+	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
+
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
+
+	struct Process* proc = (struct Process*)(&(cstmt->as.process));
 
 	PrintProgram(prog);
 
@@ -455,7 +510,8 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssignBinaryExpression);
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithArchitecture);
 	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
-	SUITE_ADD_TEST(suite, TestParseProgram_ProcessDeclaration);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessStatement);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithDeclarations);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

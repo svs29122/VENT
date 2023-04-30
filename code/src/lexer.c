@@ -151,6 +151,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
+		case 'v': return checkKeyword(1, 2, size, lit, "ar", TOKEN_VAR);
 	}
 
 	return TOKEN_IDENTIFIER;

@@ -213,6 +213,15 @@ static bool validDataType(){
 	return valid;
 }
 
+static bool thereAreDeclarations(){
+	bool valid = false;
+
+	valid = 	match(TOKEN_SIG)		|| match(TOKEN_VAR)		||
+				match(TOKEN_COMP)		|| match(TOKEN_FILE);
+
+	return valid;
+}
+
 static struct Expression* parseExpression(enum Precedence precedence){
 	ParsePrefixFn prefixRule = getRule(p->currToken.type)->prefix;
 
@@ -317,6 +326,78 @@ static struct PortMode* parsePortMode(char* val){
 	return pm;
 }
 
+static void parseVariableDeclaration(struct VariableDecl* decl){
+
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after var keyword in variable declaration");
+	decl->name = (struct Identifier*)parseIdentifier();
+		
+	nextToken();
+	if(!validDataType()){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
+	}	
+	decl->dtype = parseDataType(p->currToken.literal);
+		
+	nextToken();
+	if(match(TOKEN_VASSIGN)){
+		nextToken();
+		decl->expression = parseExpression(LOWEST_PREC);	
+	}
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of variable declaration");
+}
+
+static void parseSignalDeclaration(struct SignalDecl* decl){
+
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
+	decl->name = (struct Identifier*)parseIdentifier();
+		
+	nextToken();
+	if(!validDataType()){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
+	}	
+	decl->dtype = parseDataType(p->currToken.literal);
+		
+	nextToken();
+	if(match(TOKEN_VASSIGN)){
+		nextToken();
+		decl->expression = parseExpression(LOWEST_PREC);	
+	}
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
+}
+
+static Dba* parseProcessBodyDeclarations(){
+	Dba* decls = InitBlockArray(sizeof(struct Declaration));
+
+	while(thereAreDeclarations()){
+		
+		struct Declaration decl = {0};
+
+		switch(p->currToken.type){
+			case TOKEN_SIG: {
+				decl.type = SIGNAL_DECLARATION;
+				parseSignalDeclaration(&(decl.as.signalDeclaration));
+				break;
+			}
+
+			case TOKEN_VAR: {
+				decl.type = VARIABLE_DECLARATION;
+				parseVariableDeclaration(&(decl.as.variableDeclaration));
+				break;
+			}
+
+			default:
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				break;
+		}
+
+		WriteBlockArray(decls, (char*)(&decl));
+		nextToken();	
+	}
+
+	return decls;
+}
+
 static void parseSignalAssignment(struct SignalAssign *sigAssign){
 #ifdef DEBUG
 	memcpy(&(sigAssign->token), &(p->currToken), sizeof(struct Token));
@@ -378,8 +459,7 @@ static void parseProcessStatement(struct Process* proc){
 
 	nextToken();
 	if(!match(TOKEN_RBRACE)){
-		//TODO: handle declarations in process statement
-		//proc->declarations = parseProcessBodyDeclarations();	
+		proc->declarations = parseProcessBodyDeclarations();	
 		proc->statements = parseProcessBodyStatements();	
 	}
 
