@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include "ast.h"
@@ -85,6 +86,7 @@ void DoMenu(void){
 }
 
 static int ishift;
+static bool inProcess;
 
 static char shift(int c){
 	printf("\e[0;34m|");
@@ -132,13 +134,25 @@ static void printSignalDecl(void* sDecl){
 }
 
 static void printSignalAssign(void* sAssign){
-	printf("\e[0;32m""%cSignalAssign\r\n", shift(3));
-	ishift = 4;
+	int shiftVal = 3;
+
+	if(inProcess){
+		shiftVal++;
+	}
+
+	printf("\e[0;32m""%cSignalAssign\r\n", shift(shiftVal));
+	ishift = shiftVal+1; 
 }
 
 static void printProcessStatement(void* proc){
 	printf("\e[0;32m""%cProcess\r\n", shift(3));
 	ishift = 4;
+	
+	inProcess = true;
+}
+
+static void printProcessClose(void* proc){
+	inProcess = false;
 }
 
 static void printPortMode(void* pMode){
@@ -203,6 +217,7 @@ void PrintProgram(struct Program * prog){
 	opBlk->doSignalDeclOp = printSignalDecl;
 	opBlk->doSignalAssignOp = printSignalAssign;
 	opBlk->doProcessOp = printProcessStatement;
+	opBlk->doProcessCloseOp = printProcessClose;
 	opBlk->doIdentifierOp = printIdentifier;
 	opBlk->doPortModeOp = printPortMode;
 	opBlk->doDataTypeOp = printDataType;

@@ -27,6 +27,7 @@ struct OperationBlock {
 	astNodeOpPtr doSignalDeclOp;
 	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doProcessOp;
+	astNodeOpPtr doProcessCloseOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
@@ -49,7 +50,7 @@ enum ExpressionType{
 
 struct Expression {
 #ifdef DEBUG
-	Token token;
+	struct Token token;
 #endif
 	enum ExpressionType type;
 };
@@ -87,28 +88,28 @@ struct Identifier {
 
 struct DataType {
 #ifdef DEBUG
-	Token token;
+	struct Token token;
 #endif
 	char* value;
 };
 
 struct Label {
 #ifdef DEBUG
-	Token token;
+	struct Token token;
 #endif
 	char* value;
 };
 
 struct PortMode {
 #ifdef DEBUG
-	Token token;
+	struct Token token;
 #endif
 	char* value;
 };
 
 struct SignalDecl {
 #ifdef DEBUG
-	Token token; // the sig keyword
+	struct Token token; // the sig keyword
 #endif
 	//need to add support for , separated identifier list
 	struct Identifier *name;
@@ -116,18 +117,41 @@ struct SignalDecl {
 	struct Expression* expression;
 };
 
-struct SignalAssign {
+struct VariableAssign {
 #ifdef DEBUG
-	Token token; // the "<=" operator
+	struct Token token; // the ":=" operator
 #endif
 	struct Label label;
 	struct Identifier* target;
 	struct Expression* expression;
 };
 
+struct SignalAssign {
+#ifdef DEBUG
+	struct Token token; // the "<=" operator
+#endif
+	struct Label label;
+	struct Identifier* target;
+	struct Expression* expression;
+};
+
+struct SequentialStatement {
+	enum {
+		SEQ_SIGNAL_ASSIGNMENT,
+		VARIABLE_ASSIGNMENT,
+		IF,
+		//CASE,
+		//LOOP,
+	} type;
+	union {
+		struct SignalAssign signalAssignment;
+		struct VariableAssign variableAssignment;
+	} as;
+};
+
 struct Process {
 #ifdef DEBUG
-	Token token; // the proc keyword
+	struct Token token; // the proc keyword
 #endif
 	struct Label label;
 	struct Identifier* sensitivityList;
@@ -153,7 +177,7 @@ struct ConcurrentStatement {
 
 struct ArchitectureDecl {
 #ifdef DEBUG
-	Token token; //the arch keyword
+	struct Token token; //the arch keyword
 #endif
 	struct Identifier* archName;
 	struct Identifier* entName;
@@ -170,7 +194,7 @@ struct PortDecl {
 
 struct EntityDecl {
 #ifdef DEBUG
-	Token token; // the ent keyword
+	struct Token token; // the ent keyword
 #endif
 	struct Identifier* name;
 	struct DynamicBlockArray* ports;
@@ -195,7 +219,7 @@ struct DesignUnit{
 
 struct UseStatement {
 #ifdef DEBUG
-	Token token;
+	struct Token token;
 #endif
 	char* value;
 };

@@ -159,7 +159,7 @@ end loop;							/	}
 
 
 process is							/	proc() {
-    variable i : integer := 0;/		var int i := 0;
+    variable i: integer := 0; /		var i int := 0;
 begin									/		
 	while i < 10 loop				/		while(i < 10) {
 	    i := i + 2;				/			i := i + 2;

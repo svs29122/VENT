@@ -317,6 +317,49 @@ static struct PortMode* parsePortMode(char* val){
 	return pm;
 }
 
+static void parseSignalAssignment(struct SignalAssign *sigAssign){
+#ifdef DEBUG
+	memcpy(&(sigAssign->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
+	sigAssign->target = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
+	
+	nextToken();
+	sigAssign->expression = parseExpression(LOWEST_PREC);
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
+}
+
+static Dba* parseProcessBodyStatements(){
+	Dba* stmts = InitBlockArray(sizeof(struct SequentialStatement));
+	
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		
+		struct SequentialStatement seqStmt = {0};
+		
+		switch(p->currToken.type){
+			case TOKEN_IDENTIFIER: { 
+				//TODO: this may need some work depending on what we do with labels
+				seqStmt.type = SEQ_SIGNAL_ASSIGNMENT;
+				parseSignalAssignment(&(seqStmt.as.signalAssignment));
+				break;
+			}
+	
+			default:
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				break;
+		}
+
+		WriteBlockArray(stmts, (char*)(&seqStmt));
+		nextToken();	
+	}
+
+	return stmts;
+}
+
 static void parseProcessStatement(struct Process* proc){
 #ifdef DEBUG
 	memcpy(&(proc->token), &(p->currToken), sizeof(struct Token));
@@ -337,26 +380,10 @@ static void parseProcessStatement(struct Process* proc){
 	if(!match(TOKEN_RBRACE)){
 		//TODO: handle declarations in process statement
 		//proc->declarations = parseProcessBodyDeclarations();	
-		//proc->statements = parseProcessBodyStatements();	
+		proc->statements = parseProcessBodyStatements();	
 	}
 
 	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
-}
-
-static void parseSignalAssignment(struct SignalAssign *sigAssign){
-#ifdef DEBUG
-	memcpy(&(sigAssign->token), &(p->currToken), sizeof(struct Token));
-#endif
-
-	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
-	sigAssign->target = (struct Identifier*)parseIdentifier();
-	
-	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
-	
-	nextToken();
-	sigAssign->expression = parseExpression(LOWEST_PREC);
-
-	consume(TOKEN_SCOLON, "Expect semicolon at end of signal assignment");	
 }
 
 static Dba* parseArchBodyStatements(){

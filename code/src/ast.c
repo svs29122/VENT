@@ -23,12 +23,36 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doSignalDeclOp				= noOp;
 	op->doSignalAssignOp				= noOp;
 	op->doProcessOp					= noOp;
+	op->doProcessCloseOp				= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
 	op->doExpressionOp				= noOp;
 
 	return op;
+}
+
+static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
+	for(int j=0; j < stmts->count; j++){
+		struct SequentialStatement* qstmt = (struct SequentialStatement*)(stmts->block + (j * stmts->blockSize));
+		switch(qstmt->type) {
+			case SEQ_SIGNAL_ASSIGNMENT: {
+				struct SignalAssign* sigAssign = &(qstmt->as.signalAssignment); 
+				op->doSignalAssignOp((void*)sigAssign);
+				if(sigAssign->target){
+					op->doIdentifierOp((void*)sigAssign->target);
+				}
+				if(sigAssign->expression){
+					op->doExpressionOp((void*)sigAssign->expression);
+				}
+				break;
+			}
+		
+			default:
+				break;
+		}
+	}
+	op->doBlockArrayOp((void*)stmts);
 }
 
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
@@ -53,6 +77,10 @@ static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 				if(proc->sensitivityList){
 					op->doIdentifierOp((void*)proc->sensitivityList);
 				}
+				if(proc->statements){
+					walkSequentialStatements(proc->statements, op);
+				}
+				op->doProcessCloseOp((void*)proc);
 				break;
 			}
 
