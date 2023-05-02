@@ -5,7 +5,7 @@
 **N**ot<br/>
 **T**errible<br/>
 
-VENT is a Hardware Description Language designed to transpile directly to VHDL. VENT uses a simplified 'c-like' syntax, along with fewer and shorter keywords than VHDL. The major design goal of VENT is to create a friendlier, less verbose version of VHDL. 
+VENT is a Hardware Description Language designed to transpile to VHDL. VENT uses a simplified 'c-like' syntax, along with fewer and shorter keywords than VHDL. The major design goal of VENT is to create a friendlier, less verbose version of VHDL. 
 
 NOTE: the VENT grammar is still being defined and is a WIP
 
