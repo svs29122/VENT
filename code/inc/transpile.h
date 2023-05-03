@@ -4,4 +4,4 @@
 void TranspileProgram(struct Program* prog, char* fileName);
 
 
-#endif
+#endif // INC_TRANSPILE_H

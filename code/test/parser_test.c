@@ -8,6 +8,7 @@
 #include "cutest.h"
 #include "lexer.h"
 #include "parser.h"
+#include "ast.h"
 #include "display.h"
 
 // helper function declarations
@@ -244,8 +245,8 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 
 		checkDesignUnit(tc, prog, unitNum, ARCHITECTURE, "behavioral", "ander");
 		checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, declNum, "temp", "stl", "0");
-		checkArchStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, declNum++, "temp", NULL, NULL);
-		checkArchStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, declNum++, "y", "temp", NULL);
+		checkArchStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, stmtNum++, "temp", NULL, NULL);
+		checkArchStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, stmtNum++, "y", "temp", NULL);
 
 		FreeProgram(prog);	
 
