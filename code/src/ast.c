@@ -70,8 +70,8 @@ static void walkSignalAssignment(struct SignalAssign* sigAssign, struct Operatio
 }
 
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
-	for(int j=0; j < stmts->count; j++){
-		struct SequentialStatement* qstmt = (struct SequentialStatement*)(stmts->block + (j * stmts->blockSize));
+	for(int i=0; i < BlockCount(stmts); i++){
+		struct SequentialStatement* qstmt = (struct SequentialStatement*) ReadBlockArray(stmts, i);
 		switch(qstmt->type) {
 			case SEQ_SIGNAL_ASSIGNMENT: {
 				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
@@ -86,8 +86,8 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 }
 
 static void walkDeclarations(Dba* decls, struct OperationBlock* op){
-	for(int j=0; j < decls->count; j++){
-		struct Declaration* decl = (struct Declaration*)(decls->block + (j * decls->blockSize));
+	for(int i=0; i < BlockCount(decls); i++){
+		struct Declaration* decl = (struct Declaration*) ReadBlockArray(decls, i);
 		switch (decl->type){
 			case SIGNAL_DECLARATION: {
 				walkSignalDeclaration(&(decl->as.signalDeclaration), op);
@@ -121,8 +121,8 @@ static void walkProcessStatement(struct Process* proc, struct OperationBlock* op
 }
 
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
-	for(int j=0; j < stmts->count; j++){
-		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)(stmts->block + (j * stmts->blockSize));
+	for(int i=0; i < BlockCount(stmts); i++){
+		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(stmts, i) ;
 		switch(cstmt->type) {
 			case SIGNAL_ASSIGNMENT: {
 				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
@@ -167,8 +167,8 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 	if(entDecl->ports){
 		Dba* ports = entDecl->ports;
 		op->doPortDeclOpenOp((void*)ports);
-		for(int j=0; j < ports->count; j++){
-			struct PortDecl* portDecl = (struct PortDecl*)(ports->block + (j * ports->blockSize));
+		for(int i=0; i < BlockCount(ports); i++){
+			struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
 			op->doPortDeclOp((void*)portDecl);
 			if(portDecl->name){
 				op->doIdentifierOp((void*)portDecl->name);
@@ -187,8 +187,8 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 }
 
 static void walkDesignUnits(Dba* arr, struct OperationBlock* op){
-	for(int i=0; i < arr->count; i++){
-		struct DesignUnit* unit = (struct DesignUnit*)(arr->block + (i * arr->blockSize));
+	for(int i=0; i < BlockCount(arr); i++){
+		struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(arr, i);
 		op->doDesignUnitOp((void*)unit);
 		switch(unit->type){
 			case ENTITY: {
@@ -207,8 +207,8 @@ static void walkDesignUnits(Dba* arr, struct OperationBlock* op){
 }
 
 static void walkUseStatements(Dba* arr, struct OperationBlock* op){
-	for(int i=0; i < arr->count; i++){
-		struct UseStatement* stmt = (struct UseStatement*)(arr->block + (i * arr->blockSize));
+	for(int i=0; i < BlockCount(arr); i++){
+		struct UseStatement* stmt = (struct UseStatement*) ReadBlockArray(arr, i);
 		if(stmt){
 			op->doUseStatementOp((void*)stmt);
 		}

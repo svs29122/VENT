@@ -281,15 +281,15 @@ void TestParseProgram_ProcessStatement(CuTest *tc){
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 
-	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, 0);
 
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(unit->as.architecture.statements, 0);
 	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
 
 	struct Process* proc = (struct Process*)(&(cstmt->as.process));
 	CuAssertStrEquals_Msg(tc,"Expected clk signal in sensitivity list!", "clk", proc->sensitivityList->value);
 	
-	struct SequentialStatement* qstmt = (struct SequentialStatement*)proc->statements->block;
+	struct SequentialStatement* qstmt = (struct SequentialStatement*) ReadBlockArray(proc->statements, 0);
 	CuAssertIntEquals_Msg(tc,"Expected signal assignment in process body!", SEQ_SIGNAL_ASSIGNMENT, qstmt->type);
 
 	struct SignalAssign* sAssign = (struct SignalAssign*)(&(qstmt->as.signalAssignment));
@@ -326,12 +326,12 @@ void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, 0);
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(unit->as.architecture.statements, 0);
 	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
 
 	struct Process* proc = (struct Process*)(&(cstmt->as.process));
@@ -363,12 +363,12 @@ void TestParseProgram_ProcessWithWhileWait(CuTest *tc){
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	struct DesignUnit* unit = (struct DesignUnit*)prog->units->block;
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, 0);
 	CuAssertIntEquals_Msg(tc,"Expected ARCH design unit!",  ARCHITECTURE, unit->type);
 	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", unit->as.architecture.archName->value);
 	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", unit->as.architecture.entName->value);
 
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)unit->as.architecture.statements->block;
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(unit->as.architecture.statements, 0);
 	CuAssertIntEquals_Msg(tc,"Expected Process statement!", PROCESS, cstmt->type);
 
 	struct Process* proc = (struct Process*)(&(cstmt->as.process));
@@ -422,7 +422,7 @@ static void checkProgram(CuTest* tc, struct Program* prog){
 
 static void checkUse(CuTest* tc, struct Program* prog, const char* useLiteral){
 	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
-	struct UseStatement* stmt = (struct UseStatement*)prog->useStatements->block;
+	struct UseStatement* stmt = (struct UseStatement*) ReadBlockArray(prog->useStatements, 0);
 	CuAssertStrEquals_Msg(tc,"use path incorrect!", useLiteral, stmt->value);
 
 }
@@ -430,7 +430,7 @@ static void checkUse(CuTest* tc, struct Program* prog, const char* useLiteral){
 static void checkDesignUnit(CuTest* tc, struct Program* prog, int dnum, int type, const char* uname, const char* ename){
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	struct DesignUnit* unit = (struct DesignUnit*)(prog->units->block + ((dnum-1) * prog->units->blockSize));
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
 	CuAssertIntEquals_Msg(tc,"Wrong design unit type!",  type, unit->type);
 	if(type == ENTITY){
 		CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", uname, unit->as.entity.name->value);
@@ -444,10 +444,10 @@ static void checkPort(CuTest* tc, struct Program* prog, int dnum, int pnum, cons
 
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
 
-	struct DesignUnit* unit = (struct DesignUnit*)(prog->units->block + ((dnum-1) * prog->units->blockSize));
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
 	Dba* ports = unit->as.entity.ports;
 	
-	struct PortDecl* port = (struct PortDecl*)(ports->block + ((pnum-1) * ports->blockSize));
+	struct PortDecl* port = (struct PortDecl*) ReadBlockArray(ports, pnum-1);
 	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", id, port->name->value);
 	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", mode, port->pmode->value);
 	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", dtype, port->dtype->value);
@@ -456,12 +456,12 @@ static void checkPort(CuTest* tc, struct Program* prog, int dnum, int pnum, cons
 static void checkArchDeclaration(CuTest* tc, struct Program* prog, int dnum, int declType, int declnum, const char* name1, const char* name2, const char* name3){
 
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-	struct DesignUnit* unit = (struct DesignUnit*)(prog->units->block + ((dnum-1) * prog->units->blockSize));
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
 
 	CuAssertPtrNotNullMsg(tc,"Arch body declarations NULL!", unit->as.architecture.declarations);		
 	Dba* declarations = unit->as.architecture.declarations;
 
-	struct Declaration* decl = (struct Declaration*)(declarations->block + ((declnum-1) * declarations->blockSize));
+	struct Declaration* decl = (struct Declaration*) ReadBlockArray(declarations, declnum-1);
 
 	switch (declType) { 
 		case SIGNAL_DECLARATION: {
@@ -487,12 +487,12 @@ static void checkArchDeclaration(CuTest* tc, struct Program* prog, int dnum, int
 static void checkArchStatement(CuTest* tc, struct Program* prog, int dnum, int stmtType, int snum, const char* name1, const char* name2, const char* name3){
 
 	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-	struct DesignUnit* unit = (struct DesignUnit*)(prog->units->block + ((dnum-1) * prog->units->blockSize));
+	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
 
 	CuAssertPtrNotNullMsg(tc,"Arch body statements NULL!", unit->as.architecture.statements);		
 	Dba* statements = unit->as.architecture.statements;
 
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*)(statements->block + ((snum-1) * statements->blockSize));
+	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(statements, snum-1);
 
 	switch (stmtType) { 
 		case SIGNAL_ASSIGNMENT: {

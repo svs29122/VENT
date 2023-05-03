@@ -4,23 +4,16 @@
 	Dynamic array akin to a C++ vector
 	
 	When to use:
-		use when you need a contiguous array of blocks in memory all 
-		of the same size. The array automatically resizes during
+		use when you need a dyamic, contiguous array of blocks in memory 
+		all of the same size. The array automatically resizes during
 		writes if there is not enough space in the array. Array must
 		be manually freed when no longer needed.
 
-		for dynamically sized arrays with dynamically sized elements
-		use a list instead
+		for dynamic arrays with elements of different or variable 
+		size use a list instead
 */
 
-//TODO: add some sort of iterator interface to this structure
-
-typedef struct DynamicBlockArray {
-	int count; 
-	int capacity; 
-	size_t blockSize;
-	char* block;
-} Dba;
+typedef struct DynamicBlockArray Dba;
 
 /************************
 	InitBlockArray() - creates a dynamic array of elements of size bsize on the heap
@@ -56,8 +49,7 @@ void FreeBlockArray(Dba* arr);
 
 	Inputs: 
 		arr - pointer to a dynamic block array 
-		block - pointer to data to be written to array, must be of size
-			blockSize
+		block - pointer to data to be written to array, must be of size blockSize
 
 	Outputs:
 
@@ -66,4 +58,37 @@ void FreeBlockArray(Dba* arr);
 */
 void WriteBlockArray(Dba* arr, char* block);
 
-#endif 
+/*
+	ReadBlockArray() - returns a block from the array located
+		at index (0-based indexing)
+
+	Inputs: 
+		arr - pointer to a dynamic block array 
+		index - block to be accessed within array
+
+	Outputs:
+
+	Returns:
+		void* to block element (must be cast to correct object type)
+		NULL when arr == NULL or index >= count
+
+*/
+void* ReadBlockArray(Dba* arr, int index);
+
+/*
+	BlockCount() - returns the current number of blocks in the array
+
+	Inputs: 
+		arr - pointer to a dynamic block array 
+
+	Outputs:
+
+	Returns:
+		int equal to arr->count
+		NULL when arr == NULL
+
+*/
+int BlockCount(Dba* arr);
+
+
+#endif //INC_DBA_H 

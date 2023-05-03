@@ -4,10 +4,18 @@
 
 #include "dba.h"
 
-Dba* InitBlockArray(size_t bsize){	
+struct DynamicBlockArray {
+	int count;
+   int capacity;
+   size_t blockSize;
+   char* block;
+};
+
+
+struct DynamicBlockArray* InitBlockArray(size_t bsize){	
 	Dba* arr = malloc(sizeof(Dba));	
 	if(arr == NULL){
-		printf("Error: Unable to allocated Block Array\r\n");
+		printf("Error: Unable to allocate Block Array\r\n");
 		exit(-1);
 	}
 
@@ -19,7 +27,7 @@ Dba* InitBlockArray(size_t bsize){
 	return arr;
 } 
 
-void FreeBlockArray(Dba* arr){
+void FreeBlockArray(struct DynamicBlockArray* arr){
 	arr->count = 0;
 	arr->capacity = 0;
 	arr->blockSize = 0;
@@ -30,7 +38,7 @@ void FreeBlockArray(Dba* arr){
 	free(arr);
 }
 
-void WriteBlockArray(Dba* arr, char* block){
+void WriteBlockArray(struct DynamicBlockArray* arr, char* block){
 	if(arr == NULL) {
 		printf("Error: Block Array Ptr NULL\r\n");
 		return;
@@ -45,4 +53,27 @@ void WriteBlockArray(Dba* arr, char* block){
 	char* blockPtr = &arr->block[arr->count * arr->blockSize];
 	memcpy(blockPtr, block, arr->blockSize);
 	arr->count++;
+}
+
+void* ReadBlockArray(struct DynamicBlockArray* arr, int index){
+	if(arr == NULL){
+		printf("Error: Block Array Ptr NULL\r\n");
+		return NULL;
+	}	
+
+	if(index >= arr->count) {
+		printf("Error: Block Array index out of bounds\r\n");
+		return NULL;
+	}
+	
+	return (arr->block + (index * arr->blockSize)); 
+}
+
+int BlockCount(struct DynamicBlockArray* arr){
+	if(arr == NULL){
+		printf("Error: Block Array Ptr NULL\r\n");
+		return 0;
+	}	
+
+	return arr->count;
 }
