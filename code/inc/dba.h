@@ -4,7 +4,7 @@
 	Dynamic array akin to a C++ vector
 	
 	When to use:
-		use when you need a dyamic, contiguous array of blocks in memory 
+		use when you need a dynamic, contiguous array of blocks in memory 
 		all of the same size. The array automatically resizes during
 		writes if there is not enough space in the array. Array must
 		be manually freed when no longer needed.

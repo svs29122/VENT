@@ -11,7 +11,6 @@ struct DynamicBlockArray {
    char* block;
 };
 
-
 struct DynamicBlockArray* InitBlockArray(size_t bsize){	
 	Dba* arr = malloc(sizeof(Dba));	
 	if(arr == NULL){

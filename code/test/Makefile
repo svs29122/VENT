@@ -21,7 +21,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 _OBJ = parser.o dba.o lexer.o display.o ast.o error.o transpile.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
-_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o transpile_test.o
+_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o transpile_test.o dba_test.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
 # this is the executable to run all tests
