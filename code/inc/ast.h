@@ -174,9 +174,10 @@ struct SignalAssign {
 
 struct SequentialStatement {
 	enum {
-		SEQ_SIGNAL_ASSIGNMENT,
+		QSIGNAL_ASSIGNMENT,
 		VARIABLE_ASSIGNMENT,
 		IF,
+		WHILE_LOOP,
 		//CASE,
 		//LOOP,
 	} type;

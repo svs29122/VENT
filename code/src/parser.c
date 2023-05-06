@@ -444,7 +444,7 @@ static Dba* parseProcessBodyStatements(){
 		switch(p->currToken.type){
 			case TOKEN_IDENTIFIER: { 
 				//TODO: this may need some work depending on what we do with labels
-				seqStmt.type = SEQ_SIGNAL_ASSIGNMENT;
+				seqStmt.type = QSIGNAL_ASSIGNMENT;
 				parseSignalAssignment(&(seqStmt.as.signalAssignment));
 				break;
 			}

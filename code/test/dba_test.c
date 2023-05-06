@@ -163,7 +163,6 @@ void TestDba_ArrayOfUnions(CuTest* tc) {
 
 	WriteBlockArray(myBlock, (char*)&b1);
 
-	//print all data
 	for(int i=0; i<BlockCount(myBlock); i++){
 			union testUnion* tb = (union testUnion*) ReadBlockArray(myBlock, i);
 			if(i == 0){

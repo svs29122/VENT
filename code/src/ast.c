@@ -73,7 +73,7 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(stmts); i++){
 		struct SequentialStatement* qstmt = (struct SequentialStatement*) ReadBlockArray(stmts, i);
 		switch(qstmt->type) {
-			case SEQ_SIGNAL_ASSIGNMENT: {
+			case QSIGNAL_ASSIGNMENT: {
 				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
 				break;
 			}
