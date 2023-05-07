@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include "ast.h"
+#include <ast.h>
 
 void PrintUsage(void){
 	printf("Usage:\n"

@@ -106,10 +106,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "token.h"
-#include "error.h"
-#include "lexer.h"
-#include "ast.h"
+#include <token.h>
+#include <lexer.h>
+#include <ast.h>
 
 static bool printTokenFlag = false;
 
@@ -121,6 +120,7 @@ struct parser {
 static struct parser *p = &parser;
 
 //private includes
+#include "error.h"
 #include "expression.h"
 #include "utils.h"
 #include "free.h"
