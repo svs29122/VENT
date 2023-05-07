@@ -1,6 +1,9 @@
 This is a TODO list for VENT work:
 
-I) AST ToDo
+I) Lexer ToDo
+	1) 
+
+II) AST ToDo
 ### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
 ### DONE ###	2) Wrap AST token declarations in DEBUG macros
 ### DONE ###	3) Thinking it might be nice to have a walkTree method instead of forcing the parser to do it multiple times
@@ -8,9 +11,10 @@ I) AST ToDo
 	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
 			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
 			 ###			- this is something like the well-known strategy pattern 
+	4) Refactor Walk Tree into readable units
 			
 			
-II) Parser ToDo
+III) Parser ToDo
 ### DONE ###	1) Unit tests for basic parser functions
 ### DONE ###		i) flesh this out fully for ents before adding much more functionality
 		ii) thinking I want a set of tests for the public API and for the private
@@ -20,10 +24,32 @@ II) Parser ToDo
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
-III) Transpiler ToDo
+IV) Transpiler ToDo
 	1) Need to add validation to transpile_test.c
 		i) we currently only produce a file with 0 asserting or checking
 	
-IV) Refactor ToDo
+V) Refactor ToDo
 ### DONE ###  	1) Go through Valgrind output and fix memory leaks
 ### DONE ###  	2) Go add static keyword to any variables that should be static
+	3) Wondering about maybe passing the ventsrc char* to ParseProgram and having it do lexer/parser initialization instead of requiring a caller to do all of that work upfront
+		i) i.e. change this:
+			/****************************************/
+				char* ventSrc = readFile(fileName);
+				InitLexer(ventSrc);
+				InitParser();
+				
+				struct Program* prog = ParseProgram();
+			/****************************************/
+		ii) to this:
+			/****************************************/
+				char* ventSrc = readFile(fileName);
+
+				struct Program* prog = ParseProgram(ventsrc);
+			/****************************************/
+		
+
+VI) Overall ToDO
+	1) Need to implement basic functionality including proc, comp, map, if, when, loop
+		i) need to do work to handle comma separated lists of identifiers
+		ii) need to handle labels and decide if they are treated differently than identifiers by the lexer
+	2) Need to go and add NULL checks to all of my heap allocations especially in the parser duh...

@@ -112,6 +112,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			break;
 		case 'e': return checkKeyword(1, 2, size, lit, "nt", TOKEN_ENT);
 		case 'i': return checkKeyword(1, 2, size, lit, "nt", TOKEN_INTEGER);
+		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
 		case 's': 
 			if(size > 1){
 				switch(lit[1]){
@@ -146,6 +147,19 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 						break;
 					case 'n':
 						if(size > 2) return checkKeyword(2, 6, size, lit, "signed", TOKEN_UNSIGNED);
+						break;
+				}
+			}
+			break;
+		case 'v': return checkKeyword(1, 2, size, lit, "ar", TOKEN_VAR);
+		case 'w':
+			if(size > 1){
+				switch(lit[1]){
+					case 'a':
+						if(size > 2) return checkKeyword(2, 2, size, lit, "it", TOKEN_WAIT);
+						break;
+					case 'h':
+						if(size > 2) return checkKeyword(2, 3, size, lit, "ile", TOKEN_WHILE);
 						break;
 				}
 			}
@@ -189,11 +203,14 @@ static struct Token readIdentifier(){
 				peekNext() != '+' && peekNext() != '-' &&
 				peekNext() != '*' && peekNext() != '/' &&
 				peekNext() != ';' && peekNext() != ',' &&
+				peekNext() != ':' && peekNext() != '\'' &&
 				peekNext() != '\n' && peekNext() != '\0'){
 	
 			readChar();
 			end++;
 		}
+		
+		//if(end == start+1) end--;
 	} else {
 		//got a single letter identifier
 		end--;
@@ -289,17 +306,16 @@ static struct Token readNumericLiteral(){
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
-	//TODO: assuming a space following the number?
-	// no way that's correct
-	while(peek() != ' ' && peek() != '\0'){
+	//TODO: This is probably still wrong. We may at least need to check ordering.
+	while((peek() >= '0' && peek() <= '9') ||  peek() == '.' || peek() == 'E' || peek() == '-'){
 		readChar();
 		end++;
 	}	
 
 	tok.type = TOKEN_NUMBERLIT;
 	tok.lineNumber = l->line;
-		
-	int lSize = sizeof(char) * (int)(end-start) + 2;
+	
+	int lSize = sizeof(char) * (int)(end-start) + 1; //add 1 for NULL termination
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
 	tok.literal[lSize-1] = '\0';
@@ -411,6 +427,9 @@ struct Token NextToken() {
 				return newMultiCharToken(TOKEN_SASSIGN, 2);
 			} 
 			return newToken(TOKEN_LESS, ch);
+		case '>':
+			if(peek() == '=') return newMultiCharToken(TOKEN_GREATER_EQUAL, 2);
+			return newToken(TOKEN_GREATER, ch);
 		case '+' : return newToken(TOKEN_PLUS, ch);
 		case '=' : 
 			if(peek() == '>') return newMultiCharToken(TOKEN_AASSIGN, 2); 			

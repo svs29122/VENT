@@ -91,6 +91,20 @@ entity <g> is						/ 	ent <g> {
 end <g>;								/
 
 
+entity <g> is						/ 	ent <g> {
+	generic (						/
+		bcd: std_logic;			/		bcd stl;	
+		efg: integer;				/		efg int;
+		hij: string					/		hij string;
+	);									/
+	port(								/		a -> stl;
+		a: in std_logic;			/		b -> stl;
+		b: in std_logic;			/		y <- stl;
+		y: out std_logic			/	}
+	);									/
+end <g>;								/
+
+
 port (								/		
 	a: inout std_logic := '1'	/	a <-> stl := 1;		
 	b: out std_logic;				/	b <- stl;
@@ -145,7 +159,7 @@ end loop;							/	}
 
 
 process is							/	proc() {
-    variable i : integer := 0;/		var int i := 0;
+    variable i: integer := 0; /		var i int := 0;
 begin									/		
 	while i < 10 loop				/		while(i < 10) {
 	    i := i + 2;				/			i := i + 2;

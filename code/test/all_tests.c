@@ -4,10 +4,12 @@
 #include "cutest.h"
 
 // convenience macros
+#define TEST_DBA
 #define TEST_LEXER
 #define TEST_PARSER
 #define TEST_TRANSPILE
 
+CuSuite* DbaTestGetSuite();
 CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
 CuSuite* TranspileTestGetSuite();
@@ -17,6 +19,10 @@ void RunAllTests(void){
 	CuSuite* masterSuite = CuSuiteNew();
 
 	// add new suites here!
+#ifdef TEST_DBA
+	CuSuite* dbaTestSuite = DbaTestGetSuite();
+	CuSuiteAddSuite(masterSuite, dbaTestSuite);
+#endif
 #ifdef TEST_LEXER
 	CuSuite* lexerTestSuite = LexerTestGetSuite();
 	CuSuiteAddSuite(masterSuite, lexerTestSuite);
@@ -47,6 +53,9 @@ void RunAllTests(void){
 #endif
 #ifdef TEST_LEXER
 	CuSuiteDelete(lexerTestSuite);
+#endif
+#ifdef TEST_DBA
+	CuSuiteDelete(dbaTestSuite);
 #endif
 	free(masterSuite);
 }

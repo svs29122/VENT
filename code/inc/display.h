@@ -1,11 +1,10 @@
 #ifndef INC_DISPLAY_H
 #define INC_DISPLAY_H
 
-#include "ast.h"
-
-void PrintUsage(void);
 void DoMenu(void);
 
-void PrintProgram(struct Program *);
+void PrintUsage(void);
+void PrintProgram(struct Program* prog);
 
-#endif //INC_DISPLAY_H
+
+#endif // INC_DISPLAY_H
