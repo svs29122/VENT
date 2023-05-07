@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "ast.h"
+#include <ast.h>
 
 static FILE* vhdlFile;
 
