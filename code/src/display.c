@@ -87,6 +87,7 @@ void DoMenu(void){
 
 static int ishift;
 static bool inProcess;
+static bool inWhile;
 
 static char shift(int c){
 	printf("\e[0;34m|");
@@ -135,6 +136,11 @@ static void printSignalDecl(void* sDecl){
 		shiftVal++;
 	}
 
+	if(inWhile){
+		shiftVal++;
+	}
+
+
 	printf("\e[0;32m""%cSignalDecl\r\n", shift(shiftVal));
 	ishift = shiftVal+1;
 }
@@ -146,8 +152,67 @@ static void printVariableDecl(void* vDecl){
 		shiftVal++;
 	}
 
+	if(inWhile){
+		shiftVal++;
+	}
+
+
 	printf("\e[0;32m""%cVariableDecl\r\n", shift(shiftVal));
 	ishift = shiftVal+1;
+}
+
+static void printWhileStatement(void* wStmt){
+	int shiftVal = 3;
+
+	if(inProcess){
+		shiftVal++;
+	}
+
+	if(inWhile){
+		shiftVal++;
+	}
+
+
+	printf("\e[0;33m""%cWhileStatement\r\n", shift(shiftVal));
+	ishift = shiftVal+1; 
+
+	inWhile = true;
+}
+
+static void printWhileClose(void* wStmt){
+	inWhile = false;
+}
+
+static void printWaitStatement(void* wStmt){
+	int shiftVal = 3;
+
+	if(inProcess){
+		shiftVal++;
+	}
+
+	if(inWhile){
+		shiftVal++;
+	}
+
+
+	printf("\e[0;33m""%cWaitStatement\r\n", shift(shiftVal));
+	ishift = shiftVal+1; 
+}
+
+static void printVariableAssign(void* vAssign){
+	int shiftVal = 3;
+
+	if(inProcess){
+		shiftVal++;
+	}
+
+	if(inWhile){
+		shiftVal++;
+	}
+
+
+	printf("\e[0;34m""%cVariableAssign\r\n", shift(shiftVal));
+	ishift = shiftVal+1; 
 }
 
 static void printSignalAssign(void* sAssign){
@@ -157,12 +222,23 @@ static void printSignalAssign(void* sAssign){
 		shiftVal++;
 	}
 
-	printf("\e[0;32m""%cSignalAssign\r\n", shift(shiftVal));
+	if(inWhile){
+		shiftVal++;
+	}
+
+	char blue[] = "\e[0;34m"; 
+	char green[] = "\e[0;32m"; 
+
+	if(inProcess){
+		printf("%s%cSignalAssign\r\n", blue, shift(shiftVal));
+	} else {
+		printf("%s%cSignalAssign\r\n", green, shift(shiftVal));
+	}
 	ishift = shiftVal+1; 
 }
 
 static void printProcessStatement(void* proc){
-	printf("\e[0;32m""%cProcess\r\n", shift(3));
+	printf("\e[0;34m""%cProcess\r\n", shift(3));
 	ishift = 4;
 	
 	inProcess = true;
@@ -240,6 +316,10 @@ void PrintProgram(struct Program * prog){
 	opBlk->doSignalDeclOp = printSignalDecl;
 	opBlk->doVariableDeclOp = printVariableDecl;
 	opBlk->doSignalAssignOp = printSignalAssign;
+	opBlk->doVariableAssignOp = printVariableAssign;
+	opBlk->doWaitStatementOp = printWaitStatement;
+	opBlk->doWhileStatementOp = printWhileStatement;
+	opBlk->doWhileCloseOp = printWhileClose;
 	opBlk->doProcessOp = printProcessStatement;
 	opBlk->doProcessCloseOp = printProcessClose;
 	opBlk->doIdentifierOp = printIdentifier;

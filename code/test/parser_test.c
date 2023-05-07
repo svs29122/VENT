@@ -579,13 +579,23 @@ void TestParseProgram_ProcessWithEmptyWhileWait(CuTest *tc){
 
 void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		\n \
+		ent ander {\n \
+			a -> stl;\n \
+			b -> stl;\n \
+			y <- stl;\n \
+		}\n \
+		\n \
 		arch behavioral(ander){\n \
+			a <= '0';\n \
 			\n \
 			proc () {\n \
 				sig s stl := '0';\n \
 				var i int;\n \
 				\n \
-				while(i >= 10) {\n \
+				while(i < 10) {\n \
+					s <= '1';\n \
 					i := i+2;\n \
 				}\n \
 				wait;\n \
@@ -597,10 +607,10 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	struct Program* prog = ParseProgram();
 	checkProgram(tc, prog);
 
-	int unitNum = 0;
+	int unitNum = 1;
 	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
 
-	int stmtNum = 0;
+	int stmtNum = 1;
 	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
 
 	int qstmtNum = 0;

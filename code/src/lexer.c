@@ -426,6 +426,7 @@ struct Token NextToken() {
 			} else if(peek() == '='){
 				return newMultiCharToken(TOKEN_SASSIGN, 2);
 			} 
+			return newToken(TOKEN_LESS, ch);
 		case '>':
 			if(peek() == '=') return newMultiCharToken(TOKEN_GREATER_EQUAL, 2);
 			return newToken(TOKEN_GREATER, ch);

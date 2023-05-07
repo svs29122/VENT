@@ -23,6 +23,10 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doSignalDeclOp				= noOp;
 	op->doVariableDeclOp				= noOp;
 	op->doSignalAssignOp				= noOp;
+	op->doVariableAssignOp			= noOp;
+	op->doWaitStatementOp			= noOp;
+	op->doWhileStatementOp			= noOp;
+	op->doWhileCloseOp 				= noOp;
 	op->doProcessOp					= noOp;
 	op->doProcessCloseOp				= noOp;
 	op->doIdentifierOp 				= noOp;
@@ -32,6 +36,9 @@ struct OperationBlock* InitOperationBlock(void){
 
 	return op;
 }
+
+//forward declarations
+static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
 
 static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
 	op->doVariableDeclOp((void*)varDecl);
@@ -59,6 +66,39 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 	}
 }
 
+static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlock* op){
+	op->doWhileStatementOp((void*)wStmt);
+	if(wStmt->condition){
+		op->doExpressionOp(wStmt->condition);
+	}
+	if(wStmt->statements){
+		walkSequentialStatements(wStmt->statements, op);
+	}
+}
+
+static void walkWaitStatement(struct WaitStatement* wStmt, struct OperationBlock* op){
+	op->doWaitStatementOp((void*)wStmt);
+	if(wStmt->sensitivityList){
+		op->doIdentifierOp((void*)wStmt->sensitivityList);
+	}
+	if(wStmt->condition){
+		op->doExpressionOp(wStmt->condition);
+	}
+	if(wStmt->time){
+		op->doExpressionOp(wStmt->time);
+	}
+}
+
+static void walkVariableAssignment(struct VariableAssign* varAssign, struct OperationBlock* op){
+	op->doVariableAssignOp((void*)varAssign);
+	if(varAssign->target){
+		op->doIdentifierOp((void*)varAssign->target);
+	}
+	if(varAssign->expression){
+		op->doExpressionOp((void*)varAssign->expression);
+	}
+}
+
 static void walkSignalAssignment(struct SignalAssign* sigAssign, struct OperationBlock* op){
 	op->doSignalAssignOp((void*)sigAssign);
 	if(sigAssign->target){
@@ -75,6 +115,21 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 		switch(qstmt->type) {
 			case QSIGNAL_ASSIGNMENT: {
 				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
+				break;
+			}
+
+			case VARIABLE_ASSIGNMENT: {
+				walkVariableAssignment(&(qstmt->as.variableAssignment), op);
+				break;
+			}
+		
+			case WAIT_STATEMENT: {
+				walkWaitStatement(&(qstmt->as.waitStatement), op);
+				break;
+			}
+		
+			case WHILE_STATEMENT: {
+				walkWhileStatement(&(qstmt->as.whileStatement), op);
 				break;
 			}
 		

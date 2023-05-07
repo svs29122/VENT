@@ -27,6 +27,10 @@ struct OperationBlock {
 	astNodeOpPtr doSignalDeclOp;
 	astNodeOpPtr doVariableDeclOp;
 	astNodeOpPtr doSignalAssignOp;
+	astNodeOpPtr doVariableAssignOp;
+	astNodeOpPtr doWaitStatementOp;
+	astNodeOpPtr doWhileStatementOp;
+	astNodeOpPtr doWhileCloseOp;
 	astNodeOpPtr doProcessOp;
 	astNodeOpPtr doProcessCloseOp;
 	astNodeOpPtr doIdentifierOp;
@@ -165,7 +169,7 @@ struct WhileStatement {
 
 struct WaitStatement {
 #ifdef DEBUG
-	struct Token toke; // the "wait" token
+	struct Token token; // the "wait" token
 #endif
 	struct Label* label;
 	struct Identifier* sensitivityList;
