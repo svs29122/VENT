@@ -30,8 +30,10 @@ struct OperationBlock {
 	astNodeOpPtr doVariableAssignOp;
 	astNodeOpPtr doWaitStatementOp;
 	astNodeOpPtr doWhileStatementOp;
+	astNodeOpPtr doWhileOpenOp;
 	astNodeOpPtr doWhileCloseOp;
 	astNodeOpPtr doProcessOp;
+	astNodeOpPtr doProcessOpenOp;
 	astNodeOpPtr doProcessCloseOp;
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;

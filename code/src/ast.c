@@ -26,8 +26,10 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doVariableAssignOp			= noOp;
 	op->doWaitStatementOp			= noOp;
 	op->doWhileStatementOp			= noOp;
+	op->doWhileOpenOp 				= noOp;
 	op->doWhileCloseOp 				= noOp;
 	op->doProcessOp					= noOp;
+	op->doProcessOpenOp				= noOp;
 	op->doProcessCloseOp				= noOp;
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
@@ -71,9 +73,11 @@ static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlo
 	if(wStmt->condition){
 		op->doExpressionOp(wStmt->condition);
 	}
+	op->doWhileOpenOp((void*)wStmt);
 	if(wStmt->statements){
 		walkSequentialStatements(wStmt->statements, op);
 	}
+	op->doWhileCloseOp((void*)wStmt);
 }
 
 static void walkWaitStatement(struct WaitStatement* wStmt, struct OperationBlock* op){
@@ -169,6 +173,7 @@ static void walkProcessStatement(struct Process* proc, struct OperationBlock* op
 	if(proc->declarations){
 		walkDeclarations(proc->declarations, op);
 	}
+	op->doProcessOpenOp((void*)proc);
 	if(proc->statements){
 		walkSequentialStatements(proc->statements, op);
 	}

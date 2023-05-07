@@ -8,6 +8,7 @@
 static FILE* vhdlFile;
 
 static bool incomingExpression = false;
+static bool closeExpression = false;
 static char assignmentOp[4];
 
 static void emitUseStatement(void* stmt){
@@ -116,9 +117,23 @@ static void emitSignalDeclaration(void* sDecl){
 
 	if(sigDecl->expression){
 		incomingExpression = true;
+		closeExpression = true;
 		memcpy(assignmentOp, " :=", 4);
 	}
 
+}
+
+static void emitVariableDeclaration(void* vDecl){
+	struct VariableDecl* varDecl = (struct VariableDecl*) vDecl;
+
+	char* varName = varDecl->name->value;
+	fprintf(vhdlFile, "\t\tvariable %s: ", varName);		
+
+	if(varDecl->expression){
+		incomingExpression = true;
+		closeExpression = true;
+		memcpy(assignmentOp, " :=", 4);
+	}
 }
 
 static void emitSignalAssignment(void* sAssign){
@@ -129,7 +144,21 @@ static void emitSignalAssignment(void* sAssign){
 
 	if(sigAssign->expression){
 		incomingExpression = true;
+		closeExpression = true;
 		memcpy(assignmentOp, "<=", 3);
+	}
+}
+
+static void emitVariableAssignment(void* vAssign){
+	struct VariableAssign* varAssign = (struct VariableAssign*) vAssign;
+
+	char* target = varAssign->target->value;
+	fprintf(vhdlFile, "\t\t\t%s ", target);		
+
+	if(varAssign->expression){
+		incomingExpression = true;
+		closeExpression = true;
+		memcpy(assignmentOp, ":=", 3);
 	}
 }
 
@@ -141,6 +170,8 @@ static void emitDataType(void* dtype){
 		fprintf(vhdlFile, "std_logic");
 	} else if(strcmp(typeName, "stlv") == 0){
 		fprintf(vhdlFile, "std_logic_vector");
+	} else if(strcmp(typeName, "int") == 0){
+		fprintf(vhdlFile, "integer");
 	}
 
 	if(!incomingExpression) {
@@ -156,6 +187,12 @@ static void emitSubExpression(void* expr){
 		case CHAR_EXPR: {
 			struct CharExpr* chexp = (struct CharExpr*)expr;
 			fprintf(vhdlFile, "'%s'", chexp->literal);
+			break;
+		}
+
+		case NUM_EXPR: {
+			struct NumExpr* nexp = (struct NumExpr*)expr;
+			fprintf(vhdlFile, "%s", nexp->literal);
 			break;
 		}
 
@@ -184,9 +221,48 @@ static void emitExpression(void* expr){
 	
 	fprintf(vhdlFile, "%s ", assignmentOp);	
 	emitSubExpression(expr);
-	fprintf(vhdlFile, ";\n");
+	if(closeExpression){
+		fprintf(vhdlFile, ";\n");
+	}
 
 	incomingExpression = false;
+	closeExpression = false;
+}
+
+static void emitProcess(void* proc){
+	
+	fprintf(vhdlFile, "\tprocess is \n"); 
+}
+
+static void emitProcessOpen(void* proc){
+	
+	fprintf(vhdlFile, "\tbegin\n\n");
+}
+
+static void emitProcessClose(void* proc){
+	
+	fprintf(vhdlFile, "\n\tend process;\n");
+}
+
+static void emitWhileLoop(void* wstmt){
+
+	struct WhileStatement* whileStat = (struct WhileStatement*)wstmt;	
+	fprintf(vhdlFile, "\t\twhile");
+
+	if(whileStat->condition){
+		incomingExpression = true;
+		memcpy(assignmentOp, "\0", 1);
+	}
+}
+
+static void emitWhileLoopOpen(void* wstmt){
+
+	fprintf(vhdlFile, " loop\n");
+}
+
+static void emitWhileLoopClose(void* wstmt){
+	
+	fprintf(vhdlFile, "\t\tend loop;\n");
 }
 
 void TranspileProgram(struct Program* prog, char* fileName){
@@ -204,9 +280,17 @@ void TranspileProgram(struct Program* prog, char* fileName){
 	op->doArchDeclOpenOp = emitArchitectureDeclarationOpen;
 	op->doArchDeclCloseOp = emitArchitectureDeclarationClose;
 	op->doSignalDeclOp = emitSignalDeclaration;
+	op->doVariableDeclOp = emitVariableDeclaration;
 	op->doSignalAssignOp = emitSignalAssignment;
+	op->doVariableAssignOp = emitVariableAssignment;
 	op->doDataTypeOp = emitDataType;
 	op->doExpressionOp = emitExpression;
+	op->doProcessOp = emitProcess;	
+	op->doProcessOpenOp = emitProcessOpen;	
+	op->doProcessCloseOp = emitProcessClose;	
+	op->doWhileStatementOp = emitWhileLoop;
+	op->doWhileOpenOp = emitWhileLoopOpen;
+	op->doWhileCloseOp = emitWhileLoopClose;
 	
 	//setup filename
 	if(fileName != NULL){
