@@ -227,8 +227,8 @@ static void checkSequentialStatement(CuTest* tc, struct Program* prog, int duNum
 			break;
 		}
 
-		case WHILE_LOOP: {
-			CuAssertIntEquals_Msg(tc,"Expected while loop!", WHILE_LOOP, qstmt->type);
+		case WHILE_STATEMENT: {
+			CuAssertIntEquals_Msg(tc,"Expected while loop!", WHILE_STATEMENT, qstmt->type);
 		}
 	
 		default:
@@ -551,20 +551,46 @@ void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 	free(input);
 }
 
-void TestParseProgram_ProcessWithWhileWait(CuTest *tc){
+void TestParseProgram_ProcessWithEmptyWhileWait(CuTest *tc){
 	char* input = strdup(" \
-		arch behavioral(ander){ \
-			\
-			proc () { \
-				sig s stl := '0'; \
-				var i int; \
-				\
-				while(i < 10) { \
-					i := i + 2; \
-				} \
-				wait; \
-			} \
-		} \
+		arch behavioral(ander){\n \
+			\n \
+			proc () {\n \
+				while() {\n \
+				}\n \
+				wait;\n \
+			}\n \
+		}\n \
+	");
+	setup(input);
+
+	struct Program* prog = ParseProgram();
+	checkProgram(tc, prog);
+	int unitNum = 0;
+	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
+	int stmtNum = 0;
+	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
+	int qstmtNum = 0;
+	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(ander){\n \
+			\n \
+			proc () {\n \
+				sig s stl := '0';\n \
+				var i int;\n \
+				\n \
+				while(i >= 10) {\n \
+					i := i+2;\n \
+				}\n \
+				wait;\n \
+			}\n \
+		}\n \
 	");
 	setup(input);
 
@@ -578,9 +604,9 @@ void TestParseProgram_ProcessWithWhileWait(CuTest *tc){
 	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
 
 	int qstmtNum = 0;
-	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_LOOP, NULL, NULL, NULL);
+	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -612,7 +638,8 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_LoopedProgramParsing);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessStatement);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithDeclarations);
-	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithWhileWait);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithEmptyWhileWait);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithWhileLoop);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

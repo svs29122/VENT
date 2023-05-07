@@ -152,6 +152,18 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			}
 			break;
 		case 'v': return checkKeyword(1, 2, size, lit, "ar", TOKEN_VAR);
+		case 'w':
+			if(size > 1){
+				switch(lit[1]){
+					case 'a':
+						if(size > 2) return checkKeyword(2, 2, size, lit, "it", TOKEN_WAIT);
+						break;
+					case 'h':
+						if(size > 2) return checkKeyword(2, 3, size, lit, "ile", TOKEN_WHILE);
+						break;
+				}
+			}
+			break;
 	}
 
 	return TOKEN_IDENTIFIER;
@@ -191,11 +203,14 @@ static struct Token readIdentifier(){
 				peekNext() != '+' && peekNext() != '-' &&
 				peekNext() != '*' && peekNext() != '/' &&
 				peekNext() != ';' && peekNext() != ',' &&
+				peekNext() != ':' && peekNext() != '\'' &&
 				peekNext() != '\n' && peekNext() != '\0'){
 	
 			readChar();
 			end++;
 		}
+		
+		//if(end == start+1) end--;
 	} else {
 		//got a single letter identifier
 		end--;
@@ -291,8 +306,8 @@ static struct Token readNumericLiteral(){
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
-	//TODO: What about operators following numbers without spaces?
-	while(peek() != ' ' && peek() != '\0' && peek() != ';'){
+	//TODO: This is probably still wrong. We may at least need to check ordering.
+	while((peek() >= '0' && peek() <= '9') ||  peek() == '.' || peek() == 'E' || peek() == '-'){
 		readChar();
 		end++;
 	}	
@@ -411,7 +426,9 @@ struct Token NextToken() {
 			} else if(peek() == '='){
 				return newMultiCharToken(TOKEN_SASSIGN, 2);
 			} 
-			return newToken(TOKEN_LESS, ch);
+		case '>':
+			if(peek() == '=') return newMultiCharToken(TOKEN_GREATER_EQUAL, 2);
+			return newToken(TOKEN_GREATER, ch);
 		case '+' : return newToken(TOKEN_PLUS, ch);
 		case '=' : 
 			if(peek() == '>') return newMultiCharToken(TOKEN_AASSIGN, 2); 			

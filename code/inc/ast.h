@@ -154,6 +154,25 @@ struct Declaration {
 	} as;
 };
 
+struct WhileStatement {
+#ifdef DEBUG
+	struct Token token; // the "while" token
+#endif
+	struct Label* label;
+	struct Expression* condition;
+	struct DynamicBlockArray* statements;
+};
+
+struct WaitStatement {
+#ifdef DEBUG
+	struct Token toke; // the "wait" token
+#endif
+	struct Label* label;
+	struct Identifier* sensitivityList;
+	struct Expression* condition;
+	struct Expression* time;
+};
+
 struct VariableAssign {
 #ifdef DEBUG
 	struct Token token; // the ":=" operator
@@ -176,14 +195,17 @@ struct SequentialStatement {
 	enum {
 		QSIGNAL_ASSIGNMENT,
 		VARIABLE_ASSIGNMENT,
-		IF,
-		WHILE_LOOP,
+		IF_STATEMENT,
+		WAIT_STATEMENT,
+		WHILE_STATEMENT,
 		//CASE,
 		//LOOP,
 	} type;
 	union {
 		struct SignalAssign signalAssignment;
 		struct VariableAssign variableAssignment;
+		struct WaitStatement waitStatement;
+		struct WhileStatement whileStatement;
 	} as;
 };
 
