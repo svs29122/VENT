@@ -7,7 +7,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "display.h"
-#include "transpile.h"
+#include "emitter.h"
 
 static void doTranspile(char* fileName, bool printProgramTree);
 
