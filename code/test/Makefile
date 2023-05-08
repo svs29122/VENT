@@ -8,7 +8,7 @@
 IDIR=../inc
 SDIR=../src
 TDIR=.
-SODIR=$(SDIR)/obj_d
+SODIR=$(SDIR)/obj
 TODIR=$(TDIR)/obj
 
 CC=gcc
