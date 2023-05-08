@@ -1,5 +1,5 @@
 #ifndef INC_FREE_H
-#define _INC_FREE_H
+#define INC_FREE_H
 
 static void freeExpression(void* expr){
    enum ExpressionType type = {0};
