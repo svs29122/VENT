@@ -74,7 +74,6 @@ extern bool hadError;
 static void doTranspile(char* fileName, bool printProgramTree){
 		char* ventSrc = readFile(fileName);
 		InitLexer(ventSrc);
-		InitParser();
 		
 		struct Program* prog = ParseProgram();
 		if(printProgramTree){

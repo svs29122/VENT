@@ -110,9 +110,9 @@
 #include <lexer.h>
 #include <ast.h>
 
-static bool printTokenFlag = false;
 
 struct parser {
+	bool printTokenFlag;
 	struct Token currToken;
 	struct Token peekToken;
 } static parser;
@@ -125,7 +125,11 @@ static struct parser *p = &parser;
 #include "utils.h"
 #include "free.h"
 
-void InitParser(){
+void SetPrintTokenFlag(){
+	p->printTokenFlag = true;
+}
+
+static void initParser(){
 	
 	memset(p, 0, sizeof(struct parser));
 
@@ -133,13 +137,9 @@ void InitParser(){
 	p->peekToken = NextToken();	
 }
 
-void SetPrintTokenFlag(){
-	printTokenFlag = true;
-}
-
 static struct Token nextToken(){	
 	
-	if(printTokenFlag) PrintToken(p->currToken);
+	if(p->printTokenFlag) PrintToken(p->currToken);
 
 	free(p->currToken.literal);
 
@@ -671,6 +671,10 @@ static struct DesignUnit parseDesignUnit(){
 }
 
 struct Program* ParseProgram(){
+	// do some setup
+	initParser();
+
+
 	struct Program* prog = calloc(1, sizeof(struct Program));
 
 	// first get the use statements

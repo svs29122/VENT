@@ -1,7 +1,6 @@
 #ifndef INC_PARSER_H
 #define INC_PARSER_H
 
-void InitParser();
 void SetPrintTokenFlag();
 
 struct Program* ParseProgram();

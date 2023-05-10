@@ -14,7 +14,6 @@
 //helper functions
 static void setup(char* in){
 	InitLexer(in);
-	InitParser();
 }
 
 static void checkProgram(CuTest* tc, struct Program* prog){
