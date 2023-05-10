@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <lexer.h>
+#include <token.h>
 
 static char readChar();
 

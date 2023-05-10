@@ -106,10 +106,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <token.h>
-#include <lexer.h>
 #include <ast.h>
-
+#include <lexer.h>
 
 struct parser {
 	bool printTokenFlag;
@@ -670,8 +668,9 @@ static struct DesignUnit parseDesignUnit(){
 	return unit;
 }
 
-struct Program* ParseProgram(){
+struct Program* ParseProgram(char* ventProgram){
 	// do some setup
+	InitLexer(ventProgram);
 	initParser();
 
 

@@ -3,7 +3,7 @@
 
 void SetPrintTokenFlag();
 
-struct Program* ParseProgram();
+struct Program* ParseProgram(char* ventProgram);
 void FreeProgram(struct Program *prog);
 
 
