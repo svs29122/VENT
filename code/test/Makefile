@@ -15,7 +15,7 @@ CC=gcc
 CFLAGS=-I$(IDIR) -g
 #CFLAGS=-I$(IDIR) -pg
 
-_DEP = parser.h ast.h dba.h lexer.h token.h cutest.h display.h emitter.h
+_DEP = parser.h ast.h dba.h token.h display.h emitter.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
 _OBJ = dba.o lexer.o display.o ast.o emitter.o

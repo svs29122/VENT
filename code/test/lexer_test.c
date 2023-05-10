@@ -3,8 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <lexer.h>
+
 #include "cutest.h"
-#include "lexer.h"
 
 void TestNextToken_SingleToken(CuTest *tc){
 	char* input = strdup("+");

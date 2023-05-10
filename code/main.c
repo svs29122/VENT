@@ -4,10 +4,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "lexer.h"
-#include "parser.h"
-#include "display.h"
-#include "emitter.h"
+#include <parser.h>
+#include <display.h>
+#include <emitter.h>
 
 static void doTranspile(char* fileName, bool printProgramTree);
 
@@ -73,9 +72,8 @@ extern bool hadError;
 
 static void doTranspile(char* fileName, bool printProgramTree){
 		char* ventSrc = readFile(fileName);
-		InitLexer(ventSrc);
 		
-		struct Program* prog = ParseProgram();
+		struct Program* prog = ParseProgram(ventSrc);
 		if(printProgramTree){
 			PrintProgram(prog);
 		}

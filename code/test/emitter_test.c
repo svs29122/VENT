@@ -3,15 +3,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "cutest.h"
-#include "lexer.h"
-#include "parser.h"
-#include "display.h"
-#include "emitter.h"
+#include <lexer.h>
+#include <parser.h>
+#include <display.h>
+#include <emitter.h>
 
-static void setup(char* in){
-	InitLexer(in);
-}
+#include "cutest.h"
 
 void TestTranspileProgram_Simple(CuTest *tc){
 	char* input = strdup(" \
@@ -30,9 +27,8 @@ void TestTranspileProgram_Simple(CuTest *tc){
 			y <= temp; \
 			} \
 		");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
 
@@ -62,9 +58,8 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 			} \
 		} \
 		");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
 

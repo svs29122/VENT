@@ -4,18 +4,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <parser.h>
+#include <ast.h>
+#include <display.h>
+
 #include "valgrind.h"
 #include "cutest.h"
-#include "lexer.h"
-#include "parser.h"
-#include "ast.h"
-#include "display.h"
 
 //helper functions
-static void setup(char* in){
-	InitLexer(in);
-}
-
 static void checkProgram(CuTest* tc, struct Program* prog){
 	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 }
@@ -239,9 +235,8 @@ static void checkSequentialStatement(CuTest* tc, struct Program* prog, int duNum
 // the actual tests
 void TestParseProgram_UseDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all;");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkUse(tc, prog, "ieee.std_logic_1164.all");
 
@@ -251,9 +246,8 @@ void TestParseProgram_UseDeclaration(CuTest *tc){
 
 void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	char* input = strdup("ent ander {\n}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
 	
@@ -263,9 +257,8 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 
 void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all;\n\nent ander {\n}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkUse(tc, prog, "ieee.std_logic_1164.all");
 	checkDesignUnit(tc, prog, 1, ENTITY, "ander" , NULL);
@@ -276,9 +269,8 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 
 void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
 	char* input = strdup("ent ander{ a -> stl; b -> stl; y <- stl;}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
 
@@ -296,9 +288,7 @@ void TestParseProgram_UseEntityWithPorts(CuTest *tc){
 		} \
 	");
 
-	setup(input);
-
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkUse(tc, prog, "ieee.std_logic_1164.all");
 	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
@@ -313,9 +303,8 @@ void TestParseProgram_UseEntityWithPorts(CuTest *tc){
 
 void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) {}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 	
@@ -325,9 +314,8 @@ void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
 
 void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl;}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", NULL);
@@ -338,9 +326,8 @@ void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
 
 void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl := '0';}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", "0");
@@ -351,9 +338,8 @@ void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 
 void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl; temp <= '0';}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", "0");
@@ -365,9 +351,8 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 
 void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl; temp <= a and b;}");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
 	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", NULL);
@@ -395,9 +380,7 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 		} \
 	");
 
-	setup(input);
-
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	checkUse(tc, prog, "ieee.std_logic_1164.all");
 
@@ -442,9 +425,8 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 
 	float timeA = (float)clock()/CLOCKS_PER_SEC;
 	for(int i = 0; i < 10000; i++){
-		setup(input);
 		
-		struct Program* prog = ParseProgram();
+		struct Program* prog = ParseProgram(input);
 		checkProgram(tc, prog);
 		checkUse(tc, prog, "ieee.std_logic_1164.all");
 
@@ -491,9 +473,8 @@ void TestParseProgram_ProcessStatement(CuTest *tc){
 			} \
 		} \
 	");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 
 	int unitNum = 1;
@@ -528,9 +509,8 @@ void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 			} \n \
 		} \n \
 	");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 
 	int unitNum = 0;
@@ -561,9 +541,8 @@ void TestParseProgram_ProcessWithEmptyWhileWait(CuTest *tc){
 			}\n \
 		}\n \
 	");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 	int unitNum = 0;
 	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
@@ -601,9 +580,8 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 			}\n \
 		}\n \
 	");
-	setup(input);
 
-	struct Program* prog = ParseProgram();
+	struct Program* prog = ParseProgram(input);
 	checkProgram(tc, prog);
 
 	int unitNum = 1;
@@ -625,7 +603,6 @@ void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
 	");
-	//setup(input);
 
 	free(input);
 }
