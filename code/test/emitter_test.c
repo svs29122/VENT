@@ -11,7 +11,6 @@
 
 static void setup(char* in){
 	InitLexer(in);
-	InitParser();
 }
 
 void TestTranspileProgram_Simple(CuTest *tc){

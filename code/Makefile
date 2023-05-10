@@ -81,4 +81,3 @@ print:
 	@echo $(CFLAGS)
 	@echo $(DEPS)
 	@echo $(OBJ)
-	@echo $(PARSER)
