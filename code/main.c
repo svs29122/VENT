@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <parser.h>
 #include <display.h>
@@ -60,19 +59,12 @@ int main(int argc, char* argv[]) {
 
 	if(argc < 2){
 		PrintUsage();
-		return -1;
+		exit(EXIT_FAILURE);
 	}	
 
-	bool skipTranspilation = false;
 	bool printProgramTree = false;
 	bool printTokens = false;
 
-	if(argc == 2){
-		if(strcmp("-i", argv[1]) == 0){
-			DoMenu();
-			skipTranspilation = true;
-		}
-	} 
 	if(argc == 3){
 		if(strcmp("--print-tokens", argv[2]) == 0){
 			printTokens = true;
@@ -81,9 +73,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	if(!skipTranspilation){
-		doTranspile(argv[1], printProgramTree, printTokens);
-	}
+	doTranspile(argv[1], printProgramTree, printTokens);
 
 	return 0;
 }

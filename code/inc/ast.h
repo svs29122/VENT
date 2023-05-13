@@ -25,9 +25,13 @@ struct OperationBlock {
 	astNodeOpPtr doPortDeclOpenOp;
 	astNodeOpPtr doPortDeclCloseOp;
 	astNodeOpPtr doSignalDeclOp;
+	astNodeOpPtr doSignalDeclCloseOp;
 	astNodeOpPtr doVariableDeclOp;
+	astNodeOpPtr doVariableDeclCloseOp;
 	astNodeOpPtr doSignalAssignOp;
+	astNodeOpPtr doSignalAssignCloseOp;
 	astNodeOpPtr doVariableAssignOp;
+	astNodeOpPtr doVariableAssignCloseOp;
 	astNodeOpPtr doWaitStatementOp;
 	astNodeOpPtr doWhileStatementOp;
 	astNodeOpPtr doWhileOpenOp;

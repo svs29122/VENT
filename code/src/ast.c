@@ -21,9 +21,13 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doPortDeclOpenOp				= noOp;
 	op->doPortDeclCloseOp			= noOp;
 	op->doSignalDeclOp				= noOp;
+	op->doSignalDeclCloseOp			= noOp;
 	op->doVariableDeclOp				= noOp;
+	op->doVariableDeclCloseOp		= noOp;
 	op->doSignalAssignOp				= noOp;
+	op->doSignalAssignCloseOp		= noOp;
 	op->doVariableAssignOp			= noOp;
+	op->doVariableAssignCloseOp	= noOp;
 	op->doWaitStatementOp			= noOp;
 	op->doWhileStatementOp			= noOp;
 	op->doWhileOpenOp 				= noOp;
@@ -53,6 +57,7 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 	if(varDecl->expression){
 		op->doExpressionOp((void*)varDecl->expression);
 	}
+	op->doVariableDeclCloseOp((void*)varDecl);
 }
 
 static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBlock* op){
@@ -66,6 +71,7 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 	if(sigDecl->expression){
 		op->doExpressionOp((void*)sigDecl->expression);
 	}
+	op->doSignalDeclCloseOp((void*)sigDecl);
 }
 
 static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlock* op){
@@ -101,6 +107,7 @@ static void walkVariableAssignment(struct VariableAssign* varAssign, struct Oper
 	if(varAssign->expression){
 		op->doExpressionOp((void*)varAssign->expression);
 	}
+	op->doVariableAssignCloseOp((void*)varAssign);
 }
 
 static void walkSignalAssignment(struct SignalAssign* sigAssign, struct OperationBlock* op){
@@ -111,6 +118,7 @@ static void walkSignalAssignment(struct SignalAssign* sigAssign, struct Operatio
 	if(sigAssign->expression){
 		op->doExpressionOp((void*)sigAssign->expression);
 	}
+	op->doSignalAssignCloseOp((void*)sigAssign);
 }
 
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
@@ -239,8 +247,8 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 			if(portDecl->dtype){
 				op->doDataTypeOp((void*)portDecl->dtype);
 			}	
+			op->doPortDeclCloseOp((void*)ports);
 		}
-		op->doPortDeclCloseOp((void*)ports);
 		op->doBlockArrayOp((void*)ports);	
 	}
 	op->doEntityDeclCloseOp((void*)entDecl);
