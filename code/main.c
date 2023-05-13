@@ -8,39 +8,6 @@
 #include <display.h>
 #include <emitter.h>
 
-static void doTranspile(char* fileName, bool printProgramTree);
-
-int main(int argc, char* argv[]) {
-
-	if(argc < 2){
-		PrintUsage();
-		return -1;
-	}	
-
-	bool skipTranspilation = false;
-	bool printProgramTree = false;
-
-	if(argc == 2){
-		if(strcmp("-i", argv[1]) == 0){
-			DoMenu();
-			skipTranspilation = true;
-		}
-	} 
-	if(argc == 3){
-		if(strcmp("--print-tokens", argv[2]) == 0){
-			SetPrintTokenFlag();
-		} else if(strcmp("--print-ast", argv[2]) == 0){
-			printProgramTree = true;
-		}
-	}
-	
-	if(!skipTranspilation){
-		doTranspile(argv[1], printProgramTree);
-	}
-
-	return 0;
-}
-
 static char* readFile(const char* path){
 	FILE* file = fopen(path, "rb");
 	if(!file) {
@@ -70,14 +37,13 @@ static char* readFile(const char* path){
 
 extern bool hadError;
 
-static void doTranspile(char* fileName, bool printProgramTree){
+static void doTranspile(char* fileName, bool printProgramTree, bool printTokens){
 		char* ventSrc = readFile(fileName);
 		
+		if(printTokens) SetPrintTokenFlag();
 		struct Program* prog = ParseProgram(ventSrc);
-		if(printProgramTree){
-			PrintProgram(prog);
-		}
-		
+
+		if(printProgramTree) PrintProgram(prog);
 		TranspileProgram(prog, fileName);
 
 		printf("Transpilation complete");
@@ -89,3 +55,36 @@ static void doTranspile(char* fileName, bool printProgramTree){
 		FreeProgram(prog);
 		free(ventSrc);
 }
+
+int main(int argc, char* argv[]) {
+
+	if(argc < 2){
+		PrintUsage();
+		return -1;
+	}	
+
+	bool skipTranspilation = false;
+	bool printProgramTree = false;
+	bool printTokens = false;
+
+	if(argc == 2){
+		if(strcmp("-i", argv[1]) == 0){
+			DoMenu();
+			skipTranspilation = true;
+		}
+	} 
+	if(argc == 3){
+		if(strcmp("--print-tokens", argv[2]) == 0){
+			printTokens = true;
+		} else if(strcmp("--print-ast", argv[2]) == 0){
+			printProgramTree = true;
+		}
+	}
+	
+	if(!skipTranspilation){
+		doTranspile(argv[1], printProgramTree, printTokens);
+	}
+
+	return 0;
+}
+

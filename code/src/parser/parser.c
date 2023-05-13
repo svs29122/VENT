@@ -1,4 +1,4 @@
- /*
+/*
 	parser.c
 
 	This file contains all code used to parse the list of tokens 
@@ -128,9 +128,13 @@ void SetPrintTokenFlag(){
 }
 
 static void initParser(){
-	
+
+	//preserve printToken btw inits
+	bool keepPrinting = p->printTokenFlag;
+
 	memset(p, 0, sizeof(struct parser));
 
+	p->printTokenFlag = keepPrinting;
 	p->currToken = NextToken();
 	p->peekToken = NextToken();	
 }
