@@ -7,95 +7,25 @@
 
 void PrintUsage(void){
 	printf("Usage:\n"
-			" tvt -i (interactive menu)\n"
 			" tvt adder.vent (perform transpilation)\n"
 			" tvt adder.vent --print-tokens\n"
 			" tvt adder.vent --print-ast\n"
 		);
 }
 
-static void printOptions(void){
-	printf(" t:   \tTranspile VENT to VHDL\n"
-		 	 " r:   \tReverse Transpile VHDL to VENT\n"
-			 " h:   \tHelp\n"
-			 " q/Q: \tQuit\n"); 
-}
+static int indent;
 
-static void printWaterfall(void){
-	const int waterFallDelay = 250000;
-
-	printf("-----------------------\n");
-	printf("The V E N T Transpiler\n");
-	usleep(waterFallDelay);
-	printf("     H x o e\n");
-	usleep(waterFallDelay);
-	printf("      D c t r\n");
-	usleep(waterFallDelay);
-	printf("       L e   r\n");
-	usleep(waterFallDelay);
-	printf("          p   i\n");
-	usleep(waterFallDelay);
-	printf("           t   b\n");
-	usleep(waterFallDelay);
-	printf("                l\n");
-	usleep(waterFallDelay);
-	printf("                 e\n");
-	usleep(waterFallDelay);
-	printf("-----------------------\n");
-}
-
-void DoMenu(void){
-
-	printWaterfall();
-
-	char opt[256];
-	while(1){
-		printf("What would you like to do?\n");
-		printOptions();
-		
-		printf("\n=>");
-		fgets(opt, sizeof(opt), stdin);
-		
-		switch(opt[0]){
-		   
-			case 't':
-				printf("Transpiling...\n");
-				sleep(3);
-				break;
-		
-			case 'r':
-				printf("Reverse transpiling...\n");
-				sleep(3);
-				break;
-
-			case 'h':
-				printf("Help:\n");
-				break;
-			
-			case 'Q':
-			case 'q':
-				goto exit;
-		
-			default:
-				break;
-		}
-	}
-
-	exit:
-		return;
-}
-
-static int ishift;
-static bool inProcess;
-static bool inWhile;
-
-static char shift(int c){
+static char shift(){
 	printf("\e[0;34m|");
-	for(int i=0; i<c-1; i++){
+	for(int i=0; i<indent; i++){
 		printf("-");
 	}
 	printf("\e[0m");
 	return ' ';
+}
+
+static void printClose(void* none){
+	indent--;
 }
 
 static void printProg(){
@@ -103,157 +33,76 @@ static void printProg(){
 }
 
 static void printUseStatement(void* stmt){
-	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(1), ((struct UseStatement*)stmt)->value);
+	indent = 0;
+	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(), ((struct UseStatement*)stmt)->value);
 }
 
 static void printDesignUnit(void* unit){
-	printf("\e[1;32m""%cDesignUnit\r\n", shift(1));
+	indent = 0;
+	printf("\e[1;32m""%cDesignUnit\r\n", shift());
+	indent++;
 }
 
 static void printEntityDecl(void* eDecl){
-	printf("\e[0;32m""%cEntityDecl\r\n", shift(2));
-	ishift = 3;
+	printf("\e[0;32m""%cEntityDecl\r\n", shift());
+	indent++;
 }
 
-static void printArchDecl(void* eDecl){
-	printf("\e[0;32m""%cArchDecl\r\n", shift(2));
-	ishift = 3;
+static void printArchDecl(void* aDecl){
+	printf("\e[0;32m""%cArchDecl\r\n", shift());
+	indent++;
 }
 
 static void printIdentifier(void* ident){
-	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(ishift), ((struct Identifier*)ident)->value);
+	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(), ((struct Identifier*)ident)->value);
 }
 
 static void printPortDecl(void* pDecl){
-	printf("\e[0;32m""%cPortDecl\r\n", shift(3));
-	ishift = 4;
+	printf("\e[0;32m""%cPortDecl\r\n", shift());
+	indent++;
 }
 
 static void printSignalDecl(void* sDecl){
-	int shiftVal = 3;
-	
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-
-	printf("\e[0;32m""%cSignalDecl\r\n", shift(shiftVal));
-	ishift = shiftVal+1;
+	printf("\e[0;32m""%cSignalDecl\r\n", shift());
+	indent++;
 }
 
 static void printVariableDecl(void* vDecl){
-	int shiftVal = 3;
-	
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-
-	printf("\e[0;32m""%cVariableDecl\r\n", shift(shiftVal));
-	ishift = shiftVal+1;
+	printf("\e[0;32m""%cVariableDecl\r\n", shift());
+	indent++;
 }
 
 static void printWhileStatement(void* wStmt){
-	int shiftVal = 3;
-
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-
-	printf("\e[0;33m""%cWhileStatement\r\n", shift(shiftVal));
-	ishift = shiftVal+1; 
-
-	inWhile = true;
-}
-
-static void printWhileClose(void* wStmt){
-	inWhile = false;
+	printf("\e[0;33m""%cWhileStatement\r\n", shift());
+	indent++;
 }
 
 static void printWaitStatement(void* wStmt){
-	int shiftVal = 3;
-
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-
-	printf("\e[0;33m""%cWaitStatement\r\n", shift(shiftVal));
-	ishift = shiftVal+1; 
+	printf("\e[0;33m""%cWaitStatement\r\n", shift());
 }
 
 static void printVariableAssign(void* vAssign){
-	int shiftVal = 3;
-
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-
-	printf("\e[0;34m""%cVariableAssign\r\n", shift(shiftVal));
-	ishift = shiftVal+1; 
+	printf("\e[0;36m""%cVariableAssign\r\n", shift());
+	indent++;
 }
 
 static void printSignalAssign(void* sAssign){
-	int shiftVal = 3;
-
-	if(inProcess){
-		shiftVal++;
-	}
-
-	if(inWhile){
-		shiftVal++;
-	}
-
-	char blue[] = "\e[0;34m"; 
-	char green[] = "\e[0;32m"; 
-
-	if(inProcess){
-		printf("%s%cSignalAssign\r\n", blue, shift(shiftVal));
-	} else {
-		printf("%s%cSignalAssign\r\n", green, shift(shiftVal));
-	}
-	ishift = shiftVal+1; 
+	printf("\e[0;36m""%cSignalAssign\r\n", shift());
+	indent++;
 }
 
 static void printProcessStatement(void* proc){
-	printf("\e[0;34m""%cProcess\r\n", shift(3));
-	ishift = 4;
-	
-	inProcess = true;
-}
-
-static void printProcessClose(void* proc){
-	inProcess = false;
+	indent = 2;
+	printf("\e[0;33m""%cProcess\r\n", shift());
+	indent++;
 }
 
 static void printPortMode(void* pMode){
-	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(4), ((struct PortMode*)pMode)->value);
+	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(), ((struct PortMode*)pMode)->value);
 }
 
 static void printDataType(void* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(ishift), ((struct DataType*)dType)->value);
+	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
 }
 
 static void printSubExpression(void* expr){
@@ -296,7 +145,7 @@ static void printSubExpression(void* expr){
 
 static void printExpression(void* expr){
 	
-	printf("\e[0;35m""%cExpression: \'", shift(ishift));
+	printf("\e[0;35m""%cExpression: \'", shift());
 	
 	printSubExpression(expr);	
 
@@ -307,25 +156,32 @@ static void printExpression(void* expr){
 void PrintProgram(struct Program * prog){
 	
 	// setup block
-	struct OperationBlock* opBlk = InitOperationBlock();
-	opBlk->doUseStatementOp = printUseStatement;	
-	opBlk->doDesignUnitOp = printDesignUnit;
-	opBlk->doEntityDeclOp = printEntityDecl;
-	opBlk->doArchDeclOp = printArchDecl;
-	opBlk->doPortDeclOp = printPortDecl;
-	opBlk->doSignalDeclOp = printSignalDecl;
-	opBlk->doVariableDeclOp = printVariableDecl;
-	opBlk->doSignalAssignOp = printSignalAssign;
-	opBlk->doVariableAssignOp = printVariableAssign;
-	opBlk->doWaitStatementOp = printWaitStatement;
-	opBlk->doWhileStatementOp = printWhileStatement;
-	opBlk->doWhileCloseOp = printWhileClose;
-	opBlk->doProcessOp = printProcessStatement;
-	opBlk->doProcessCloseOp = printProcessClose;
-	opBlk->doIdentifierOp = printIdentifier;
-	opBlk->doPortModeOp = printPortMode;
-	opBlk->doDataTypeOp = printDataType;
-	opBlk->doExpressionOp = printExpression;
+	struct OperationBlock* opBlk 		= InitOperationBlock();
+	opBlk->doUseStatementOp 			= printUseStatement;	
+	opBlk->doDesignUnitOp 				= printDesignUnit;
+	opBlk->doEntityDeclOp 				= printEntityDecl;
+	opBlk->doArchDeclOp 					= printArchDecl;
+	opBlk->doPortDeclOp 					= printPortDecl;
+	opBlk->doSignalDeclOp 				= printSignalDecl;
+	opBlk->doVariableDeclOp 			= printVariableDecl;
+	opBlk->doSignalAssignOp 			= printSignalAssign;
+	opBlk->doVariableAssignOp 			= printVariableAssign;
+	opBlk->doWaitStatementOp 			= printWaitStatement;
+	opBlk->doWhileStatementOp 			= printWhileStatement;
+	opBlk->doProcessOp 					= printProcessStatement;
+	opBlk->doIdentifierOp 				= printIdentifier;
+	opBlk->doPortModeOp 					= printPortMode;
+	opBlk->doDataTypeOp 					= printDataType;
+	opBlk->doExpressionOp 				= printExpression;
+	opBlk->doEntityDeclCloseOp 		= printClose;
+	opBlk->doArchDeclCloseOp 			= printClose;
+	opBlk->doPortDeclCloseOp 			= printClose;
+	opBlk->doSignalDeclCloseOp 		= printClose;
+	opBlk->doVariableDeclCloseOp 		= printClose;
+	opBlk->doSignalAssignCloseOp 		= printClose;
+	opBlk->doVariableAssignCloseOp 	= printClose;
+	opBlk->doProcessCloseOp 			= printClose;
+	opBlk->doWhileCloseOp 				= printClose;
 	
 	printProg();	
 	WalkTree(prog, opBlk);
