@@ -224,6 +224,12 @@ static void checkSequentialStatement(CuTest* tc, struct Program* prog, int duNum
 
 		case WHILE_STATEMENT: {
 			CuAssertIntEquals_Msg(tc,"Expected while loop!", WHILE_STATEMENT, qstmt->type);
+			break;
+		}
+	
+		case IF_STATEMENT: {
+			CuAssertIntEquals_Msg(tc,"Expected if statement!", IF_STATEMENT, qstmt->type);
+			break;
 		}
 	
 		default:
@@ -598,7 +604,6 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	FreeProgram(prog);
 	free(input);
 }
-
 void TestParseProgram_ProcessWithIf(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(ander){\n \
@@ -619,7 +624,7 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 							temp <= '1';\n \
 						}\n \
 						myVar := '1';\n \
-					}\n \
+					}\n  \
 					temp <= '0';\n \
 				} else {\n \
 					temp <= temp;\n \
@@ -638,10 +643,9 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
 
 	int qstmtNum = 0;
-	//checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, VAR_ASSIGN, NULL, NULL, NULL);
 	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, IF_STATEMENT, NULL, NULL, NULL);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
