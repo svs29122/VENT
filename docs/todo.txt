@@ -11,7 +11,7 @@ II) AST ToDo
 	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
 			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
 			 ###			- this is something like the well-known strategy pattern 
-	4) Refactor Walk Tree into readable units
+	### DONE ###	4) Refactor Walk Tree into readable units
 			
 			
 III) Parser ToDo
@@ -31,21 +31,7 @@ IV) Transpiler ToDo
 V) Refactor ToDo
 ### DONE ###  	1) Go through Valgrind output and fix memory leaks
 ### DONE ###  	2) Go add static keyword to any variables that should be static
-	3) Wondering about maybe passing the ventsrc char* to ParseProgram and having it do lexer/parser initialization instead of requiring a caller to do all of that work upfront
-		i) i.e. change this:
-			/****************************************/
-				char* ventSrc = readFile(fileName);
-				InitLexer(ventSrc);
-				InitParser();
-				
-				struct Program* prog = ParseProgram();
-			/****************************************/
-		ii) to this:
-			/****************************************/
-				char* ventSrc = readFile(fileName);
-
-				struct Program* prog = ParseProgram(ventsrc);
-			/****************************************/
+### DONE ###	3) Wondering about maybe passing the ventsrc char* to ParseProgram and having it do lexer/parser initialization instead of requiring a caller to do all of that work upfront
 		
 
 VI) Overall ToDO
