@@ -1,7 +1,6 @@
 This is a TODO list for VENT work:
 
 I) Lexer ToDo
-	1) 
 
 II) AST ToDo
 ### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
@@ -34,8 +33,20 @@ V) Refactor ToDo
 ### DONE ###	3) Wondering about maybe passing the ventsrc char* to ParseProgram and having it do lexer/parser initialization instead of requiring a caller to do all of that work upfront
 		
 
-VI) Overall ToDO
+VI) Overall ToDo
 	1) Need to implement basic functionality including proc, comp, map, if, when, loop
 		i) need to do work to handle comma separated lists of identifiers
 		ii) need to handle labels and decide if they are treated differently than identifiers by the lexer
 	2) Need to go and add NULL checks to all of my heap allocations especially in the parser duh...
+
+
+VII) Proc ToDo
+	1) sequential statements to implement:
+		i) wait, assert, report
+		### DONE ###  		ii) signal and variable assignment
+		iii) if, case for, while, loop
+			- next, exit, return
+		iv) null
+		v) procedure call
+
+
