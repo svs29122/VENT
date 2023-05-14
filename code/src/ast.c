@@ -28,6 +28,7 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doSignalAssignCloseOp		= noOp;
 	op->doVariableAssignOp			= noOp;
 	op->doVariableAssignCloseOp	= noOp;
+	op->doIfStatementOp 				= noOp;
 	op->doWaitStatementOp			= noOp;
 	op->doWhileStatementOp			= noOp;
 	op->doWhileOpenOp 				= noOp;
@@ -72,6 +73,22 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 		op->doExpressionOp((void*)sigDecl->expression);
 	}
 	op->doSignalDeclCloseOp((void*)sigDecl);
+}
+
+static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* op){
+	op->doIfStatementOp((void*)ifStmt);
+	if(ifStmt->antecedent){
+		op->doExpressionOp(ifStmt->antecedent);
+	}
+	if(ifStmt->consequentStatements){
+		walkSequentialStatements(ifStmt->consequentStatements, op);
+	}
+	if(ifStmt->elsif){
+		walkIfStatement(ifStmt->elsif, op);
+	}	
+	if(ifStmt->alternativeStatements){
+		walkSequentialStatements(ifStmt->alternativeStatements, op);
+	}
 }
 
 static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlock* op){
@@ -132,6 +149,11 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 
 			case VARIABLE_ASSIGNMENT: {
 				walkVariableAssignment(&(qstmt->as.variableAssignment), op);
+				break;
+			}
+
+			case IF_STATEMENT: {
+				walkIfStatement(&(qstmt->as.ifStatement), op);
 				break;
 			}
 		
