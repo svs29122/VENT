@@ -364,6 +364,54 @@ static void parseSequentialAssignment(struct SequentialStatement* seqStmt){
 //need this forward declaration because sequentials can nest
 static Dba* parseSequentialStatements();
 
+static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
+#ifdef DEBUG
+	memcpy(&(ifStmt->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	if(!parsingElsif){
+		consume(TOKEN_IF, "Expect token if at start of if statement");
+	} else {
+		consume(TOKEN_ELSIF, "Expect token elsif at start of elsif statement");
+	}
+	consumeNext(TOKEN_LPAREN, "Expect '(' after if token");	
+
+	nextToken();
+	if(match(TOKEN_RPAREN)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid antecedent in if statement");
+	} else {
+		ifStmt->antecedent = parseExpression(LOWEST_PREC);
+	}
+	consume(TOKEN_RPAREN, "Expect ')' after if antecedent");
+	consumeNext(TOKEN_LBRACE, "Expect '{' at start of if statement body");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		ifStmt->consequentStatements = parseSequentialStatements();
+	}
+	consume(TOKEN_RBRACE, "expect '}' at end of if statement");
+
+	//check for elsif block
+	if(peek(TOKEN_ELSIF)){
+		ifStmt->elsif = calloc(1, sizeof(struct IfStatement));
+
+		nextToken();
+		parseIfStatement(ifStmt->elsif, true);
+	}
+
+	// check for else block
+	if(peek(TOKEN_ELSE)){
+		consumeNext(TOKEN_ELSE, "Expect else token");
+		consumeNext(TOKEN_LBRACE, "Expect '{' after else token");	
+		
+		nextToken();
+		if(!match(TOKEN_RBRACE)){
+			ifStmt->alternativeStatements = parseSequentialStatements();
+		}
+		consume(TOKEN_RBRACE, "expect '}' at end of else statement");
+	}
+}
+
 static void parseWhileStatement(struct WhileStatement* wStmt){
 #ifdef DEBUG
 	memcpy(&(wStmt->token), &(p->currToken), sizeof(struct Token));
@@ -374,7 +422,6 @@ static void parseWhileStatement(struct WhileStatement* wStmt){
 
 	nextToken();
 	if(!match(TOKEN_RPAREN)){
-		//handle condition
 		wStmt->condition = parseExpression(LOWEST_PREC);
 	}
 	consume(TOKEN_RPAREN, "Expect ')' after while condition");
@@ -411,6 +458,12 @@ static Dba* parseSequentialStatements(){
 		switch(p->currToken.type){
 			case TOKEN_IDENTIFIER: { 
 				parseSequentialAssignment(&seqStmt);
+				break;
+			}
+
+			case TOKEN_IF: {
+				seqStmt.type = IF_STATEMENT;
+				parseIfStatement(&(seqStmt.as.ifStatement), false);
 				break;
 			}
 

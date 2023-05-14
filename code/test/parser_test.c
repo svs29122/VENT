@@ -599,6 +599,50 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ProcessWithIf(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(ander){\n \
+			\n \
+			sig temp stl;\n \
+			\n \
+			proc () {\n \
+				if ( a ) {\n \
+					temp <= '1';\n \
+				} elsif ( b ) {\n \
+					if ( c ) {\n \
+						temp <= '0';\n \
+					} elsif ( d ) {\n \
+						temp <= '1';\n \
+					} else {\n \
+						if ( q ) {\n \
+							temp <= '1';\n \
+						}\n \
+						temp <= temp;\n \
+					}\n \
+					temp <= '0';\n \
+				} else {\n \
+					temp <= temp;\n \
+				}\n \
+			}\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	checkProgram(tc, prog);
+
+	int unitNum = 0;
+	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
+
+	int stmtNum = 0;
+	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
+
+	int qstmtNum = 0;
+	//checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -626,6 +670,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithDeclarations);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithEmptyWhileWait);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithWhileLoop);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithIf);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

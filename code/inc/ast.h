@@ -164,6 +164,17 @@ struct Declaration {
 	} as;
 };
 
+struct IfStatement {
+#ifdef DEBUG
+	struct Token token; // the 'if' token
+#endif 
+	struct Label* label;
+	struct Expression* antecedent;
+	struct DynamicBlockArray* consequentStatements;
+	struct DynamicBlockArray* alternativeStatements;
+	struct IfStatement* elsif;
+};
+
 struct WhileStatement {
 #ifdef DEBUG
 	struct Token token; // the "while" token
@@ -214,6 +225,7 @@ struct SequentialStatement {
 	union {
 		struct SignalAssign signalAssignment;
 		struct VariableAssign variableAssignment;
+		struct IfStatement ifStatement;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
 	} as;

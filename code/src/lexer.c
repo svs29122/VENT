@@ -110,8 +110,35 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
-		case 'e': return checkKeyword(1, 2, size, lit, "nt", TOKEN_ENT);
-		case 'i': return checkKeyword(1, 2, size, lit, "nt", TOKEN_INTEGER);
+		case 'e': 
+			if(size > 1){
+				switch(lit[1]){
+					case 'l':
+						if(size > 2){
+							switch(lit[2]){
+								case 's': 
+									if(size > 3){
+										switch(lit[3]){
+											case 'e': return checkKeyword(4, 0, size, lit, "", TOKEN_ELSE);
+											case 'i': return checkKeyword(4, 1, size, lit, "f", TOKEN_ELSIF);
+										}
+									}
+									break;
+							}	
+						}
+						break;
+					case 'n': return checkKeyword(1, 2, size, lit, "nt", TOKEN_ENT);
+				}
+			}
+			break;
+		case 'i': 
+			if(size >1){
+				switch(lit[1]){
+					case 'f': return checkKeyword(2, 0, size, lit, "", TOKEN_IF);
+					case 'n': return checkKeyword(2, 1, size, lit, "t", TOKEN_INTEGER);
+				}
+			}
+			break;
 		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
 		case 's': 
 			if(size > 1){
@@ -495,6 +522,7 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_UNSIGNED: 	return "TOKEN_UNSIGNED";
 		case TOKEN_IDENTIFIER:	return "TOKEN_IDENTIFIER";
 		case TOKEN_CHARLIT: 		return "TOKEN_CHARLIT";
+		case TOKEN_NUMBERLIT:	return "TOKEN_NUMBERLIT";
 		case TOKEN_STRINGLIT:	return "TOKEN_STRINGLIT";
 		case TOKEN_BSTRINGLIT:	return "TOKEN_BSTRINGLIT";
 		case TOKEN_ENT:	 		return "TOKEN_ENT";
