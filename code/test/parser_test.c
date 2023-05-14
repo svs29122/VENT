@@ -593,7 +593,7 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	int qstmtNum = 0;
 	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
