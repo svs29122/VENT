@@ -210,6 +210,24 @@ static char readChar(){
 	return l->ch;
 }
 
+#define INVALID_CHAR_NUM 25
+char invalidCharacters[INVALID_CHAR_NUM] = { 
+   ' ', ';', '=', '{', '}',
+   '(', ')', '<', '>', '+',
+   '-', '*', '/', ',', '`',
+   '~', '!', '&', '?', '"',
+	':', '\'', '\n', '\0', '@',
+};
+
+static bool charIsValidInIdentifier(char character){
+   for(int i=0; i < INVALID_CHAR_NUM; i++){
+      if( invalidCharacters[i]  == character) return false;
+   }   
+   return true;
+}
+#undef INVALID_CHAR_NUM
+
+
 static struct Token readIdentifier(){
 	struct Token tok = {TOKEN_ILLEGAL, 0};
 
@@ -218,26 +236,11 @@ static struct Token readIdentifier(){
 	char *start = &(l->input[l->currPos-1]);
 	char *end = start+1;
 
-	//check for any chars that can follow an identifier
-	//TODO: this is gonna be huge, maybe break it out
-	//to a separate function or a few different functions?
-	
-	if(peek() != ' ' && peek() != ';') {	
-		while(peekNext() != ' ' && peekNext() != '=' &&
-				peekNext() != '{' && peekNext() != '}' &&
-				peekNext() != '(' && peekNext() != ')' &&
-				peekNext() != '<' && peekNext() != '>' &&
-				peekNext() != '+' && peekNext() != '-' &&
-				peekNext() != '*' && peekNext() != '/' &&
-				peekNext() != ';' && peekNext() != ',' &&
-				peekNext() != ':' && peekNext() != '\'' &&
-				peekNext() != '\n' && peekNext() != '\0'){
-	
+	if(charIsValidInIdentifier(peek())){
+		while(charIsValidInIdentifier(peekNext())){
 			readChar();
 			end++;
 		}
-		
-		//if(end == start+1) end--;
 	} else {
 		//got a single letter identifier
 		end--;
