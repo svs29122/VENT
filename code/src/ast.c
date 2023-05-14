@@ -29,6 +29,8 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doVariableAssignOp			= noOp;
 	op->doVariableAssignCloseOp	= noOp;
 	op->doIfStatementOp 				= noOp;
+	op->doIfStatementCloseOp		= noOp;
+	op->doIfStatementElseOp			= noOp;
 	op->doWaitStatementOp			= noOp;
 	op->doWhileStatementOp			= noOp;
 	op->doWhileOpenOp 				= noOp;
@@ -83,10 +85,12 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->consequentStatements){
 		walkSequentialStatements(ifStmt->consequentStatements, op);
 	}
+	op->doIfStatementCloseOp((void*)ifStmt);
 	if(ifStmt->elsif){
 		walkIfStatement(ifStmt->elsif, op);
 	}	
 	if(ifStmt->alternativeStatements){
+		op->doIfStatementElseOp((void*)ifStmt);
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
 	}
 }

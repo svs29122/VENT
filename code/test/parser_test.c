@@ -606,18 +606,19 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 			sig temp stl;\n \
 			\n \
 			proc () {\n \
-				if ( a ) {\n \
+				var myVar stl;\n \
+				if ( a > 5 ) {\n \
 					temp <= '1';\n \
-				} elsif ( b ) {\n \
-					if ( c ) {\n \
+				} elsif ( b < 2 ) {\n \
+					if ( c = 255 ) {\n \
 						temp <= '0';\n \
-					} elsif ( d ) {\n \
+					} elsif ( d = '0' ) {\n \
 						temp <= '1';\n \
 					} else {\n \
-						if ( q ) {\n \
+						if ( q = y ) {\n \
 							temp <= '1';\n \
 						}\n \
-						temp <= temp;\n \
+						myVar := '1';\n \
 					}\n \
 					temp <= '0';\n \
 				} else {\n \
@@ -638,6 +639,8 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 
 	int qstmtNum = 0;
 	//checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+
+	PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
