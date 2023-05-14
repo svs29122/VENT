@@ -123,7 +123,7 @@ else									/
 process (ck)						/	proc(clk)
 begin									/	{
 	if(rising_edge(ck) then		/		if(clk'up) {
-		a <= '1';					/			a <= 1; 
+	a <= '1';					/			a <= 1; 
 	elsif(falling_edge(ck))then/		elsif(clk'down) 
 		a <= '0';					/			a <= 0;
 	else								/		else

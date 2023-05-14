@@ -32,6 +32,7 @@ struct OperationBlock {
 	astNodeOpPtr doSignalAssignCloseOp;
 	astNodeOpPtr doVariableAssignOp;
 	astNodeOpPtr doVariableAssignCloseOp;
+	astNodeOpPtr doIfStatementOp;
 	astNodeOpPtr doWaitStatementOp;
 	astNodeOpPtr doWhileStatementOp;
 	astNodeOpPtr doWhileOpenOp;
