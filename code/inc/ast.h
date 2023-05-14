@@ -34,6 +34,7 @@ struct OperationBlock {
 	astNodeOpPtr doVariableAssignCloseOp;
 	astNodeOpPtr doIfStatementOp;
 	astNodeOpPtr doIfStatementCloseOp;
+	astNodeOpPtr doIfStatementElsifOp;
 	astNodeOpPtr doIfStatementElseOp;
 	astNodeOpPtr doWaitStatementOp;
 	astNodeOpPtr doWhileStatementOp;

@@ -27,8 +27,11 @@ POBJS ?= $(patsubst %,$(SODIR)/%,$(_POBJ))
 _TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o emitter_test.o dba_test.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
+_TIOBJ = parser_internals.o 
+TIOBJS = $(patsubst %,$(TODIR)/%,$(_TIOBJ))
+
 # this is the executable to run all tests
-RunUnitTests: $(TOBJS) $(POBJS) $(OBJS)
+RunUnitTests: $(TOBJS) $(TIOBJS) $(POBJS) $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 #build source code
@@ -62,3 +65,4 @@ print:
 	@echo $(TDIR)
 	@echo $(TODIR)
 	@echo $(TOBJS)
+	@echo $(TIOBJS)

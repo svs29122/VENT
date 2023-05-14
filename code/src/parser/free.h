@@ -55,13 +55,14 @@ void FreeProgram(struct Program* prog){
 	
 	// setup block
 	struct OperationBlock* opBlk = InitOperationBlock();
-	opBlk->doProgOp 			= lambda (void, (void* prog) 	{ struct Program* pg = (struct Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
-	opBlk->doUseStatementOp = lambda (void, (void* stmt) 	{ struct UseStatement* st = (struct UseStatement*)stmt; if(st->value) free(st->value); });
-	opBlk->doBlockArrayOp 	= lambda (void, (void* arr) 	{ FreeBlockArray((Dba*)arr); });
-	opBlk->doIdentifierOp	= lambda (void, (void* ident) { struct Identifier* id = (struct Identifier*)ident; if(id->value) free(id->value); free(id); });
-	opBlk->doPortModeOp 		= lambda (void, (void* pmode) { struct PortMode* pm = (struct PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
-	opBlk->doDataTypeOp 		= lambda (void, (void* dtype) { struct DataType* dt = (struct DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
-	opBlk->doExpressionOp	= freeExpression;
+	opBlk->doProgOp 					= lambda (void, (void* prog) 	{ struct Program* pg = (struct Program*)prog; pg->useStatements=NULL; pg->units=NULL; free(pg); });
+	opBlk->doUseStatementOp 		= lambda (void, (void* stmt) 	{ struct UseStatement* st = (struct UseStatement*)stmt; if(st->value) free(st->value); });
+	opBlk->doBlockArrayOp 			= lambda (void, (void* arr) 	{ FreeBlockArray((Dba*)arr); });
+	opBlk->doIdentifierOp			= lambda (void, (void* ident) { struct Identifier* id = (struct Identifier*)ident; if(id->value) free(id->value); free(id); });
+	opBlk->doPortModeOp 				= lambda (void, (void* pmode) { struct PortMode* pm = (struct PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
+	opBlk->doDataTypeOp 				= lambda (void, (void* dtype) { struct DataType* dt = (struct DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
+	opBlk->doIfStatementElsifOp 	= lambda (void, (void* stmt) 	{ struct IfStatement* ifStmt = (struct IfStatement*)stmt; free(ifStmt); });
+	opBlk->doExpressionOp			= freeExpression;
 	
 	WalkTree(prog, opBlk);
 
