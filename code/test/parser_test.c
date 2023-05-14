@@ -607,12 +607,12 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 			\n \
 			proc () {\n \
 				var myVar stl;\n \
-				if ( a > 5 ) {\n \
+				if (a>5) {\n \
 					temp <= '1';\n \
-				} elsif ( b < 2 ) {\n \
+				} elsif (b) {\n \
 					if ( c = 255 ) {\n \
 						temp <= '0';\n \
-					} elsif ( d = '0' ) {\n \
+					} elsif (d='0') {\n \
 						temp <= '1';\n \
 					} else {\n \
 						if ( q = y ) {\n \
@@ -638,7 +638,8 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
 
 	int qstmtNum = 0;
-	//checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+	//checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, VAR_ASSIGN, NULL, NULL, NULL);
+	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, IF_STATEMENT, NULL, NULL, NULL);
 
 	PrintProgram(prog);
 
