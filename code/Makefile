@@ -15,7 +15,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = display.o lexer.o dba.o ast.o emitter.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_POBJ = error.o parser.o
+_POBJ = parser.o
 POBJ ?= $(patsubst %,$(ODIR)/%,$(_POBJ))
 
 MAIN=$(ODIR)/main.o
@@ -75,10 +75,7 @@ cleand:
 cleant:
 	$(MAKE) -C ./test clean 
 	
-cleani:
-	$(MAKE) -C ./test/internal clean 
-	
-cleanall: clean cleand cleant cleani
+cleanall: clean cleand cleant 
 
 print:
 	@echo $(CFLAGS)

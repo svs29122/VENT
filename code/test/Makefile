@@ -20,7 +20,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 _OBJ = dba.o lexer.o display.o ast.o emitter.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
-_POBJ = error.o parser.o
+_POBJ = parser.o
 POBJS ?= $(patsubst %,$(SODIR)/%,$(_POBJ))
 
 _TOBJ = parser_test.o lexer_test.o unit_tests.o cutest.o emitter_test.o dba_test.o
