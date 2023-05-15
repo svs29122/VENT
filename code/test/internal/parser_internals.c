@@ -13,6 +13,26 @@
 
 void TestParseInternal_SimpleProcess(CuTest *tc){
    char* input = strdup(" \
+      proc (clk) {\n \
+				clk <= not clk;\n \
+			}\n \
+		}\n \
+   ");
+	
+	InitLexer(input);
+	initParser();
+	
+	struct ConcurrentStatement conStmt = {0};
+	conStmt.type = PROCESS;
+
+	parseProcessStatement(&(conStmt.as.process));
+
+	// clean up
+   free(input);
+}
+
+void TestParseInternal_NestedIf(CuTest *tc){
+   char* input = strdup(" \
       proc () {\n \
 			if(a<b){\n \
 				a <= '1';\n \
@@ -64,6 +84,7 @@ CuSuite* ParserInternalsGetSuite(){
    CuSuite* suite = CuSuiteNew();
 
    SUITE_ADD_TEST(suite, TestParseInternal_SimpleProcess);
+   SUITE_ADD_TEST(suite, TestParseInternal_NestedIf);
    SUITE_ADD_TEST(suite, TestParseInternal_);
 
    return suite;
