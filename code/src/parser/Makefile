@@ -17,7 +17,7 @@ DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 _DEP = parser.h ast.h dba.h lexer.h token.h error.h 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = error.o parser.o
+_OBJ = parser.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: $(OBJ)
@@ -28,9 +28,6 @@ $(ODIR):
 $(ODIR)/parser.o: parser.c | $(ODIR)
 	$(CC) -c $^ $(CFLAGS) -o $@ 
  
-$(ODIR)/error.o: error.c | $(ODIR)
-	$(CC) -c $^ $(CFLAGS) -o $@
-
 .PHONY: clean all
 
 debug: 
