@@ -79,7 +79,6 @@ static void printIfStatement(void* ifStmt){
 
 static void printElseClause(void* ifStmt){
 	printf("\e[0;34m""%c/*ElseBlock*/\r\n", shift());
-	indent++;
 }
 
 static void printWhileStatement(void* wStmt){
@@ -160,11 +159,7 @@ static void printExpression(void* expr){
 	printf("\'\r\n");
 }
 
-
-void PrintProgram(struct Program * prog){
-	
-	// setup block
-	struct OperationBlock* opBlk 		= InitOperationBlock();
+static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doUseStatementOp 			= printUseStatement;	
 	opBlk->doDesignUnitOp 				= printDesignUnit;
 	opBlk->doEntityDeclOp 				= printEntityDecl;
@@ -192,7 +187,16 @@ void PrintProgram(struct Program * prog){
 	opBlk->doVariableAssignCloseOp 	= printClose;
 	opBlk->doProcessCloseOp 			= printClose;
 	opBlk->doIfStatementCloseOp		= printClose;
+	//opBlk->doIfStatementElsifOp		= printClose;
 	opBlk->doWhileCloseOp 				= printClose;
+}
+
+
+void PrintProgram(struct Program * prog){
+	
+	// setup block
+	struct OperationBlock* opBlk = InitOperationBlock();
+	setupDisplayOpBlock(opBlk);
 	
 	printProg();	
 	WalkTree(prog, opBlk);

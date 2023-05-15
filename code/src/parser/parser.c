@@ -400,7 +400,7 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 	}
 
 	// check for else block
-	if(peek(TOKEN_ELSE)){
+	if(!parsingElsif && peek(TOKEN_ELSE)){
 		consumeNext(TOKEN_ELSE, "Expect else token");
 		consumeNext(TOKEN_LBRACE, "Expect '{' after else token");	
 		
