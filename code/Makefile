@@ -61,7 +61,7 @@ test:
 
 runtest: 
 	@$(MAKE) -C ./test --silent
-	@./test/RunUnitTests
+	@./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
 clean:
@@ -75,7 +75,10 @@ cleand:
 cleant:
 	$(MAKE) -C ./test clean 
 	
-cleanall: clean cleand cleant
+cleani:
+	$(MAKE) -C ./test/internal clean 
+	
+cleanall: clean cleand cleant cleani
 
 print:
 	@echo $(CFLAGS)

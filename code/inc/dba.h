@@ -1,5 +1,8 @@
 #ifndef INC_DBA_H
 #define INC_DBA_H
+
+#include <stddef.h>
+
 /*
 	Dynamic array akin to a C++ vector
 	

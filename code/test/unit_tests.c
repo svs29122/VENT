@@ -14,8 +14,6 @@ CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
 CuSuite* TranspileTestGetSuite();
 
-CuSuite* ParserTestInternalsGetSuite();
-
 void RunAllTests(void){
 	CuString *output = CuStringNew();
 	CuSuite* masterSuite = CuSuiteNew();
@@ -32,9 +30,6 @@ void RunAllTests(void){
 #ifdef TEST_PARSER
 	CuSuite* parserTestSuite = ParserTestGetSuite();
 	CuSuiteAddSuite(masterSuite, parserTestSuite);
-
-	CuSuite* parserInternalsTestSuite = ParserTestInternalsGetSuite();
-	CuSuiteAddSuite(masterSuite, parserInternalsTestSuite);
 #endif
 #ifdef TEST_TRANSPILE
 	CuSuite* transpileTestSuite = TranspileTestGetSuite();
@@ -55,7 +50,6 @@ void RunAllTests(void){
 #endif
 #ifdef TEST_PARSER
 	CuSuiteDelete(parserTestSuite);
-	CuSuiteDelete(parserInternalsTestSuite);
 #endif
 #ifdef TEST_LEXER
 	CuSuiteDelete(lexerTestSuite);
