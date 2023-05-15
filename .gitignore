@@ -8,6 +8,8 @@ code/src/obj_d
 
 code/test/RunUnitTests
 code/test/obj
+code/test/internal/obj
+code/test/internal/ParserInternalTests
 
 code/sandbox
 
