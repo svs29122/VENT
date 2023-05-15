@@ -13,7 +13,6 @@ TODIR=$(TDIR)/obj
 
 CC=gcc
 CFLAGS=-I$(IDIR) -g
-#CFLAGS=-I$(IDIR) -pg
 
 _DEP = parser.h ast.h dba.h token.h display.h emitter.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
@@ -24,14 +23,11 @@ OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 _POBJ = error.o parser.o
 POBJS ?= $(patsubst %,$(SODIR)/%,$(_POBJ))
 
-_TOBJ = parser_test.o lexer_test.o all_tests.o cutest.o emitter_test.o dba_test.o
+_TOBJ = parser_test.o lexer_test.o unit_tests.o cutest.o emitter_test.o dba_test.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
-_TIOBJ = parser_internals.o 
-TIOBJS = $(patsubst %,$(TODIR)/%,$(_TIOBJ))
-
 # this is the executable to run all tests
-RunUnitTests: $(TOBJS) $(TIOBJS) $(POBJS) $(OBJS)
+UnitTests: $(TOBJS) $(TIOBJS) $(POBJS) $(OBJS) $(DEPS)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 #build source code
@@ -53,13 +49,13 @@ $(TODIR)/%.o: $(TDIR)/%.c $(DEPS) | $(TODIR)
 
 .PHONY: runtest clean print
 
-runtest: RunUnitTests
-	@./RunUnitTests
+runtest: UnitTests
+	@./UnitTests
 
 clean:
 	rm -fr $(TODIR)
 	rm -fr $(SODIR)
-	rm -f RunUnitTests
+	rm -f UnitTests
 
 print:
 	@echo $(TDIR)
