@@ -187,7 +187,6 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doVariableAssignCloseOp 	= printClose;
 	opBlk->doProcessCloseOp 			= printClose;
 	opBlk->doIfStatementCloseOp		= printClose;
-	//opBlk->doIfStatementElsifOp		= printClose;
 	opBlk->doWhileCloseOp 				= printClose;
 }
 
