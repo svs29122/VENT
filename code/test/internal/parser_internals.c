@@ -7,11 +7,28 @@
 
 #include "../cutest.h"
 #include "../src/parser/parser.c"
+#include "../src/parser/error.c"
+#include "../src/ast.c"
+#include "../src/display.c"
 
 void TestParseInternal_SimpleProcess(CuTest *tc){
    char* input = strdup(" \
-      proc ( clk ) {\n \
-			clk <=  not clk;\n \
+      proc () {\n \
+			if(a<b){\n \
+				a <= '1';\n \
+			} elsif (b<a){\n \
+				b <= '1';\n \
+				if(c = '1'){\n \
+					b <= '0';\n \
+				} elsif (c = '0') {\n \
+					b <= '1';\n \
+				} else {\n \
+					b <= '3';\n \
+				}\n \
+			} else {\n \
+				a <= '0';\n \
+				b <= '0';\n \
+			}\n \
 		}\n \
    ");
 	
@@ -23,7 +40,15 @@ void TestParseInternal_SimpleProcess(CuTest *tc){
 
 	parseProcessStatement(&(conStmt.as.process));
 
-	
+	struct OperationBlock* op = InitOperationBlock();
+	setupDisplayOpBlock(op);
+
+	walkProcessStatement(&(conStmt.as.process), op);
+
+	// clean up
+	free(op);
+	printf("\e[0m");
+
    free(input);
 }
 

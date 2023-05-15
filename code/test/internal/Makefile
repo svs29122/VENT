@@ -20,7 +20,7 @@ CFLAGS=-I$(IDIR) -g
 _DEP = parser.h ast.h dba.h token.h display.h emitter.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = dba.o lexer.o display.o ast.o emitter.o
+_OBJ = dba.o lexer.o 
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
 _TOBJ = cutest.o
