@@ -11,240 +11,44 @@
 #include "valgrind.h"
 #include "cutest.h"
 
-//helper functions
-static void checkProgram(CuTest* tc, struct Program* prog){
-	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
-}
+//helper macros
+#define getUseStatement(p, x)		((struct UseStatement*)(ReadBlockArray(p->useStatements, x)))
 
-static void checkUse(CuTest* tc, struct Program* prog, const char* useLiteral){
-	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
-	struct UseStatement* stmt = (struct UseStatement*) ReadBlockArray(prog->useStatements, 0);
-	CuAssertStrEquals_Msg(tc,"use path incorrect!", useLiteral, stmt->value);
+#define getDesignUnit(p, x) 		((struct DesignUnit*)(ReadBlockArray(p->units, x)))
+#define getEntity(d)					(struct EntityDecl*)(&(d->as.entity))
+#define getArch(d)					(struct ArchitectureDecl*)(&(d->as.architecture))
 
-}
+#define getPortDecl(d, x)			((struct PortDecl*)(ReadBlockArray((d)->ports, x)))
 
-static void checkDesignUnit(CuTest* tc, struct Program* prog, int dnum, int type, const char* uname, const char* ename){
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+#define getDeclaration(a, x)		((struct Declaration*)(ReadBlockArray((a)->declarations, x)))
+#define getSigDecl(d)				(struct SignalDecl*)(&(d->as.signalDeclaration))
+#define getVarDecl(d)				(struct VariableDecl*)(&(d->as.variableDeclaration))
 
-	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
-	CuAssertIntEquals_Msg(tc,"Wrong design unit type!",  type, unit->type);
-	if(type == ENTITY){
-		CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", uname, unit->as.entity.name->value);
-	} else if (type == ARCHITECTURE){
-		CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", uname, unit->as.architecture.archName->value);
-		CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", ename, unit->as.architecture.entName->value);
-	}
-}
+#define getConStatement(a, x)		((struct ConcurrentStatement*)(ReadBlockArray((a)->statements, x)))
+#define getProcess(c)				(struct Process*)(&(c->as.process))
 
-static void checkPort(CuTest* tc, struct Program* prog, int dnum, int pnum, const char* id, const char* mode, const char* dtype){
+#define getSeqStatement(p, x)		((struct SequentialStatement*)(ReadBlockArray((p)->statements, x)))
+#define getSigAssign(s)				(struct SignalAssign*)(&(s->as.signalAssignment))
+#define getVarAssign(s)				(struct VariableAssign*)(&(s->as.variableAssignment))
+#define getWaitStatement(s)		(struct WaitStatement*)(&(s->as.waitStatement))
+#define getWhileStatement(s)		(struct WhileStatement*)(&(s->as.whileStatement))
 
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+#define getIfStatement(s)			(struct IfStatement*)(&(s->as.ifStatement))
+#define getConsequent(p, x)		((struct SequentialStatement*)(ReadBlockArray((p)->consequentStatements, x)))
+#define getAlternative(p, x)		((struct SequentialStatement*)(ReadBlockArray((p)->alternativeStatements, x)))
 
-	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
-	Dba* ports = unit->as.entity.ports;
-	
-	struct PortDecl* port = (struct PortDecl*) ReadBlockArray(ports, pnum-1);
-	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", id, port->name->value);
-	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", mode, port->pmode->value);
-	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", dtype, port->dtype->value);
-}
-
-static void checkArchDeclaration(CuTest* tc, struct Program* prog, int dnum, int declType, int declnum, const char* name1, const char* name2, const char* name3){
-
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
-
-	CuAssertPtrNotNullMsg(tc,"Arch body declarations NULL!", unit->as.architecture.declarations);		
-	Dba* declarations = unit->as.architecture.declarations;
-
-	struct Declaration* decl = (struct Declaration*) ReadBlockArray(declarations, declnum-1);
-
-	switch (declType) { 
-		case SIGNAL_DECLARATION: {
-			CuAssertIntEquals_Msg(tc,"Expected signal declaration!", SIGNAL_DECLARATION, decl->type);		
-			struct SignalDecl* sDecl = (struct SignalDecl*)&(decl->as.signalDeclaration);
-
-			CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", name1, sDecl->name->value);
-			CuAssertStrEquals_Msg(tc,"Signal data type incorrect!", name2, sDecl->dtype->value);
-			
-			if(sDecl->expression){
-				CuAssertPtrNotNullMsg(tc,"Signal initialization expression NULL!", sDecl->expression);		
-				CuAssertStrEquals_Msg(tc,"Expression not to char literal!", name3, ((struct CharExpr*)(sDecl->expression))->literal);
-			}
-			break;
-		}
-
-		default:
-			break;
-	}
-
-}
-
-static void checkConcurrentStatement(CuTest* tc, struct Program* prog, int dnum, int stmtType, int snum, const char* name1, const char* name2, const char* name3){
-
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, dnum-1);
-
-	CuAssertPtrNotNullMsg(tc,"Arch body statements NULL!", unit->as.architecture.statements);		
-	Dba* statements = unit->as.architecture.statements;
-
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(statements, snum-1);
-
-	switch (stmtType) { 
-		case SIGNAL_ASSIGNMENT: {
-			CuAssertIntEquals_Msg(tc,"Expected signal assignment statement!", SIGNAL_ASSIGNMENT, cstmt->type);
-	
-			struct SignalAssign* sAssign = &(cstmt->as.signalAssignment);
-			CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", name1, sAssign->target->value);
-
-			if(sAssign->expression){
-				CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
-
-				switch (sAssign->expression->type) {
-
-					case BINARY_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
-						break;
-					}
-					
-					case CHAR_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", CHAR_EXPR, sAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct CharExpr*)(sAssign->expression))->literal);
-						break;
-					}
-
-					case NAME_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", NAME_EXPR, sAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct Identifier*)(sAssign->expression))->value);
-						break;
-					}
-
-					default:
-						break;
-				}
-			}
-			break;
-		}
-
-		case PROCESS: {
-			CuAssertIntEquals_Msg(tc,"Expected process statement!", PROCESS, cstmt->type);
-		
-			struct Process* proc = &(cstmt->as.process);
-	
-			if(proc->sensitivityList){
-				CuAssertStrEquals_Msg(tc,"Sensitivity List mismatch", name1, ((struct Identifier*)(proc->sensitivityList))->value);
-			}
-			break;
-		}
-
-		default:
-			break;
-	}
-
-}
-
-static void checkSequentialStatement(CuTest* tc, struct Program* prog, int duNum,  int csNum, int qsNum, int qstmtType, const char* name1, const char* name2, const char* name3){
-
-	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
-	struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(prog->units, duNum-1);
-	struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(unit->as.architecture.statements, csNum-1);
-	struct Process* proc = (struct Process*)(&(cstmt->as.process));
-	struct SequentialStatement* qstmt = (struct SequentialStatement*) ReadBlockArray(proc->statements, qsNum-1);
-
-	switch (qstmtType) { 
-		case QSIGNAL_ASSIGNMENT: {
-			CuAssertIntEquals_Msg(tc,"Expected signal assignment statement!", QSIGNAL_ASSIGNMENT, cstmt->type);
-	
-			struct SignalAssign* sAssign = &(qstmt->as.signalAssignment);
-			CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", name1, sAssign->target->value);
-
-			if(sAssign->expression){
-				CuAssertPtrNotNullMsg(tc,"Signal assignment expression NULL!", sAssign->expression);		
-
-				switch (sAssign->expression->type) {
-
-					case BINARY_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, sAssign->expression->type);
-						break;
-					}
-					
-					case CHAR_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", CHAR_EXPR, sAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct CharExpr*)(sAssign->expression))->literal);
-						break;
-					}
-
-					case NAME_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", NAME_EXPR, sAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct Identifier*)(sAssign->expression))->value);
-						break;
-					}
-
-					default:
-						break;
-				}
-			}
-			break;
-		}
-
-		case VARIABLE_ASSIGNMENT: {
-			CuAssertIntEquals_Msg(tc,"Expected variable assignment statement!", VARIABLE_ASSIGNMENT, qstmt->type);
-		
-			struct VariableAssign* vAssign = &(qstmt->as.variableAssignment);
-			CuAssertStrEquals_Msg(tc,"Variable identifier incorrect!", name1, vAssign->target->value);
-
-			if(vAssign->expression){
-				CuAssertPtrNotNullMsg(tc,"Variable assignment expression NULL!", vAssign->expression);		
-
-				switch (vAssign->expression->type) {
-
-					case BINARY_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected binary expression!", BINARY_EXPR, vAssign->expression->type);
-						break;
-					}
-					
-					case CHAR_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", CHAR_EXPR,vAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct CharExpr*)(vAssign->expression))->literal);
-						break;
-					}
-
-					case NAME_EXPR: {
-						CuAssertIntEquals_Msg(tc,"Expected char expression!", NAME_EXPR, vAssign->expression->type);
-						CuAssertStrEquals_Msg(tc,"Expression not char literal!", name2, ((struct Identifier*)(vAssign->expression))->value);
-						break;
-					}
-
-					default:
-						break;
-				}
-			}
-			break;
-		}
-
-		case WHILE_STATEMENT: {
-			CuAssertIntEquals_Msg(tc,"Expected while loop!", WHILE_STATEMENT, qstmt->type);
-			break;
-		}
-	
-		case IF_STATEMENT: {
-			CuAssertIntEquals_Msg(tc,"Expected if statement!", IF_STATEMENT, qstmt->type);
-			break;
-		}
-	
-		default:
-			break;
-	}
-
-}
+#define getBinaryExp(e)				(struct BinaryExpr*)(e)
+#define getNumExp(e)					(struct NumExpr*)(e)
+#define getIdentifier(e)			(struct Identifier*)(e)
 
 // the actual tests
 void TestParseProgram_UseDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all;");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkUse(tc, prog, "ieee.std_logic_1164.all");
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", (getUseStatement(prog, 0))->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -254,8 +58,10 @@ void TestParseProgram_EntityDeclarationNoPorts(CuTest *tc){
 	char* input = strdup("ent ander {\n}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -265,9 +71,12 @@ void TestParseProgram_UseWithEntityDeclaration(CuTest *tc){
 	char* input = strdup("use ieee.std_logic_1164.all;\n\nent ander {\n}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkUse(tc, prog, "ieee.std_logic_1164.all");
-	checkDesignUnit(tc, prog, 1, ENTITY, "ander" , NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", (getUseStatement(prog, 0))->value);
+
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -277,8 +86,10 @@ void TestParseProgram_EntityDeclarationWithPorts(CuTest *tc){
 	char* input = strdup("ent ander{ a -> stl; b -> stl; y <- stl;}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -295,13 +106,27 @@ void TestParseProgram_UseEntityWithPorts(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkUse(tc, prog, "ieee.std_logic_1164.all");
-	checkDesignUnit(tc, prog, 1, ENTITY, "ander", NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", (getUseStatement(prog, 0))->value);
 
-	checkPort(tc, prog, 1, 1, "a", "->", "stl");
-	checkPort(tc, prog, 1, 2, "b", "->", "stl");
-	checkPort(tc, prog, 1, 3, "y", "<-", "stl");
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
+
+	struct PortDecl* port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 0);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "a", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+
+	port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 1);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "b", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+
+	port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 2);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "y", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "<-", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -311,8 +136,10 @@ void TestParseProgram_ArchitectureDeclarationEmpty(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) {}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
 	
 	FreeProgram(prog);	
 	free(input);
@@ -322,9 +149,13 @@ void TestParseProgram_ArchitectureWithSignalDeclaration(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl;}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
-	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
+	
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -334,9 +165,13 @@ void TestParseProgram_ArchitectureWithSignalInit(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl := '0';}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
-	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", "0");
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
+
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
 
 	FreeProgram(prog);
 	free(input);
@@ -346,10 +181,15 @@ void TestParseProgram_ArchitectureWithSignalAssign(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl; temp <= '0';}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
-	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", "0");
-	checkConcurrentStatement(tc, prog, 1, SIGNAL_ASSIGNMENT, 1, "temp", "0", NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
+
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 0)), 0)))->target->value);
 
 	FreeProgram(prog);
 	free(input);
@@ -359,10 +199,15 @@ void TestParseProgram_ArchitectureWithSignalAssignBinaryExpression(CuTest *tc){
 	char* input = strdup("arch behavioral(ander) { sig temp stl; temp <= a and b;}");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkDesignUnit(tc, prog, 1, ARCHITECTURE, "behavioral", "ander");
-	checkArchDeclaration(tc, prog, 1, SIGNAL_DECLARATION, 1, "temp", "stl", NULL);
-	checkConcurrentStatement(tc, prog, 1, SIGNAL_ASSIGNMENT, 1, "temp", NULL, NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
+
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 0)), 0)))->target->value);
 
 	FreeProgram(prog);
 	free(input);
@@ -387,24 +232,43 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	checkUse(tc, prog, "ieee.std_logic_1164.all");
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+	CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+	CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", (getUseStatement(prog, 0))->value);
 
 	int unitNum = 1;
 	int portNum = 1;
-	checkDesignUnit(tc, prog, unitNum, ENTITY, "ander" , NULL);
-	checkPort(tc, prog, unitNum, portNum++, "a", "->", "stl");
-	checkPort(tc, prog, unitNum, portNum++, "b", "->", "stl");
-	checkPort(tc, prog, unitNum, portNum++, "y", "<-", "stl");
+
+	CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+	CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
+
+	struct PortDecl* port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 0);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "a", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+
+	port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 1);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "b", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+
+	port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 2);	
+	CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "y", port->name->value);
+	CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "<-", port->pmode->value);
+	CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
 
 	unitNum += 1;
 	int declNum = 1;
 	int stmtNum = 1;
 
-	checkDesignUnit(tc, prog, unitNum, ARCHITECTURE, "behavioral", "ander");
-	checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, declNum, "temp", "stl", "0");
-	checkConcurrentStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, declNum++, "temp", NULL, NULL);
-	checkConcurrentStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, declNum++, "y", "temp", NULL);
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 1)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 1)))->entName->value);
+
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 1)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 1)), 0)))->dtype->value);
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 0)))->target->value);
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 1)))->target->value);
 
 	FreeProgram(prog);	
 	free(input);
@@ -433,24 +297,36 @@ void TestParseProgram_LoopedProgramParsing(CuTest *tc){
 	for(int i = 0; i < 10000; i++){
 		
 		struct Program* prog = ParseProgram(input);
-		checkProgram(tc, prog);
-		checkUse(tc, prog, "ieee.std_logic_1164.all");
+		CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+		CuAssertPtrNotNullMsg(tc,"Use statements NULL!", prog->useStatements);	
+		CuAssertStrEquals_Msg(tc,"use path incorrect!", "ieee.std_logic_1164.all", (getUseStatement(prog, 0))->value);
 
-		int unitNum = 1;
-		int portNum = 1;
-		checkDesignUnit(tc, prog, unitNum, ENTITY, "ander" , NULL);
-		checkPort(tc, prog, unitNum, portNum++, "a", "->", "stl");
-		checkPort(tc, prog, unitNum, portNum++, "b", "->", "stl");
-		checkPort(tc, prog, unitNum, portNum++, "y", "<-", "stl");
+		CuAssertPtrNotNullMsg(tc,"Design units NULL!", prog->units);	
+		CuAssertStrEquals_Msg(tc,"Entity identifier incorrect!", "ander", (getEntity(getDesignUnit(prog, 0)))->name->value);
 
-		unitNum += 1;
-		int declNum = 1;
-		int stmtNum = 1;
+		struct PortDecl* port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 0);	
+		CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "a", port->name->value);
+		CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+		CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
 
-		checkDesignUnit(tc, prog, unitNum, ARCHITECTURE, "behavioral", "ander");
-		checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, declNum, "temp", "stl", "0");
-		checkConcurrentStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, stmtNum++, "temp", NULL, NULL);
-		checkConcurrentStatement(tc, prog, unitNum, SIGNAL_ASSIGNMENT, stmtNum++, "y", "temp", NULL);
+		port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 1);	
+		CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "b", port->name->value);
+		CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "->", port->pmode->value);
+		CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+	
+		port = getPortDecl(getEntity(getDesignUnit(prog, 0)), 2);	
+		CuAssertStrEquals_Msg(tc,"Port identifier incorrect!", "y", port->name->value);
+		CuAssertStrEquals_Msg(tc,"Port mode incorrect!", "<-", port->pmode->value);
+		CuAssertStrEquals_Msg(tc,"Port data type incorrect!", "stl", port->dtype->value);
+
+		CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 1)))->archName->value);
+		CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 1)))->entName->value);
+
+		CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 1)), 0)))->name->value);
+		CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 1)), 0)))->dtype->value);
+
+		CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 0)))->target->value);
+		CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 1)))->target->value);
 
 		FreeProgram(prog);	
 
@@ -481,21 +357,22 @@ void TestParseProgram_ProcessStatement(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 
 	int unitNum = 1;
-	checkDesignUnit(tc, prog, unitNum, ARCHITECTURE, "behavioral", "ander");
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
 
-	int declNum = 0;
-	checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, ++declNum, "a", "stl", "0");
-	checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, ++declNum, "b", "stl", NULL);
-	checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, ++declNum, "y", "stl", "0");
+	CuAssertStrEquals(tc, "a", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
+	CuAssertStrEquals(tc, "b", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 1)))->name->value);
+	CuAssertStrEquals(tc, "stl", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 1)))->dtype->value);
+	CuAssertStrEquals(tc, "y", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 2)))->name->value);
+	CuAssertStrEquals(tc, "stl", 	(getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 2)))->dtype->value);
 	
-	int stmtNum = 1;
-	checkConcurrentStatement(tc, prog, unitNum, PROCESS, stmtNum, "clk", NULL, NULL);
-
-	int qstmtNum = 1;
-	checkSequentialStatement(tc, prog, unitNum, stmtNum, qstmtNum, QSIGNAL_ASSIGNMENT, "y", NULL, NULL);
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
+	CuAssertStrEquals(tc, "clk", proc->sensitivityList->value);
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", (getSigAssign(getSeqStatement(proc, 0)))->target->value);
 
 	//PrintProgram(prog);
 
@@ -517,18 +394,18 @@ void TestParseProgram_ProcessWithDeclarations(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 
-	int unitNum = 0;
-	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
+	int unitNum = 1;
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
 
-	int declNum = 0;
-	checkArchDeclaration(tc, prog, unitNum, SIGNAL_DECLARATION, ++declNum, "u", "stl", "0");
+	CuAssertStrEquals(tc, "u", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stl", (getSigDecl(getDeclaration(getArch(getDesignUnit(prog, 0)), 0)))->dtype->value);
 	
-	int stmtNum = 0;
-	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, NULL, NULL, NULL);
-
-	//TODO: write code to check declarations in a process
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
+	CuAssertStrEquals(tc, "s", (getSigDecl(getDeclaration(proc, 0)))->name->value);
+	CuAssertStrEquals(tc, "i", (getVarDecl(getDeclaration(proc, 1)))->name->value);
 
 	//PrintProgram(prog);
 
@@ -549,13 +426,14 @@ void TestParseProgram_ProcessWithEmptyWhileWait(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
-	int unitNum = 0;
-	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
-	int stmtNum = 0;
-	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
-	int qstmtNum = 0;
-	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 0)))->entName->value);
+
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
+	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WHILE_STATEMENT, (getSeqStatement(proc, 0))->type);	
+	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WAIT_STATEMENT, (getSeqStatement(proc, 1))->type);	
 
 	FreeProgram(prog);
 	free(input);
@@ -588,32 +466,31 @@ void TestParseProgram_ProcessWithWhileLoop(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
 
-	int unitNum = 1;
-	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getDesignUnit(prog, 1)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getDesignUnit(prog, 1)))->entName->value);
 
-	int stmtNum = 1;
-	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 1)), 1));
+	CuAssertStrEquals(tc, "s", (getSigDecl(getDeclaration(proc, 0)))->name->value);
+	CuAssertStrEquals(tc, "i", (getVarDecl(getDeclaration(proc, 1)))->name->value);
 
-	int qstmtNum = 0;
-	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, WHILE_STATEMENT, NULL, NULL, NULL);
+	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WHILE_STATEMENT, (getSeqStatement(proc, 0))->type);	
+	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WAIT_STATEMENT, (getSeqStatement(proc, 1))->type);	
 
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
 }
+
 void TestParseProgram_ProcessWithIf(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(ander){\n \
 			\n \
-			sig temp stl;\n \
-			\n \
-			proc () {\n \
+			proc (clk) {\n \
 				var myVar stl;\n \
 				if (a>5) {\n \
-					temp <= '1';\n \
 				} elsif (b) {\n \
 					if ( c = 255 ) {\n \
 						temp <= '0';\n \
@@ -629,23 +506,28 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 				} else {\n \
 					temp <= temp;\n \
 				}\n \
+				wait;\n \
 			}\n \
 		}\n \
 	");
 
 	struct Program* prog = ParseProgram(input);
-	checkProgram(tc, prog);
 
-	int unitNum = 0;
-	checkDesignUnit(tc, prog, ++unitNum, ARCHITECTURE, "behavioral", "ander");
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
+	CuAssertStrEquals(tc, "clk", proc->sensitivityList->value);
+	CuAssertStrEquals(tc, "myVar", (getVarDecl(getDeclaration(proc, 0)))->name->value);
 
-	int stmtNum = 0;
-	checkConcurrentStatement(tc, prog, unitNum, PROCESS, ++stmtNum, "", NULL, NULL);
+	struct IfStatement* ifs = getIfStatement(getSeqStatement(proc, 0));
+	struct BinaryExpr* be = getBinaryExp(ifs->antecedent);
+	CuAssertStrEquals(tc, "a", (getIdentifier(be->left))->value);
+	CuAssertStrEquals(tc, ">", be->op);
+	CuAssertStrEquals(tc, "5", (getNumExp(be->right))->literal);
 
-	int qstmtNum = 0;
-	checkSequentialStatement(tc, prog, unitNum, stmtNum, ++qstmtNum, IF_STATEMENT, NULL, NULL, NULL);
+	CuAssertStrEquals(tc, "temp", (getSigAssign(getAlternative(ifs, 0)))->target->value);
 
-	//PrintProgram(prog);
+	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WAIT_STATEMENT, (getSeqStatement(proc, 1))->type);	
+	
+	PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
