@@ -527,6 +527,39 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 
 	CuAssertIntEquals_Msg(tc, "Sequential statement type incorrect!", WAIT_STATEMENT, (getSeqStatement(proc, 1))->type);	
 	
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(ander){\n \
+			\n \
+			proc () {\n \
+				if(a<b){\n \
+					a <= '1';\n \
+				} elsif (b<a){\n \
+					b <= '1';\n \
+					if(c = '1'){\n \
+						b <= '0';\n \
+					} elsif (c = '0') {\n \
+						b <= '1';\n \
+					} else {\n \
+						b <= '3';\n \
+					}\n \
+				} else {\n \
+					a <= '0';\n \
+					b <= '0';\n \
+				}\n \
+			}\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
+
 	PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -561,6 +594,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithEmptyWhileWait);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithWhileLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithIf);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithNestedIf);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
