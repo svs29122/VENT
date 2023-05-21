@@ -560,6 +560,54 @@ void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
 
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(looper){\n \
+			\n \
+			proc() {\n \
+				loop {\n \
+					count := count + 1;\n \
+					//count += 1;\n \
+					//count++;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithForLoop(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(looper){\n \
+			\n \
+			proc() {\n \
+				for (i : 0 to 5){\n \
+					report \"hit\" severity note;\n \
+				}\n \
+				\n \
+				for (op : Opcode) {\n \
+					report \"op\" severity node;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
 	PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -595,6 +643,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithWhileLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithIf);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithNestedIf);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithInfiniteLoop);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

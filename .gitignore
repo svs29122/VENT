@@ -6,7 +6,7 @@ code/src/obj
 code/tvt_d
 code/src/obj_d
 
-code/test/RunUnitTests
+code/test/UnitTests
 code/test/obj
 code/test/internal/obj
 code/test/internal/ParserInternalTests
@@ -16,6 +16,8 @@ code/sandbox
 code/*.vhdl
 
 docs/*.png
+
+spec/notes
 
 vhdl/*
 

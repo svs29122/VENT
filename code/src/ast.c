@@ -32,6 +32,8 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doIfStatementCloseOp		= noOp;
 	op->doIfStatementElseOp			= noOp;
 	op->doIfStatementElsifOp		= noOp;
+	op->doLoopStatementOp			= noOp;
+	op->doLoopCloseOp 				= noOp;
 	op->doWaitStatementOp			= noOp;
 	op->doWhileStatementOp			= noOp;
 	op->doWhileOpenOp 				= noOp;
@@ -95,6 +97,14 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 		op->doIfStatementElseOp((void*)ifStmt);
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
 	}
+}
+
+static void walkLoopStatement(struct LoopStatement* lStmt, struct OperationBlock* op){
+	op->doLoopStatementOp((void*)lStmt);
+	if(lStmt->statements){
+		walkSequentialStatements(lStmt->statements, op);
+	}
+	op->doLoopCloseOp((void*)lStmt);
 }
 
 static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlock* op){
@@ -163,6 +173,11 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 				break;
 			}
 		
+			case LOOP_STATEMENT: {
+				walkLoopStatement(&(qstmt->as.loopStatement), op);
+				break;
+			}
+
 			case WAIT_STATEMENT: {
 				walkWaitStatement(&(qstmt->as.waitStatement), op);
 				break;

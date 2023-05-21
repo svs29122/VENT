@@ -412,6 +412,22 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 	}
 }
 
+static void parseLoopStatement(struct LoopStatement* lStmt){
+#ifdef DEBUG
+	memcpy(&(lStmt->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	consume(TOKEN_LOOP, "Expect token loop at start of loop statement");
+	consumeNext(TOKEN_LBRACE, "Expect '{' at start of while body");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		lStmt->statements = parseSequentialStatements();
+	}
+
+	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
+}
+
 static void parseWhileStatement(struct WhileStatement* wStmt){
 #ifdef DEBUG
 	memcpy(&(wStmt->token), &(p->currToken), sizeof(struct Token));
@@ -464,6 +480,12 @@ static Dba* parseSequentialStatements(){
 			case TOKEN_IF: {
 				seqStmt.type = IF_STATEMENT;
 				parseIfStatement(&(seqStmt.as.ifStatement), false);
+				break;
+			}
+
+			case TOKEN_LOOP: {
+				seqStmt.type = LOOP_STATEMENT;
+				parseLoopStatement(&(seqStmt.as.loopStatement));
 				break;
 			}
 

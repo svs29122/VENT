@@ -75,6 +75,7 @@ enum TOKEN_TYPE {
 	TOKEN_FOR, 
 	TOKEN_USE,
 	TOKEN_WHILE,			 
+	TOKEN_LOOP,
 	TOKEN_WAIT,
 
 	TOKEN_EOP, // end of program			

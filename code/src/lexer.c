@@ -139,6 +139,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
+		case 'l': return checkKeyword(1, 3, size, lit, "oop", TOKEN_LOOP);
 		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
 		case 's': 
 			if(size > 1){
@@ -540,6 +541,7 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_FOR:	 		return "TOKEN_FOR";
 		case TOKEN_USE:	 		return "TOKEN_USE";
 		case TOKEN_WHILE: 		return "TOKEN_WHILE";
+		case TOKEN_LOOP: 			return "TOKEN_LOOP";
 		case TOKEN_WAIT:	 		return "TOKEN_WAIT";
 		case TOKEN_EOP:	 		return "TOKEN_EOP";
 		case TOKEN_ILLEGAL: 		return "TOKEN_ILLEGAL";
