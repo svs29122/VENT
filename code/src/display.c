@@ -72,6 +72,11 @@ static void printVariableDecl(void* vDecl){
 	indent++;
 }
 
+static void printForStatement(void* fStmt){
+	printf("\e[0;33m""%cForStatement\r\n", shift());
+	indent++;
+}
+
 static void printIfStatement(void* ifStmt){
 	printf("\e[0;33m""%cIfStatement\r\n", shift());
 	indent++;
@@ -168,6 +173,24 @@ static void printExpression(void* expr){
 	printf("\'\r\n");
 }
 
+static void printRange(void* rng){
+	printf("\e[0;35m""%cRange: ", shift());
+
+	struct Range* range = (struct Range*)rng;
+	printSubExpression(range->left);
+	
+	if(range->right){
+		if(range->descending){
+			printf(" downto ");
+		} else {
+			printf(" to ");
+		}
+
+		printSubExpression(range->right);
+	}
+	printf("\r\n");
+}
+
 static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doUseStatementOp 			= printUseStatement;	
 	opBlk->doDesignUnitOp 				= printDesignUnit;
@@ -179,6 +202,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doSignalAssignOp 			= printSignalAssign;
 	opBlk->doVariableAssignOp 			= printVariableAssign;
 	opBlk->doAssignmentOp				= printAssignmentOp;
+	opBlk->doForStatementOp 			= printForStatement;
 	opBlk->doIfStatementOp 				= printIfStatement;
 	opBlk->doIfStatementElseOp			= printElseClause;
 	opBlk->doLoopStatementOp 			= printLoopStatement;
@@ -188,6 +212,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doIdentifierOp 				= printIdentifier;
 	opBlk->doPortModeOp 					= printPortMode;
 	opBlk->doDataTypeOp 					= printDataType;
+	opBlk->doRangeOp 						= printRange;
 	opBlk->doExpressionOp 				= printExpression;
 	opBlk->doEntityDeclCloseOp 		= printClose;
 	opBlk->doArchDeclCloseOp 			= printClose;
@@ -197,6 +222,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doSignalAssignCloseOp 		= printClose;
 	opBlk->doVariableAssignCloseOp 	= printClose;
 	opBlk->doProcessCloseOp 			= printClose;
+	opBlk->doForCloseOp 					= printClose;
 	opBlk->doIfStatementCloseOp		= printClose;
 	opBlk->doLoopCloseOp 				= printClose;
 	opBlk->doWhileCloseOp 				= printClose;

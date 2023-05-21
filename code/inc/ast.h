@@ -35,6 +35,9 @@ struct OperationBlock {
 	astNodeOpPtr doVariableAssignOp;
 	astNodeOpPtr doAssignmentOp;
 	astNodeOpPtr doVariableAssignCloseOp;
+	astNodeOpPtr doForStatementOp;
+	astNodeOpPtr doForOpenOp;
+	astNodeOpPtr doForCloseOp;
 	astNodeOpPtr doIfStatementOp;
 	astNodeOpPtr doIfStatementCloseOp;
 	astNodeOpPtr doIfStatementElsifOp;
@@ -51,6 +54,7 @@ struct OperationBlock {
 	astNodeOpPtr doIdentifierOp;
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
+	astNodeOpPtr doRangeOp;
 	astNodeOpPtr doExpressionOp;
 };
 

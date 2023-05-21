@@ -44,6 +44,15 @@ static void freeExpression(void* expr){
    }
 }
 
+static void freeRange(void* rng){
+	struct Range* range = (struct Range*)rng;
+
+	if(range->left) freeExpression(range->left);
+	if(range->right) freeExpression(range->right);
+
+	free(range);
+}
+
 // I know this isn't portable, but I just love it so much 
 #define lambda(function_body) \
 ({ \
@@ -64,6 +73,7 @@ void FreeProgram(struct Program* prog){
 	opBlk->doIfStatementElsifOp 	= lambda ((void* stmt) 	{ struct IfStatement* ifStmt = (struct IfStatement*)stmt; free(ifStmt); });
 	opBlk->doBlockArrayOp 			= lambda ((void* arr) 	{ FreeBlockArray((Dba*)arr); });
 	opBlk->doExpressionOp			= freeExpression;
+	opBlk->doRangeOp					= freeRange;
 	
 	WalkTree(prog, opBlk);
 
