@@ -33,3 +33,27 @@ arch behavioral(looper) {
 		wait;
 	}
 } 
+
+
+arch myArch(looper) {
+	proc () {
+		var count int := 0;		
+
+		loop {
+			count := count + 1;
+			count += 1;
+			count++; 
+		}
+
+		for (i : 0 to 5) {
+			report "hit" severity note;
+		}
+
+		for (op : Opcode) {
+			report "op" severity note;
+		}
+
+	}
+} 
+
+

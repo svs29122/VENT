@@ -36,6 +36,8 @@ struct OperationBlock {
 	astNodeOpPtr doIfStatementCloseOp;
 	astNodeOpPtr doIfStatementElsifOp;
 	astNodeOpPtr doIfStatementElseOp;
+	astNodeOpPtr doLoopStatementOp;
+	astNodeOpPtr doLoopCloseOp;
 	astNodeOpPtr doWaitStatementOp;
 	astNodeOpPtr doWhileStatementOp;
 	astNodeOpPtr doWhileOpenOp;
@@ -179,6 +181,14 @@ struct IfStatement {
 	struct IfStatement* elsif;
 };
 
+struct LoopStatement {
+#ifdef DEBUG
+	struct Token token; // the "loop" token
+#endif
+	struct Label* label;
+	struct DynamicBlockArray* statements;
+};
+
 struct WhileStatement {
 #ifdef DEBUG
 	struct Token token; // the "while" token
@@ -221,15 +231,16 @@ struct SequentialStatement {
 		QSIGNAL_ASSIGNMENT,
 		VARIABLE_ASSIGNMENT,
 		IF_STATEMENT,
+		LOOP_STATEMENT,
 		WAIT_STATEMENT,
 		WHILE_STATEMENT,
 		//CASE,
-		//LOOP,
 	} type;
 	union {
 		struct SignalAssign signalAssignment;
 		struct VariableAssign variableAssignment;
 		struct IfStatement ifStatement;
+		struct LoopStatement loopStatement;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
 	} as;

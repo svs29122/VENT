@@ -81,6 +81,11 @@ static void printElseClause(void* ifStmt){
 	printf("\e[0;34m""%c/*ElseBlock*/\r\n", shift());
 }
 
+static void printLoopStatement(void* wStmt){
+	printf("\e[0;33m""%cLoopStatement\r\n", shift());
+	indent++;
+}
+
 static void printWhileStatement(void* wStmt){
 	printf("\e[0;33m""%cWhileStatement\r\n", shift());
 	indent++;
@@ -171,6 +176,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doVariableAssignOp 			= printVariableAssign;
 	opBlk->doIfStatementOp 				= printIfStatement;
 	opBlk->doIfStatementElseOp			= printElseClause;
+	opBlk->doLoopStatementOp 			= printLoopStatement;
 	opBlk->doWaitStatementOp 			= printWaitStatement;
 	opBlk->doWhileStatementOp 			= printWhileStatement;
 	opBlk->doProcessOp 					= printProcessStatement;
@@ -187,6 +193,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doVariableAssignCloseOp 	= printClose;
 	opBlk->doProcessCloseOp 			= printClose;
 	opBlk->doIfStatementCloseOp		= printClose;
+	opBlk->doLoopCloseOp 				= printClose;
 	opBlk->doWhileCloseOp 				= printClose;
 }
 
