@@ -1,6 +1,8 @@
 #ifndef INC_AST_H
 #define INC_AST_H
 
+#include <stdbool.h>
+
 #include "token.h"
 #include "dba.h"
 
@@ -110,6 +112,12 @@ struct Identifier {
 	//identifiers e.g. in portDecls and proc sensitivity lists
 };
 
+struct Range {
+	struct Expression* left;
+	bool descending;
+	struct Expression* right;
+};
+
 struct DataType {
 #ifdef DEBUG
 	struct Token token;
@@ -171,6 +179,16 @@ struct Declaration {
 	} as;
 };
 
+struct ForStatement {
+#ifdef DEBUG
+	struct Token token; // the "while" token
+#endif
+	struct Label* label;
+	struct Identifier* parameter;
+	struct Range* range;
+	struct DynamicBlockArray* statements;
+};
+
 struct IfStatement {
 #ifdef DEBUG
 	struct Token token; // the 'if' token
@@ -230,19 +248,21 @@ struct SignalAssign {
 
 struct SequentialStatement {
 	enum {
-		QSIGNAL_ASSIGNMENT,
-		VARIABLE_ASSIGNMENT,
+		FOR_STATEMENT,
 		IF_STATEMENT,
 		LOOP_STATEMENT,
+		QSIGNAL_ASSIGNMENT,
+		VARIABLE_ASSIGNMENT,
 		WAIT_STATEMENT,
 		WHILE_STATEMENT,
 		//CASE,
 	} type;
 	union {
-		struct SignalAssign signalAssignment;
-		struct VariableAssign variableAssignment;
+		struct ForStatement forStatement;
 		struct IfStatement ifStatement;
 		struct LoopStatement loopStatement;
+		struct SignalAssign signalAssignment;
+		struct VariableAssign variableAssignment;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
 	} as;
