@@ -593,13 +593,11 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 			\n \
 			proc() {\n \
 				for (i : 0 to 5){\n \
-					//report \"hit\" severity note;\n \
 					count := count + 1;\n \
 				}\n \
 				\n \
 				for (op : Opcode) {\n \
-					//report \"op\" severity node;\n \
-					count := count + 1;\n \
+					muxIn <= op;\n \
 				}\n \
 			}\n \
 		}\n \

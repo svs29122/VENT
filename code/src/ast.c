@@ -29,6 +29,9 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doVariableAssignOp			= noOp;
 	op->doAssignmentOp	 			= noOp;
 	op->doVariableAssignCloseOp	= noOp;
+	op->doForStatementOp				= noOp;
+	op->doForOpenOp 					= noOp;
+	op->doForCloseOp 					= noOp;
 	op->doIfStatementOp 				= noOp;
 	op->doIfStatementCloseOp		= noOp;
 	op->doIfStatementElseOp			= noOp;
@@ -45,6 +48,7 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doIdentifierOp 				= noOp;
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
+	op->doRangeOp	 					= noOp;
 	op->doExpressionOp				= noOp;
 
 	return op;
@@ -79,6 +83,21 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 		op->doExpressionOp((void*)sigDecl->expression);
 	}
 	op->doSignalDeclCloseOp((void*)sigDecl);
+}
+
+static void walkForStatement(struct ForStatement* fStmt, struct OperationBlock* op){
+	op->doForStatementOp((void*)fStmt);
+	if(fStmt->parameter){
+		op->doIdentifierOp(fStmt->parameter);
+	}
+	if(fStmt->range){
+		op->doRangeOp(fStmt->range);
+	}
+	op->doForOpenOp((void*)fStmt);
+	if(fStmt->statements){
+		walkSequentialStatements(fStmt->statements, op);
+	}
+	op->doForCloseOp((void*)fStmt);
 }
 
 static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* op){
@@ -162,16 +181,11 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(stmts); i++){
 		struct SequentialStatement* qstmt = (struct SequentialStatement*) ReadBlockArray(stmts, i);
 		switch(qstmt->type) {
-			case QSIGNAL_ASSIGNMENT: {
-				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
+			case FOR_STATEMENT: {
+				walkForStatement(&(qstmt->as.forStatement), op);
 				break;
 			}
-
-			case VARIABLE_ASSIGNMENT: {
-				walkVariableAssignment(&(qstmt->as.variableAssignment), op);
-				break;
-			}
-
+		
 			case IF_STATEMENT: {
 				walkIfStatement(&(qstmt->as.ifStatement), op);
 				break;
@@ -179,6 +193,16 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 		
 			case LOOP_STATEMENT: {
 				walkLoopStatement(&(qstmt->as.loopStatement), op);
+				break;
+			}
+
+			case QSIGNAL_ASSIGNMENT: {
+				walkSignalAssignment(&(qstmt->as.signalAssignment), op);
+				break;
+			}
+
+			case VARIABLE_ASSIGNMENT: {
+				walkVariableAssignment(&(qstmt->as.variableAssignment), op);
 				break;
 			}
 
