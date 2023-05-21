@@ -242,6 +242,32 @@ static struct Expression* parseBinary(struct Expression* expr){
 	return &(biexp->self);
 }
 
+static struct Range* parseRange(){
+	struct Range* rng = calloc(1, sizeof(struct Range));
+	
+	rng->left = parseExpression(LOWEST_PREC);
+
+	if(match(TOKEN_TO) || match(TOKEN_DOWNTO)){
+		if(match(TOKEN_DOWNTO)){
+			rng->descending = true;
+		}
+	
+		nextToken();
+		rng->right = parseExpression(LOWEST_PREC);	
+	}
+
+	return rng;
+}
+
+static char* parseAssignmentOperator(){
+	int len = 3; // two chars  + \0
+	char* op = calloc(len, sizeof(char));
+	
+	memcpy(op, p->currToken.literal, len-1); 
+
+	return op;
+}
+
 static struct DataType* parseDataType(char* val){
 	struct DataType* dt = calloc(1, sizeof(struct DataType));
 #ifdef DEBUG
@@ -253,15 +279,6 @@ static struct DataType* parseDataType(char* val){
 	memcpy(dt->value, val, size);
 
 	return dt;
-}
-
-static char* parseAssignmentOperator(){
-	int len = 3; // two chars  + \0
-	char* op = calloc(len, sizeof(char));
-	
-	memcpy(op, p->currToken.literal, len-1); 
-
-	return op;
 }
 
 static struct PortMode* parsePortMode(char* val){
@@ -435,6 +452,32 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 	}
 }
 
+static void parseForStatement(struct ForStatement* fStmt){
+#ifdef DEBUG
+	memcpy(&(fStmt->token), &(p->currToken), sizeof(struct Token));
+#endif
+
+	consume(TOKEN_FOR, "Expect token for at start of for statement");
+	consumeNext(TOKEN_LPAREN, "Expect '(' after for token");	
+
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier in for loop paraemeter");
+	fStmt->parameter = (struct Identifier*)parseIdentifier();
+	consumeNext(TOKEN_COLON, "Expect colon after paramter in for statement");
+
+	nextToken();
+	fStmt->range = parseRange();
+	
+	consume(TOKEN_RPAREN, "Expect ')' after range in for statement");
+	consumeNext(TOKEN_LBRACE, "Expect '{' at start of for body");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		fStmt->statements = parseSequentialStatements();
+	}
+
+	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
+}
+
 static void parseLoopStatement(struct LoopStatement* lStmt){
 #ifdef DEBUG
 	memcpy(&(lStmt->token), &(p->currToken), sizeof(struct Token));
@@ -503,6 +546,12 @@ static Dba* parseSequentialStatements(){
 			case TOKEN_IF: {
 				seqStmt.type = IF_STATEMENT;
 				parseIfStatement(&(seqStmt.as.ifStatement), false);
+				break;
+			}
+
+			case TOKEN_FOR: {
+				seqStmt.type = FOR_STATEMENT;
+				parseForStatement(&(seqStmt.as.forStatement));
 				break;
 			}
 

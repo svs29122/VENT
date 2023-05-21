@@ -110,6 +110,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
+		case 'd': return checkKeyword(1, 5, size, lit, "ownto", TOKEN_DOWNTO);
 		case 'e': 
 			if(size > 1){
 				switch(lit[1]){
@@ -127,10 +128,11 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 							}	
 						}
 						break;
-					case 'n': return checkKeyword(1, 2, size, lit, "nt", TOKEN_ENT);
+					case 'n': return checkKeyword(2, 1, size, lit, "t", TOKEN_ENT);
 				}
 			}
 			break;
+		case 'f': return checkKeyword(1, 2, size, lit, "or", TOKEN_FOR);
 		case 'i': 
 			if(size >1){
 				switch(lit[1]){
@@ -141,9 +143,11 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			break;
 		case 'l': return checkKeyword(1, 3, size, lit, "oop", TOKEN_LOOP);
 		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
+		case 'r': return checkKeyword(1, 5, size, lit, "eport", TOKEN_REPORT);
 		case 's': 
 			if(size > 1){
 				switch(lit[1]){
+					case 'e': return checkKeyword(2, 6, size, lit, "verity", TOKEN_SEVERITY);
 					case 'i':
 						if(size > 2){
 							switch(lit[2]){
@@ -167,6 +171,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
+		case 't': return checkKeyword(1, 1, size, lit, "o", TOKEN_TO);
 		case 'u':
 			if(size > 1){
 				switch(lit[1]){
@@ -553,6 +558,8 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_LOOP: 			return "TOKEN_LOOP";
 		case TOKEN_WAIT:	 		return "TOKEN_WAIT";
 		case TOKEN_EOP:	 		return "TOKEN_EOP";
+		case TOKEN_REPORT:	 	return "TOKEN_REPORT";
+		case TOKEN_SEVERITY:	 	return "TOKEN_SEVERITY";
 		case TOKEN_ILLEGAL: 		return "TOKEN_ILLEGAL";
 		default: 			return "";
 	}

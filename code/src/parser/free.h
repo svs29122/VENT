@@ -59,6 +59,7 @@ void FreeProgram(struct Program* prog){
 	opBlk->doUseStatementOp 		= lambda ((void* stmt) 	{ struct UseStatement* st = (struct UseStatement*)stmt; if(st->value) free(st->value); });
 	opBlk->doIdentifierOp			= lambda ((void* ident) { struct Identifier* id = (struct Identifier*)ident; if(id->value) free(id->value); free(id); });
 	opBlk->doPortModeOp 				= lambda ((void* pmode) { struct PortMode* pm = (struct PortMode*)pmode; if(pm->value) free(pm->value); free(pm); });
+	opBlk->doAssignmentOp			= lambda ((void* op) 	{ free((char*)op); });
 	opBlk->doDataTypeOp 				= lambda ((void* dtype) { struct DataType* dt = (struct DataType*)dtype; if(dt->value) free(dt->value); free(dt); });
 	opBlk->doIfStatementElsifOp 	= lambda ((void* stmt) 	{ struct IfStatement* ifStmt = (struct IfStatement*)stmt; free(ifStmt); });
 	opBlk->doBlockArrayOp 			= lambda ((void* arr) 	{ FreeBlockArray((Dba*)arr); });

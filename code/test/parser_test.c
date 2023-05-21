@@ -581,7 +581,7 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -593,11 +593,13 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 			\n \
 			proc() {\n \
 				for (i : 0 to 5){\n \
-					report \"hit\" severity note;\n \
+					//report \"hit\" severity note;\n \
+					count := count + 1;\n \
 				}\n \
 				\n \
 				for (op : Opcode) {\n \
-					report \"op\" severity node;\n \
+					//report \"op\" severity node;\n \
+					count := count + 1;\n \
 				}\n \
 			}\n \
 		}\n \
@@ -642,6 +644,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithIf);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithNestedIf);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithInfiniteLoop);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithForLoop);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
