@@ -255,6 +255,15 @@ static struct DataType* parseDataType(char* val){
 	return dt;
 }
 
+static char* parseAssignmentOperator(){
+	int len = 3; // two chars  + \0
+	char* op = calloc(len, sizeof(char));
+	
+	memcpy(op, p->currToken.literal, len-1); 
+
+	return op;
+}
+
 static struct PortMode* parsePortMode(char* val){
 	struct PortMode* pm = calloc(1, sizeof(struct PortMode));
 #ifdef DEBUG
@@ -316,10 +325,18 @@ static void parseVariableAssignment(struct VariableAssign *varAssign){
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	varAssign->target = (struct Identifier*)parseIdentifier();
 	
-	consumeNext(TOKEN_VASSIGN, "Expect := after identifier");
-	
 	nextToken();
-	varAssign->expression = parseExpression(LOWEST_PREC);
+	if(!validAssignment()){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid variable assignment operator");
+	}
+	varAssign->op = parseAssignmentOperator();
+	
+	if(!match(TOKEN_PLUS_PLUS) && !match(TOKEN_MINUS_MINUS)){
+		nextToken();
+		varAssign->expression = parseExpression(LOWEST_PREC);
+	} else {
+		nextToken();
+	}
 
 	consume(TOKEN_SCOLON, "Expect semicolon at end of variable assignment");	
 }
@@ -349,6 +366,12 @@ static void parseSequentialAssignment(struct SequentialStatement* seqStmt){
 			break;
 		}
 
+		case TOKEN_PLUS_EQUAL:
+		case TOKEN_PLUS_PLUS:
+		case TOKEN_MINUS_EQUAL:
+		case TOKEN_MINUS_MINUS:
+		case TOKEN_STAR_EQUAL:
+		case TOKEN_SLASH_EQUAL:
 		case TOKEN_VASSIGN: {
 			seqStmt->type = VARIABLE_ASSIGNMENT;
 			parseVariableAssignment(&(seqStmt->as.variableAssignment));

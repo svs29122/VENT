@@ -27,6 +27,7 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doSignalAssignOp				= noOp;
 	op->doSignalAssignCloseOp		= noOp;
 	op->doVariableAssignOp			= noOp;
+	op->doAssignmentOp	 			= noOp;
 	op->doVariableAssignCloseOp	= noOp;
 	op->doIfStatementOp 				= noOp;
 	op->doIfStatementCloseOp		= noOp;
@@ -136,6 +137,9 @@ static void walkVariableAssignment(struct VariableAssign* varAssign, struct Oper
 	op->doVariableAssignOp((void*)varAssign);
 	if(varAssign->target){
 		op->doIdentifierOp((void*)varAssign->target);
+	}
+	if(varAssign->op){
+		op->doAssignmentOp((void*)varAssign->op);
 	}
 	if(varAssign->expression){
 		op->doExpressionOp((void*)varAssign->expression);

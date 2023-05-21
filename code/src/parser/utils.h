@@ -42,6 +42,20 @@ static bool validDataType(){
 	return valid;
 }
 
+static bool validAssignment(){
+	bool valid = false;
+
+	valid =	match(TOKEN_SLASH_EQUAL)	||
+				match(TOKEN_STAR_EQUAL) 	||
+				match(TOKEN_MINUS_EQUAL) 	||
+				match(TOKEN_MINUS_MINUS)	||
+				match(TOKEN_PLUS_EQUAL)		||
+				match(TOKEN_PLUS_PLUS)		||
+				match(TOKEN_VASSIGN);
+	
+	return valid;
+}
+
 static bool thereAreDeclarations(){
 	bool valid = false;
 

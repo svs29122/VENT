@@ -445,10 +445,20 @@ struct Token NextToken() {
 		case '{' : return newToken(TOKEN_LBRACE, ch);
 		case '}' : return newToken(TOKEN_RBRACE, ch);
 		case ',' : return newToken(TOKEN_COMMA, ch);
-		case '/' : return newToken(TOKEN_SLASH, ch);
-		case '*' : return newToken(TOKEN_STAR, ch);
+		case '/' : 
+			if(peek() == '=') return newMultiCharToken(TOKEN_SLASH_EQUAL, 2); 			
+			return newToken(TOKEN_SLASH, ch);
+		case '*' : 
+			if(peek() == '=') return newMultiCharToken(TOKEN_STAR_EQUAL, 2); 			
+			return newToken(TOKEN_STAR, ch);
+		case '+' : 
+			if(peek() == '=') return newMultiCharToken(TOKEN_PLUS_EQUAL, 2); 			
+			if(peek() == '+') return newMultiCharToken(TOKEN_PLUS_PLUS, 2); 			
+			return newToken(TOKEN_PLUS, ch);
 		case '-' :
 			if(peek() == '>') return newMultiCharToken(TOKEN_INPUT, 2); 			
+			if(peek() == '=') return newMultiCharToken(TOKEN_MINUS_EQUAL, 2); 			
+			if(peek() == '-') return newMultiCharToken(TOKEN_MINUS_MINUS, 2); 			
 			return newToken(TOKEN_MINUS, ch);
 		case '<' :
 			if(peek() == '-') {
@@ -461,7 +471,6 @@ struct Token NextToken() {
 		case '>':
 			if(peek() == '=') return newMultiCharToken(TOKEN_GREATER_EQUAL, 2);
 			return newToken(TOKEN_GREATER, ch);
-		case '+' : return newToken(TOKEN_PLUS, ch);
 		case '=' : 
 			if(peek() == '>') return newMultiCharToken(TOKEN_AASSIGN, 2); 			
 			return newToken(TOKEN_EQUAL, ch);

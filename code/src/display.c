@@ -119,6 +119,10 @@ static void printDataType(void* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
 }
 
+static void printAssignmentOp(void* op){
+	printf("\e[0;35m""%cOperator:   \'%s\'\r\n", shift(), (char*)op);
+}
+
 static void printSubExpression(void* expr){
 	enum ExpressionType type = ((struct Expression*)expr)->type;
 
@@ -174,6 +178,7 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doVariableDeclOp 			= printVariableDecl;
 	opBlk->doSignalAssignOp 			= printSignalAssign;
 	opBlk->doVariableAssignOp 			= printVariableAssign;
+	opBlk->doAssignmentOp				= printAssignmentOp;
 	opBlk->doIfStatementOp 				= printIfStatement;
 	opBlk->doIfStatementElseOp			= printElseClause;
 	opBlk->doLoopStatementOp 			= printLoopStatement;
