@@ -24,28 +24,23 @@ void TestNextToken_SingleToken(CuTest *tc){
 }
 
 void TestNextToken_MultipleTokens(CuTest *tc){
-	char* input = strdup("():{},'/-+*=");
+	char* input = strdup("():{},'=/-+*");
 	InitLexer(input);
 
 	enum TOKEN_TYPE expToken[12] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
-											TOKEN_LBRACE,TOKEN_RBRACE,TOKEN_COMMA,
-											TOKEN_TICK,TOKEN_SLASH,TOKEN_MINUS,
-											TOKEN_PLUS,TOKEN_STAR,TOKEN_EQUAL};
+											TOKEN_LBRACE, TOKEN_RBRACE,TOKEN_COMMA,
+											TOKEN_TICK, TOKEN_EQUAL, TOKEN_SLASH,
+											TOKEN_MINUS, TOKEN_PLUS,TOKEN_STAR};
 	
 	char expLiteralArr[12] = {'(', ')', ':', 
 								 '{', '}',',',
-								 '\'', '/', '-',
-								  '+', '*','='};
+								 '\'','=', '/',
+								  '-','+', '*'};
 
 	for(int i=0; i<12; i++){
 		struct Token nt = NextToken();
-	
-		char* expLiteral = strdup((char[2]){expLiteralArr[i], '\0'});
-		CuAssertIntEquals(tc, expToken[i], nt.type);
-		CuAssertStrEquals(tc, expLiteral, nt.literal); 
-		
+		CuAssertStrEquals(tc, TokenToString(expToken[i]), TokenToString(nt.type)); 
 		free(nt.literal);	
-		free(expLiteral);
 	}
 
 	free(input);

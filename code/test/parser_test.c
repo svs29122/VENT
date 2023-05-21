@@ -573,8 +573,6 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 			proc() {\n \
 				loop {\n \
 					count := count + 1;\n \
-					//count += 1;\n \
-					//count++;\n \
 				}\n \
 			}\n \
 		}\n \

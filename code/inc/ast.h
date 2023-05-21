@@ -31,6 +31,7 @@ struct OperationBlock {
 	astNodeOpPtr doSignalAssignOp;
 	astNodeOpPtr doSignalAssignCloseOp;
 	astNodeOpPtr doVariableAssignOp;
+	astNodeOpPtr doAssignmentOp;
 	astNodeOpPtr doVariableAssignCloseOp;
 	astNodeOpPtr doIfStatementOp;
 	astNodeOpPtr doIfStatementCloseOp;
@@ -210,10 +211,11 @@ struct WaitStatement {
 
 struct VariableAssign {
 #ifdef DEBUG
-	struct Token token; // the ":=" operator
+	struct Token token; // the assignment operator
 #endif
 	struct Label* label;
 	struct Identifier* target;
+	char* op;
 	struct Expression* expression;
 };
 
