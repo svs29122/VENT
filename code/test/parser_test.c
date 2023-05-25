@@ -270,6 +270,8 @@ void TestParseProgram_EntityWithArchitecture(CuTest *tc){
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 0)))->target->value);
 	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "y", (getSigAssign(getConStatement(getArch(getDesignUnit(prog, 1)), 1)))->target->value);
 
+	PrintProgram(prog);	
+
 	FreeProgram(prog);	
 	free(input);
 }
@@ -606,7 +608,7 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

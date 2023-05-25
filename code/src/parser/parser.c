@@ -619,8 +619,9 @@ static Dba* parseProcessBodyDeclarations(){
 
 static void parseProcessStatement(struct Process* proc){
 #ifdef DEBUG
-	memcpy(&(proc->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(proc->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	proc->self.type = AST_PROCESS;
 
 	consume(TOKEN_PROC, "expect proc keyword at start of process");
 	consumeNext(TOKEN_LPAREN, "expect '(' after proc keyword");
@@ -708,6 +709,7 @@ static Dba* parsePortDecl(){
 
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		struct PortDecl port;		
+		port.self.type = AST_PORT;
 
 		consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
 		port.name = (struct Identifier*)parseIdentifier();
@@ -735,8 +737,9 @@ static Dba* parsePortDecl(){
 
 static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 #ifdef DEBUG
-	memcpy(&(aDecl->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(aDecl->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	aDecl->self.type = AST_ARCHITECTURE;
 	
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after keyword arch");
 	aDecl->archName = (struct Identifier*)parseIdentifier();
@@ -760,8 +763,9 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 
 static void parseEntityDecl(struct EntityDecl* eDecl){
 #ifdef DEBUG
-	memcpy(&(eDecl->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(eDecl->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	eDecl->self.type = AST_ENTITY;
 	
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after ent keyword");
 	eDecl->name = (struct Identifier*)parseIdentifier();
@@ -781,8 +785,9 @@ static struct UseStatement parseUseStatement(){
 	struct UseStatement stmt = {0};
 
 #ifdef DEBUG	
-	memcpy(&(stmt.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(stmt.self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	stmt.self.type = AST_USE;
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
 	
@@ -824,8 +829,8 @@ struct Program* ParseProgram(char* ventProgram){
 	InitLexer(ventProgram);
 	initParser();
 
-
 	struct Program* prog = calloc(1, sizeof(struct Program));
+	prog->self.type = AST_PROGRAM;
 
 	// first get the use statements
 	while(p->currToken.type == TOKEN_USE && p->currToken.type != TOKEN_EOP){

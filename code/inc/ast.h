@@ -6,14 +6,39 @@
 #include "token.h"
 #include "dba.h"
 
+enum AstNodeType {
+	AST_PROGRAM = 0,
+	AST_USE,
+	AST_ENTITY,
+	AST_ARCHITECTURE,
+	AST_PORT,
+	AST_PROCESS,
+};
+
+struct AstNode {
+#ifdef DEBUG
+	struct Token token;
+#endif
+	enum AstNodeType type;
+};
+
+
 struct Program;
 
-typedef void (*astNodeOpPtr) (void*);
 
 struct OperationBlock* InitOperationBlock(void);
 void WalkTree(struct Program* prog, struct OperationBlock* op);
 
+//typedef void (*visitPtr) (void* node, enum AstNodeType type);
+typedef void (*visitPtr) (struct AstNode*);
+
+typedef void (*astNodeOpPtr) (void*);
+
 struct OperationBlock {
+	visitPtr doDefaultOp;
+	visitPtr doOpeneOp;
+	visitPtr doCloseOp;
+	visitPtr doExtraOp;
 	astNodeOpPtr doProgOp;
 	astNodeOpPtr doBlockArrayOp;
 	astNodeOpPtr doUseStatementOp;
@@ -74,9 +99,7 @@ enum ExpressionType{
 };
 
 struct Expression {
-#ifdef DEBUG
-	struct Token token;
-#endif
+	struct AstNode root;
 	enum ExpressionType type;
 };
 
@@ -123,30 +146,26 @@ struct Range {
 };
 
 struct DataType {
-#ifdef DEBUG
-	struct Token token;
-#endif
+	struct AstNode self;
+
 	char* value;
 };
 
 struct Label {
-#ifdef DEBUG
-	struct Token token;
-#endif
+	struct AstNode self;
+
 	char* value;
 };
 
 struct PortMode {
-#ifdef DEBUG
-	struct Token token;
-#endif
+	struct AstNode self;
+
 	char* value;
 };
 
 struct VariableDecl {
-#ifdef DEBUG
-	struct Token token; // the sig keyword
-#endif
+	struct AstNode self;
+
 	//TODO: need to add support for , separated identifier list
 	struct Identifier *name;
 	struct DataType* dtype;
@@ -154,9 +173,8 @@ struct VariableDecl {
 };
 
 struct SignalDecl {
-#ifdef DEBUG
-	struct Token token; // the sig keyword
-#endif
+	struct AstNode self;
+
 	//need to add support for , separated identifier list
 	struct Identifier *name;
 	struct DataType* dtype;
@@ -184,9 +202,8 @@ struct Declaration {
 };
 
 struct ForStatement {
-#ifdef DEBUG
-	struct Token token; // the "while" token
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct Identifier* parameter;
 	struct Range* range;
@@ -194,9 +211,8 @@ struct ForStatement {
 };
 
 struct IfStatement {
-#ifdef DEBUG
-	struct Token token; // the 'if' token
-#endif 
+	struct AstNode self;
+
 	struct Label* label;
 	struct Expression* antecedent;
 	struct DynamicBlockArray* consequentStatements;
@@ -205,26 +221,23 @@ struct IfStatement {
 };
 
 struct LoopStatement {
-#ifdef DEBUG
-	struct Token token; // the "loop" token
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct DynamicBlockArray* statements;
 };
 
 struct WhileStatement {
-#ifdef DEBUG
-	struct Token token; // the "while" token
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct Expression* condition;
 	struct DynamicBlockArray* statements;
 };
 
 struct WaitStatement {
-#ifdef DEBUG
-	struct Token token; // the "wait" token
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct Identifier* sensitivityList;
 	struct Expression* condition;
@@ -232,9 +245,8 @@ struct WaitStatement {
 };
 
 struct VariableAssign {
-#ifdef DEBUG
-	struct Token token; // the assignment operator
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct Identifier* target;
 	char* op;
@@ -242,9 +254,8 @@ struct VariableAssign {
 };
 
 struct SignalAssign {
-#ifdef DEBUG
-	struct Token token; // the "<=" operator
-#endif
+	struct AstNode self;
+
 	struct Label* label;
 	struct Identifier* target;
 	struct Expression* expression;
@@ -273,9 +284,8 @@ struct SequentialStatement {
 };
 
 struct Process {
-#ifdef DEBUG
-	struct Token token; // the proc keyword
-#endif
+	struct AstNode self;
+
 	struct Label label;
 	struct Identifier* sensitivityList;
 	struct DynamicBlockArray* declarations;
@@ -299,9 +309,8 @@ struct ConcurrentStatement {
 };
 
 struct ArchitectureDecl {
-#ifdef DEBUG
-	struct Token token; //the arch keyword
-#endif
+	struct AstNode self;
+
 	struct Identifier* archName;
 	struct Identifier* entName;
 	struct DynamicBlockArray* declarations;
@@ -309,6 +318,8 @@ struct ArchitectureDecl {
 };
 
 struct PortDecl {
+	struct AstNode self;
+
 	//need to add support for , separated identifier list
 	struct Identifier *name;
 	struct PortMode* pmode;
@@ -316,9 +327,8 @@ struct PortDecl {
 };
 
 struct EntityDecl {
-#ifdef DEBUG
-	struct Token token; // the ent keyword
-#endif
+	struct AstNode self;
+
 	struct Identifier* name;
 	struct DynamicBlockArray* ports;
 };
@@ -341,13 +351,14 @@ struct DesignUnit{
 };
 
 struct UseStatement {
-#ifdef DEBUG
-	struct Token token;
-#endif
+	struct AstNode self;
+
 	char* value;
 };
 
 struct Program {
+	struct AstNode self;
+
 	struct DynamicBlockArray* useStatements;
 	struct DynamicBlockArray* units;
 };

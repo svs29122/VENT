@@ -24,11 +24,11 @@ static char shift(){
 	return ' ';
 }
 
-static void printClose(void* none){
+static void printClose(struct AstNode* none){
 	indent--;
 }
 
-static void printProg(){
+static void printProgram(){
 	printf("\e[1;32m""Program\r\n");
 }
 
@@ -191,12 +191,38 @@ static void printRange(void* rng){
 	printf("\r\n");
 }
 
+static void printDefault(struct AstNode* node){
+
+	switch(node->type){
+		
+		case AST_PROGRAM:
+			printProgram((void*)node);
+			break;
+
+		case AST_USE:
+			printUseStatement((void*)node);
+			break;
+		
+		case AST_ENTITY:
+			printEntityDecl((void*)node);
+			break;
+
+		case AST_ARCHITECTURE:
+			printArchDecl((void*)node);
+			break;
+
+		case AST_PORT:
+			printPortDecl((void*)node);
+			break;
+
+		case AST_PROCESS:
+			printProcessStatement((void*)node);
+			break;
+	}
+}
+
 static void setupDisplayOpBlock(struct OperationBlock* opBlk){
-	opBlk->doUseStatementOp 			= printUseStatement;	
 	opBlk->doDesignUnitOp 				= printDesignUnit;
-	opBlk->doEntityDeclOp 				= printEntityDecl;
-	opBlk->doArchDeclOp 					= printArchDecl;
-	opBlk->doPortDeclOp 					= printPortDecl;
 	opBlk->doSignalDeclOp 				= printSignalDecl;
 	opBlk->doVariableDeclOp 			= printVariableDecl;
 	opBlk->doSignalAssignOp 			= printSignalAssign;
@@ -214,18 +240,8 @@ static void setupDisplayOpBlock(struct OperationBlock* opBlk){
 	opBlk->doDataTypeOp 					= printDataType;
 	opBlk->doRangeOp 						= printRange;
 	opBlk->doExpressionOp 				= printExpression;
-	opBlk->doEntityDeclCloseOp 		= printClose;
-	opBlk->doArchDeclCloseOp 			= printClose;
-	opBlk->doPortDeclCloseOp 			= printClose;
-	opBlk->doSignalDeclCloseOp 		= printClose;
-	opBlk->doVariableDeclCloseOp 		= printClose;
-	opBlk->doSignalAssignCloseOp 		= printClose;
-	opBlk->doVariableAssignCloseOp 	= printClose;
-	opBlk->doProcessCloseOp 			= printClose;
-	opBlk->doForCloseOp 					= printClose;
-	opBlk->doIfStatementCloseOp		= printClose;
-	opBlk->doLoopCloseOp 				= printClose;
-	opBlk->doWhileCloseOp 				= printClose;
+	opBlk->doDefaultOp					= printDefault;
+	opBlk->doCloseOp						= printClose;
 }
 
 
@@ -235,7 +251,6 @@ void PrintProgram(struct Program * prog){
 	struct OperationBlock* opBlk = InitOperationBlock();
 	setupDisplayOpBlock(opBlk);
 	
-	printProg();	
 	WalkTree(prog, opBlk);
 
 	// clean up
