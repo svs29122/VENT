@@ -10,15 +10,16 @@ II) AST ToDo
 	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
 			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
 			 ###			- this is something like the well-known strategy pattern 
-	### DONE ###	4) Refactor Walk Tree into readable units
+### DONE ###	4) Refactor Walk Tree into readable units
+### DONE ### 5) Refactor Operation Block into a small set of operations that depend on the client checking the node type
 			
 			
 III) Parser ToDo
 ### DONE ###	1) Unit tests for basic parser functions
-### DONE ###		i) flesh this out fully for ents before adding much more functionality
-		ii) thinking I want a set of tests for the public API and for the private
-			e.g. parser_test.c for public
-				 parser_test_internals.c for private
+	### DONE ###		i) flesh this out fully for ents before adding much more functionality
+	### DROPPED ### ii) thinking I want a set of tests for the public API and for the private
+					###	e.g. parser_test.c for public
+					###		 parser_test_internals.c for private
 ### DONE ###   2) Implement error strategy e.g. the wrong token follows an ent decl
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
@@ -47,7 +48,7 @@ VI) Overall ToDo
 VII) Proc ToDo
 	1) sequential statements to implement:
 		i) wait, assert, report
-		### DONE ###  		ii) signal and variable assignment
+		### DONE ###	ii) signal and variable assignment
 		iii) if, case for, while, loop
 			- next, exit, return
 		iv) null

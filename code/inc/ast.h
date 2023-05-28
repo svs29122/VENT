@@ -26,7 +26,7 @@ struct OperationBlock {
 void WalkTree(struct Program* prog, struct OperationBlock* op);
 
 enum AstNodeType {
-	AST_PROGRAM = 0,
+	AST_PROGRAM = 1,
 	AST_USE,
 	AST_ENTITY,
 	AST_ARCHITECTURE,

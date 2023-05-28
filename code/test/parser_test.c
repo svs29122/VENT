@@ -614,6 +614,39 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ProcessWithSwitchCase(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(switcher){\n \
+			\n \
+			proc() {\n \
+				switch(ADDRESS) {\n \
+					case 0:\n \
+						A <= '1';\n \
+					case 1:\n \
+						A <= '1';\n \
+						B <= '1';\n \
+					case 2 to 15:\n \
+						C <= '1';\n \
+					case 16 | 20 | 25;\n \
+						B <= '1';\n \
+						C <= '1';\n \
+						D <= '1';\n \
+					default:\n \
+						null;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -645,6 +678,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithNestedIf);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithInfiniteLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithForLoop);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;
