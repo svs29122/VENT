@@ -6,6 +6,25 @@
 #include "token.h"
 #include "dba.h"
 
+struct Program;
+struct AstNode;
+struct Expression;
+
+typedef void (*astNodeOpPtr) (struct AstNode*);
+typedef void (*expOpPtr) (struct Expression*);
+typedef void (*blkOpPtr) (struct DynamicBlockArray*);
+
+struct OperationBlock {
+	astNodeOpPtr doDefaultOp;
+	astNodeOpPtr doOpenOp;
+	astNodeOpPtr doCloseOp;
+	astNodeOpPtr doSpecialOp;
+	expOpPtr doExpressionOp;
+	blkOpPtr doBlockArrayOp;
+};
+
+void WalkTree(struct Program* prog, struct OperationBlock* op);
+
 enum AstNodeType {
 	AST_PROGRAM = 0,
 	AST_USE,
@@ -35,27 +54,6 @@ struct AstNode {
 	struct Token token;
 #endif
 	enum AstNodeType type;
-};
-
-
-struct Program;
-
-
-struct OperationBlock* InitOperationBlock(void);
-void WalkTree(struct Program* prog, struct OperationBlock* op);
-
-//typedef void (*visitPtr) (void* node, enum AstNodeType type);
-typedef void (*visitPtr) (struct AstNode*);
-
-typedef void (*astNodeOpPtr) (void*);
-
-struct OperationBlock {
-	visitPtr doDefaultOp;
-	visitPtr doOpenOp;
-	visitPtr doCloseOp;
-	visitPtr doSpecialOp;
-	astNodeOpPtr doExpressionOp;
-	astNodeOpPtr doBlockArrayOp;
 };
 
 enum ExpressionType{
@@ -298,7 +296,7 @@ struct PortDecl {
 	struct AstNode self;
 
 	//need to add support for , separated identifier list
-	struct Identifier *name;
+	struct Identifier* name;
 	struct PortMode* pmode;
 	struct DataType* dtype; 
 };
@@ -339,5 +337,11 @@ struct Program {
 	struct DynamicBlockArray* useStatements;
 	struct DynamicBlockArray* units;
 };
+
+#define lambda(function_body) \
+({ \
+	void __fn__ function_body \
+			__fn__; \
+})
 
 #endif //INC_AST_H
