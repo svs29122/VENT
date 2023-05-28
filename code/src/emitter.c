@@ -59,8 +59,10 @@ static void emitEntityDeclarationClose(void* edecl){
 	fprintf(vhdlFile, "\n\t);\nend %s;\n\n", entIdent);
 }
 
-static void emitPortDeclarationOpen(void* ports){
-	if(ports != NULL){
+static void emitPortDeclarationOpen(void* eDecl){
+	struct EntityDecl* entDecl = (struct EntityDecl*)eDecl;
+	
+	if(entDecl->ports != NULL){
 		fprintf(vhdlFile, "%cport(\n", emitIndent());
 	}	
 }
@@ -260,31 +262,139 @@ static void emitExpression(void* expr){
 	memset(&eStat, 0, sizeof(struct expressionStatus));
 }
 
+static void emitClose(struct AstNode* node){
+
+	switch(node->type){
+
+		case AST_ENTITY:
+			emitEntityDeclarationClose((void*)node);
+			break;
+		
+		case AST_ARCHITECTURE:
+			emitArchitectureDeclarationClose((void*)node);
+			break;
+		
+		case AST_PROCESS:
+			emitProcessClose((void*)node);
+			break;
+		
+		case AST_WHILE:
+			emitWhileLoopClose((void*)node);
+			break;
+		
+		default:
+			break;
+	}
+}
+
+static void emitOpen(struct AstNode* node){
+
+	switch(node->type){
+		
+		case AST_ENTITY:
+			emitPortDeclarationOpen((void*)node);
+			break;
+		
+		case AST_ARCHITECTURE:
+			emitArchitectureDeclarationOpen((void*)node);
+			break;
+		
+		case AST_PROCESS:
+			emitProcessOpen((void*)node);
+			break;
+		
+		case AST_WHILE:
+			emitWhileLoopOpen((void*)node);
+			break;
+		
+		default:
+			break;
+	}
+}
+
+static void emitDefault(struct AstNode* node){
+
+	switch(node->type){
+		
+      case AST_USE:
+         emitUseStatement((void*)node);
+         break;
+
+      case AST_ENTITY:
+         emitEntityDeclaration((void*)node);
+         break;
+
+      case AST_ARCHITECTURE:
+         emitArchitectureDeclaration((void*)node);
+         break;
+
+      case AST_PORT:
+         emitPortDeclaration((void*)node);
+         break;
+
+      case AST_PROCESS:
+			emitProcess((void*)node);
+         break;
+
+      case AST_FOR:
+         break;
+
+      case AST_ELSIF:
+         break;
+
+      case AST_LOOP:
+         break;
+
+      case AST_WAIT:
+         break;
+
+    	case AST_WHILE:
+			emitWhileLoop((void*)node);
+         break;
+
+      case AST_SASSIGN:
+         emitSignalAssignment((void*)node);
+         break;
+
+      case AST_VASSIGN:
+         emitVariableAssignment((void*)node);
+         break;
+
+      case AST_SDECL:
+         emitSignalDeclaration((void*)node);
+         break;
+
+      case AST_VDECL:
+         emitVariableDeclaration((void*)node);
+         break;
+
+      case AST_IDENTIFIER:
+         break;
+
+      case AST_PMODE:
+         emitPortMode((void*)node);
+         break;
+
+      case AST_DTYPE:
+         emitDataType((void*)node);
+         break;
+
+      case AST_RANGE:
+         break;
+
+      default:
+         break;
+	}
+}
+
 void TranspileProgram(struct Program* prog, char* fileName){
 
 	//setup block
 	struct OperationBlock* op 		= InitOperationBlock();
-	op->doUseStatementOp 			= emitUseStatement;
-	op->doEntityDeclOp 				= emitEntityDeclaration;
-	op->doEntityDeclCloseOp 		= emitEntityDeclarationClose;
-	op->doPortDeclOpenOp 			= emitPortDeclarationOpen;
-	op->doPortDeclOp 					= emitPortDeclaration;
-	op->doPortModeOp 					= emitPortMode;
-	op->doArchDeclOp 					= emitArchitectureDeclaration;
-	op->doArchDeclOpenOp 			= emitArchitectureDeclarationOpen;
-	op->doArchDeclCloseOp 			= emitArchitectureDeclarationClose;
-	op->doSignalDeclOp 				= emitSignalDeclaration;
-	op->doVariableDeclOp 			= emitVariableDeclaration;
-	op->doSignalAssignOp 			= emitSignalAssignment;
-	op->doVariableAssignOp 			= emitVariableAssignment;
-	op->doDataTypeOp 					= emitDataType;
+	op->doDefaultOp					= emitDefault;
+	op->doOpenOp						= emitOpen;
+	op->doCloseOp						= emitClose;
 	op->doExpressionOp 				= emitExpression;
-	op->doProcessOp 					= emitProcess;	
-	op->doProcessOpenOp 				= emitProcessOpen;	
-	op->doProcessCloseOp 			= emitProcessClose;	
-	op->doWhileStatementOp 			= emitWhileLoop;
-	op->doWhileOpenOp 				= emitWhileLoopOpen;
-	op->doWhileCloseOp 				= emitWhileLoopClose;
 	
 	//setup filename
 	if(fileName != NULL){

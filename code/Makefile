@@ -39,7 +39,7 @@ $(POBJ):
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug test runtest clean cleand cleant cleanall print
+.PHONY: help debug test runtest checkleaks clean cleand cleant cleanall print
 
 help:
 	@echo "  build tvt: 'make tvt' or just 'make'"
@@ -60,8 +60,15 @@ test:
 	$(MAKE) -C ./test
 
 runtest: 
+	@$(MAKE) cleanall --silent
 	@$(MAKE) -C ./test --silent
 	@./test/UnitTests
+	@$(MAKE) -C ./test clean --silent
+
+checkleaks:
+	@$(MAKE) cleanall --silent
+	@$(MAKE) -C ./test --silent
+	clear && valgrind --leak-check=full ./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
 clean:

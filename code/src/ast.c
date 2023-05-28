@@ -10,37 +10,11 @@ struct OperationBlock* InitOperationBlock(void){
 	struct OperationBlock* op = malloc(sizeof(struct OperationBlock));	
 
 	op->doDefaultOp					= noDefaultOp;
+	op->doOpenOp						= noDefaultOp;
 	op->doCloseOp						= noDefaultOp;
 	op->doSpecialOp					= noDefaultOp;
 	op->doExpressionOp				= noOp;
-	op->doProgOp 						= noOp;
 	op->doBlockArrayOp 				= noOp;
-	op->doUseStatementOp				= noOp;
-	op->doEntityDeclOp				= noOp;
-	op->doArchDeclOp					= noOp;
-	op->doArchDeclOpenOp				= noOp;
-	op->doPortDeclOp					= noOp;
-	op->doPortDeclOpenOp				= noOp;
-	op->doSignalDeclOp				= noOp;
-	op->doVariableDeclOp				= noOp;
-	op->doSignalAssignOp				= noOp;
-	op->doVariableAssignOp			= noOp;
-	op->doAssignmentOp	 			= noOp;
-	op->doForStatementOp				= noOp;
-	op->doForOpenOp 					= noOp;
-	op->doIfStatementOp 				= noOp;
-	op->doIfStatementElseOp			= noOp;
-	op->doIfStatementElsifOp		= noOp;
-	op->doLoopStatementOp			= noOp;
-	op->doWaitStatementOp			= noOp;
-	op->doWhileStatementOp			= noOp;
-	op->doWhileOpenOp 				= noOp;
-	op->doProcessOp					= noOp;
-	op->doProcessOpenOp				= noOp;
-	op->doIdentifierOp 				= noOp;
-	op->doPortModeOp 					= noOp;
-	op->doDataTypeOp 					= noOp;
-	op->doRangeOp	 					= noOp;
 
 	return op;
 }
@@ -84,7 +58,7 @@ static void walkForStatement(struct ForStatement* fStmt, struct OperationBlock* 
 	if(fStmt->range){
 		op->doDefaultOp(&(fStmt->range->self));
 	}
-	op->doForOpenOp((void*)fStmt);
+	op->doOpenOp((void*)fStmt);
 	if(fStmt->statements){
 		walkSequentialStatements(fStmt->statements, op);
 	}
@@ -123,7 +97,7 @@ static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlo
 	if(wStmt->condition){
 		op->doExpressionOp(wStmt->condition);
 	}
-	op->doWhileOpenOp((void*)wStmt);
+	op->doOpenOp((void*)wStmt);
 	if(wStmt->statements){
 		walkSequentialStatements(wStmt->statements, op);
 	}
@@ -243,7 +217,7 @@ static void walkProcessStatement(struct Process* proc, struct OperationBlock* op
 	if(proc->declarations){
 		walkDeclarations(proc->declarations, op);
 	}
-	op->doProcessOpenOp((void*)proc);
+	op->doOpenOp((void*)proc);
 	if(proc->statements){
 		walkSequentialStatements(proc->statements, op);
 	}
@@ -282,7 +256,7 @@ static void walkArchitecture(struct ArchitectureDecl* archDecl, struct Operation
 	if(archDecl->declarations){
 		walkDeclarations(archDecl->declarations, op);
 	}
-	op->doArchDeclOpenOp((void*)archDecl);
+	op->doOpenOp((void*)archDecl);
 	if(archDecl->statements){
 		walkConcurrentStatements(archDecl->statements, op);
 	}
@@ -296,7 +270,7 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 	}
 	if(entDecl->ports){
 		Dba* ports = entDecl->ports;
-		op->doPortDeclOpenOp((void*)ports);
+		op->doOpenOp(&(entDecl->self));
 		for(int i=0; i < BlockCount(ports); i++){
 			struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
 			op->doDefaultOp(&(portDecl->self));
