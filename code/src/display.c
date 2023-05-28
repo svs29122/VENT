@@ -115,7 +115,7 @@ static void printDataType(void* dType){
 }
 
 static void printAssignmentOp(void* vAssign){
-	char* op = (struct VariableAssign*)vAssign)->op;
+	char* op = ((struct VariableAssign*)vAssign)->op;
 	printf("\e[0;35m""%cOperator:   \'%s\'\r\n", shift(), (char*)op);
 }
 
@@ -197,7 +197,6 @@ static void printSpecial(struct AstNode* node){
 			break;
 
 		default:
-			printf("Unknown node type in SpecialOp...\e[0m\r\n");
 			break;
 			
 	}
@@ -239,7 +238,7 @@ static void printDefault(struct AstNode* node){
 			printForStatement((void*)node);
 			break;
 
-		case AST_IF:
+		case AST_ELSIF:
 			printIfStatement((void*)node);
 			break;
 
@@ -288,9 +287,7 @@ static void printDefault(struct AstNode* node){
 			break;
 
 		default:
-			printf("Unknown node type in DefaultOp...\e[0m\r\n");
 			break;
-
 	}
 }
 
