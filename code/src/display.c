@@ -24,103 +24,103 @@ static char shift(){
 	return ' ';
 }
 
-static void printProgram(){
+static void printProgram(struct AstNode* prog){
 	printf("\e[1;32m""Program\r\n");
 }
 
-static void printUseStatement(void* stmt){
+static void printUseStatement(struct AstNode* stmt){
 	indent = 0;
 	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(), ((struct UseStatement*)stmt)->value);
 }
 
-static void printEntityDecl(void* eDecl){
+static void printEntityDecl(struct AstNode* eDecl){
 	printf("\e[1;32m""%cEntityDecl\r\n", shift());
 	indent++;
 }
 
-static void printArchDecl(void* aDecl){
+static void printArchDecl(struct AstNode* aDecl){
 	printf("\e[1;32m""%cArchDecl\r\n", shift());
 	indent++;
 }
 
-static void printIdentifier(void* ident){
+static void printIdentifier(struct AstNode* ident){
 	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(), ((struct Identifier*)ident)->value);
 }
 
-static void printPortDecl(void* pDecl){
+static void printPortDecl(struct AstNode* pDecl){
 	printf("\e[0;32m""%cPortDecl\r\n", shift());
 	indent++;
 }
 
-static void printSignalDecl(void* sDecl){
+static void printSignalDecl(struct AstNode* sDecl){
 	printf("\e[0;32m""%cSignalDecl\r\n", shift());
 	indent++;
 }
 
-static void printVariableDecl(void* vDecl){
+static void printVariableDecl(struct AstNode* vDecl){
 	printf("\e[0;32m""%cVariableDecl\r\n", shift());
 	indent++;
 }
 
-static void printForStatement(void* fStmt){
+static void printForStatement(struct AstNode* fStmt){
 	printf("\e[0;33m""%cForStatement\r\n", shift());
 	indent++;
 }
 
-static void printIfStatement(void* ifStmt){
+static void printIfStatement(struct AstNode* ifStmt){
 	printf("\e[0;33m""%cIfStatement\r\n", shift());
 	indent++;
 }
 
-static void printElseClause(void* ifStmt){
+static void printElseClause(struct AstNode* ifStmt){
 	printf("\e[0;34m""%c/*ElseBlock*/\r\n", shift());
 }
 
-static void printLoopStatement(void* wStmt){
+static void printLoopStatement(struct AstNode* wStmt){
 	printf("\e[0;33m""%cLoopStatement\r\n", shift());
 	indent++;
 }
 
-static void printWhileStatement(void* wStmt){
+static void printWhileStatement(struct AstNode* wStmt){
 	printf("\e[0;33m""%cWhileStatement\r\n", shift());
 	indent++;
 }
 
-static void printWaitStatement(void* wStmt){
+static void printWaitStatement(struct AstNode* wStmt){
 	printf("\e[0;33m""%cWaitStatement\r\n", shift());
 }
 
-static void printVariableAssign(void* vAssign){
+static void printVariableAssign(struct AstNode* vAssign){
 	printf("\e[0;36m""%cVariableAssign\r\n", shift());
 	indent++;
 }
 
-static void printSignalAssign(void* sAssign){
+static void printSignalAssign(struct AstNode* sAssign){
 	printf("\e[0;36m""%cSignalAssign\r\n", shift());
 	indent++;
 }
 
-static void printProcessStatement(void* proc){
+static void printProcessStatement(struct AstNode* proc){
 	indent = 2;
 	printf("\e[0;33m""%cProcess\r\n", shift());
 	indent++;
 }
 
-static void printPortMode(void* pMode){
+static void printPortMode(struct AstNode* pMode){
 	printf("\e[0;35m""%cPortMode: \'%s\'\r\n", shift(), ((struct PortMode*)pMode)->value);
 }
 
-static void printDataType(void* dType){
+static void printDataType(struct AstNode* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
 }
 
-static void printAssignmentOp(void* vAssign){
+static void printAssignmentOp(struct AstNode* vAssign){
 	char* op = ((struct VariableAssign*)vAssign)->op;
 	printf("\e[0;35m""%cOperator:   \'%s\'\r\n", shift(), (char*)op);
 }
 
-static void printSubExpression(void* expr){
-	enum ExpressionType type = ((struct Expression*)expr)->type;
+static void printSubExpression(struct Expression* expr){
+	enum ExpressionType type = expr->type;
 
 	switch(type) {
 	
@@ -138,9 +138,9 @@ static void printSubExpression(void* expr){
 
 		case BINARY_EXPR:{
 			struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
-			printSubExpression((void*)bexp->left);
+			printSubExpression(bexp->left);
 			printf(" %s ", bexp->op);
-			printSubExpression((void*)bexp->right);
+			printSubExpression(bexp->right);
 			break;
 		}
 
@@ -157,7 +157,7 @@ static void printSubExpression(void* expr){
 	}
 }
 
-static void printRange(void* rng){
+static void printRange(struct AstNode* rng){
 	printf("\e[0;35m""%cRange: ", shift());
 
 	struct Range* range = (struct Range*)rng;
@@ -177,7 +177,7 @@ static void printRange(void* rng){
 
 
 // Operation Block ops
-static void printExpression(void* expr){
+static void printExpression(struct Expression* expr){
 	printf("\e[0;35m""%cExpression: \'", shift());
 	
 	printSubExpression(expr);	
@@ -189,16 +189,15 @@ static void printSpecial(struct AstNode* node){
 	switch(node->type){
 
 		case AST_VASSIGN:
-			printAssignmentOp((void*)node);
+			printAssignmentOp(node);
 			break;
 
 		case AST_IF:
-			printElseClause((void*)node);
+			printElseClause(node);
 			break;
 
 		default:
 			break;
-			
 	}
 }
 
@@ -211,79 +210,79 @@ static void printDefault(struct AstNode* node){
 	switch(node->type){
 		
 		case AST_PROGRAM:
-			printProgram((void*)node);
+			printProgram(node);
 			break;
 
 		case AST_USE:
-			printUseStatement((void*)node);
+			printUseStatement(node);
 			break;
 		
 		case AST_ENTITY:
-			printEntityDecl((void*)node);
+			printEntityDecl(node);
 			break;
 
 		case AST_ARCHITECTURE:
-			printArchDecl((void*)node);
+			printArchDecl(node);
 			break;
 
 		case AST_PORT:
-			printPortDecl((void*)node);
+			printPortDecl(node);
 			break;
 
 		case AST_PROCESS:
-			printProcessStatement((void*)node);
+			printProcessStatement(node);
 			break;
 
 		case AST_FOR:
-			printForStatement((void*)node);
+			printForStatement(node);
 			break;
 
 		case AST_ELSIF:
-			printIfStatement((void*)node);
+			printIfStatement(node);
 			break;
 
 		case AST_LOOP:
-			printLoopStatement((void*)node);
+			printLoopStatement(node);
 			break;
 
 		case AST_WAIT:
-			printWaitStatement((void*)node);
+			printWaitStatement(node);
 			break;
 
 		case AST_WHILE:
-			printWhileStatement((void*)node);
+			printWhileStatement(node);
 			break;
 
 		case AST_SASSIGN:
-			printSignalAssign((void*)node);
+			printSignalAssign(node);
 			break;
 
 		case AST_VASSIGN:
-			printVariableAssign((void*)node);
+			printVariableAssign(node);
 			break;
 
 		case AST_SDECL:
-			printSignalDecl((void*)node);
+			printSignalDecl(node);
 			break;
 
 		case AST_VDECL:
-			printVariableDecl((void*)node);
+			printVariableDecl(node);
 			break;
 
 		case AST_IDENTIFIER:
-			printIdentifier((void*)node);
+			printIdentifier(node);
 			break;
 
 		case AST_PMODE:
-			printPortMode((void*)node);
+			printPortMode(node);
 			break;
 
 		case AST_DTYPE:
-			printDataType((void*)node);
+			printDataType(node);
 			break;
 
 		case AST_RANGE:
-			printRange((void*)node);
+			printRange(node);
 			break;
 
 		default:
@@ -291,19 +290,19 @@ static void printDefault(struct AstNode* node){
 	}
 }
 
-void PrintProgram(struct Program * prog){
+void PrintProgram(struct Program* prog){
 	
 	// setup block
-	struct OperationBlock* opBlk 		= InitOperationBlock();
-	opBlk->doDefaultOp					= printDefault;
-	opBlk->doCloseOp						= printClose;
-	opBlk->doSpecialOp					= printSpecial;
-	opBlk->doExpressionOp 				= printExpression;
+	struct OperationBlock opBlk = {
+		.doDefaultOp 		= printDefault,
+		.doCloseOp 			= printClose,
+		.doSpecialOp 		= printSpecial,
+		.doExpressionOp 	= printExpression,
+	};
 	
-	WalkTree(prog, opBlk);
+	WalkTree(prog, &opBlk);
 
 	// clean up
-	free(opBlk);
 	printf("\e[0m");
 };
 

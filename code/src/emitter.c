@@ -21,7 +21,7 @@ static char emitIndent(){
 	return '\t';
 }
 
-static void emitUseStatement(void* stmt){
+static void emitUseStatement(struct AstNode* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;
 	
 	int libCnt = -1;
@@ -43,14 +43,14 @@ static void emitUseStatement(void* stmt){
 	free(library);
 }
 
-static void emitEntityDeclaration(void* edecl){
+static void emitEntityDeclaration(struct AstNode* edecl){
 	struct EntityDecl* entDecl = (struct EntityDecl*)edecl;
 	char* entIdent = entDecl->name->value;
 
 	fprintf(vhdlFile, "\nentity %s is\n", entIdent);
 }
 
-static void emitEntityDeclarationClose(void* edecl){
+static void emitEntityDeclarationClose(struct AstNode* edecl){
 	struct EntityDecl* entDecl = (struct EntityDecl*)edecl;
 	char* entIdent = entDecl->name->value;
 
@@ -59,7 +59,7 @@ static void emitEntityDeclarationClose(void* edecl){
 	fprintf(vhdlFile, "\n\t);\nend %s;\n\n", entIdent);
 }
 
-static void emitPortDeclarationOpen(void* eDecl){
+static void emitPortDeclarationOpen(struct AstNode* eDecl){
 	struct EntityDecl* entDecl = (struct EntityDecl*)eDecl;
 	
 	if(entDecl->ports != NULL){
@@ -67,12 +67,12 @@ static void emitPortDeclarationOpen(void* eDecl){
 	}	
 }
 
-static void emitPortDeclaration(void* pdecl){
+static void emitPortDeclaration(struct AstNode* pdecl){
 	struct PortDecl* portDecl = (struct PortDecl*) pdecl;
 	fprintf(vhdlFile, "\t\t%s: ", portDecl->name->value);
 }
 
-static void emitPortMode(void* pmode){
+static void emitPortMode(struct AstNode* pmode){
 	struct PortMode* portMode = (struct PortMode*) pmode;
 
 	char* pVal = portMode->value;
@@ -87,7 +87,7 @@ static void emitPortMode(void* pmode){
 	}
 }
 
-static void emitArchitectureDeclaration(void* aDecl){
+static void emitArchitectureDeclaration(struct AstNode* aDecl){
 	struct ArchitectureDecl* archDecl = (struct ArchitectureDecl*) aDecl;
 	
 	char* archName = archDecl->archName->value;
@@ -96,11 +96,11 @@ static void emitArchitectureDeclaration(void* aDecl){
 	fprintf(vhdlFile, "architecture %s of %s is\n", archName, entName);
 }
 
-static void emitArchitectureDeclarationOpen(void* aDecl){
+static void emitArchitectureDeclarationOpen(struct AstNode* aDecl){
 	fprintf(vhdlFile, "begin\n\n");
 }
 
-static void emitArchitectureDeclarationClose(void* aDecl){
+static void emitArchitectureDeclarationClose(struct AstNode* aDecl){
 	struct ArchitectureDecl* archDecl = (struct ArchitectureDecl*) aDecl;
 
 	char* archName = archDecl->archName->value;
@@ -108,21 +108,21 @@ static void emitArchitectureDeclarationClose(void* aDecl){
 	fprintf(vhdlFile, "\nend architecture %s;\n", archName);
 }
 
-static void emitProcess(void* proc){
+static void emitProcess(struct AstNode* proc){
 	fprintf(vhdlFile, "\n\tprocess is \n"); 
 	indent++;
 }
 
-static void emitProcessOpen(void* proc){
+static void emitProcessOpen(struct AstNode* proc){
 	fprintf(vhdlFile, "\tbegin\n\n");
 }
 
-static void emitProcessClose(void* proc){
+static void emitProcessClose(struct AstNode* proc){
 	indent--;
 	fprintf(vhdlFile, "\tend process;\n");
 }
 
-static void emitWhileLoop(void* wstmt){
+static void emitWhileLoop(struct AstNode* wstmt){
 
 	struct WhileStatement* whileStat = (struct WhileStatement*)wstmt;	
 	fprintf(vhdlFile, "%cwhile", emitIndent());
@@ -134,17 +134,17 @@ static void emitWhileLoop(void* wstmt){
 	}
 }
 
-static void emitWhileLoopOpen(void* wstmt){
+static void emitWhileLoopOpen(struct AstNode* wstmt){
 	fprintf(vhdlFile, " loop\n");
 }
 
-static void emitWhileLoopClose(void* wstmt){
+static void emitWhileLoopClose(struct AstNode* wstmt){
 	indent--;
 	fprintf(vhdlFile, "%cend loop;\n\n", emitIndent());
 }
 
 
-static void emitSignalDeclaration(void* sDecl){
+static void emitSignalDeclaration(struct AstNode* sDecl){
 	struct SignalDecl* sigDecl = (struct SignalDecl*) sDecl;
 
 	char* sigName = sigDecl->name->value;
@@ -157,7 +157,7 @@ static void emitSignalDeclaration(void* sDecl){
 	} 
 }
 
-static void emitVariableDeclaration(void* vDecl){
+static void emitVariableDeclaration(struct AstNode* vDecl){
 	struct VariableDecl* varDecl = (struct VariableDecl*) vDecl;
 
 	char* varName = varDecl->name->value;
@@ -170,7 +170,7 @@ static void emitVariableDeclaration(void* vDecl){
 	}
 }
 
-static void emitSignalAssignment(void* sAssign){
+static void emitSignalAssignment(struct AstNode* sAssign){
 	struct SignalAssign* sigAssign = (struct SignalAssign*) sAssign;
 
 	char* target = sigAssign->target->value;
@@ -183,7 +183,7 @@ static void emitSignalAssignment(void* sAssign){
 	}
 }
 
-static void emitVariableAssignment(void* vAssign){
+static void emitVariableAssignment(struct AstNode* vAssign){
 	struct VariableAssign* varAssign = (struct VariableAssign*) vAssign;
 
 	char* target = varAssign->target->value;
@@ -196,7 +196,7 @@ static void emitVariableAssignment(void* vAssign){
 	}
 }
 
-static void emitDataType(void* dtype){
+static void emitDataType(struct AstNode* dtype){
 	struct DataType* dataType = (struct DataType*) dtype;
 	
 	char* typeName = dataType->value;
@@ -213,8 +213,8 @@ static void emitDataType(void* dtype){
 	}
 }
 
-static void emitSubExpression(void* expr){
-	enum ExpressionType type = ((struct Expression*)expr)->type;
+static void emitSubExpression(struct Expression* expr){
+	enum ExpressionType type = expr->type;
 
 	switch(type){
 		
@@ -232,9 +232,9 @@ static void emitSubExpression(void* expr){
 
 		case BINARY_EXPR:{
           struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
-          emitSubExpression((void*)bexp->left);
+          emitSubExpression(bexp->left);
           fprintf(vhdlFile, " %s ", bexp->op);
-          emitSubExpression((void*)bexp->right);
+          emitSubExpression(bexp->right);
           break;
        }
  
@@ -251,7 +251,7 @@ static void emitSubExpression(void* expr){
 	}	
 }
 
-static void emitExpression(void* expr){
+static void emitExpression(struct Expression* expr){
 	
 	fprintf(vhdlFile, "%s ", eStat.assignmentOp);	
 	emitSubExpression(expr);
@@ -267,19 +267,19 @@ static void emitClose(struct AstNode* node){
 	switch(node->type){
 
 		case AST_ENTITY:
-			emitEntityDeclarationClose((void*)node);
+			emitEntityDeclarationClose(node);
 			break;
 		
 		case AST_ARCHITECTURE:
-			emitArchitectureDeclarationClose((void*)node);
+			emitArchitectureDeclarationClose(node);
 			break;
 		
 		case AST_PROCESS:
-			emitProcessClose((void*)node);
+			emitProcessClose(node);
 			break;
 		
 		case AST_WHILE:
-			emitWhileLoopClose((void*)node);
+			emitWhileLoopClose(node);
 			break;
 		
 		default:
@@ -292,19 +292,19 @@ static void emitOpen(struct AstNode* node){
 	switch(node->type){
 		
 		case AST_ENTITY:
-			emitPortDeclarationOpen((void*)node);
+			emitPortDeclarationOpen(node);
 			break;
 		
 		case AST_ARCHITECTURE:
-			emitArchitectureDeclarationOpen((void*)node);
+			emitArchitectureDeclarationOpen(node);
 			break;
 		
 		case AST_PROCESS:
-			emitProcessOpen((void*)node);
+			emitProcessOpen(node);
 			break;
 		
 		case AST_WHILE:
-			emitWhileLoopOpen((void*)node);
+			emitWhileLoopOpen(node);
 			break;
 		
 		default:
@@ -317,23 +317,23 @@ static void emitDefault(struct AstNode* node){
 	switch(node->type){
 		
       case AST_USE:
-         emitUseStatement((void*)node);
+         emitUseStatement(node);
          break;
 
       case AST_ENTITY:
-         emitEntityDeclaration((void*)node);
+         emitEntityDeclaration(node);
          break;
 
       case AST_ARCHITECTURE:
-         emitArchitectureDeclaration((void*)node);
+         emitArchitectureDeclaration(node);
          break;
 
       case AST_PORT:
-         emitPortDeclaration((void*)node);
+         emitPortDeclaration(node);
          break;
 
       case AST_PROCESS:
-			emitProcess((void*)node);
+			emitProcess(node);
          break;
 
       case AST_FOR:
@@ -349,34 +349,34 @@ static void emitDefault(struct AstNode* node){
          break;
 
     	case AST_WHILE:
-			emitWhileLoop((void*)node);
+			emitWhileLoop(node);
          break;
 
       case AST_SASSIGN:
-         emitSignalAssignment((void*)node);
+         emitSignalAssignment(node);
          break;
 
       case AST_VASSIGN:
-         emitVariableAssignment((void*)node);
+         emitVariableAssignment(node);
          break;
 
       case AST_SDECL:
-         emitSignalDeclaration((void*)node);
+         emitSignalDeclaration(node);
          break;
 
       case AST_VDECL:
-         emitVariableDeclaration((void*)node);
+         emitVariableDeclaration(node);
          break;
 
       case AST_IDENTIFIER:
          break;
 
       case AST_PMODE:
-         emitPortMode((void*)node);
+         emitPortMode(node);
          break;
 
       case AST_DTYPE:
-         emitDataType((void*)node);
+         emitDataType(node);
          break;
 
       case AST_RANGE:
@@ -390,11 +390,12 @@ static void emitDefault(struct AstNode* node){
 void TranspileProgram(struct Program* prog, char* fileName){
 
 	//setup block
-	struct OperationBlock* op 		= InitOperationBlock();
-	op->doDefaultOp					= emitDefault;
-	op->doOpenOp						= emitOpen;
-	op->doCloseOp						= emitClose;
-	op->doExpressionOp 				= emitExpression;
+	struct OperationBlock opBlk = {
+		.doDefaultOp		= emitDefault,
+		.doOpenOp			= emitOpen,
+		.doCloseOp			= emitClose,
+		.doExpressionOp	= emitExpression,
+	};
 	
 	//setup filename
 	if(fileName != NULL){
@@ -424,10 +425,8 @@ void TranspileProgram(struct Program* prog, char* fileName){
 
 		fprintf(vhdlFile,"--\n-- This file was produced using TVT (The VENT Transpiler)\n--\n\n");
 
-		WalkTree(prog, op);
+		WalkTree(prog, &opBlk);
 
 		fclose(vhdlFile);
 	}
-
-	free(op);
 }

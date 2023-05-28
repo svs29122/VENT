@@ -1,13 +1,7 @@
 #ifndef INC_FREE_H
 #define INC_FREE_H
 
-#define lambda(function_body) \
-({ \
-      void __fn__ function_body \
-          __fn__; \
-})
-
-static void freeProgram(void* prog){
+static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
 	pg->useStatements = NULL;
 	pg->units = NULL;
@@ -15,49 +9,48 @@ static void freeProgram(void* prog){
 	free(pg);
 }
 
-static void freeUse(void* stmt){
+static void freeUse(struct AstNode* stmt){
 	struct UseStatement* st = (struct UseStatement*)stmt;
 	if(st->value) free(st->value);
 }
 
-static void freeIdentifier(void* ident){
+static void freeIdentifier(struct AstNode* ident){
 	struct Identifier* id = (struct Identifier*)ident;
 	if(id->value) free(id->value);
 
 	free(id);
 }
 
-static void freePortMode(void* pmode){
+static void freePortMode(struct AstNode* pmode){
 	struct PortMode* pm = (struct PortMode*)pmode;
 	if(pm->value) free(pm->value);
 
 	free(pm);
 }
 
-static void freeDataType(void* dtype){
+static void freeDataType(struct AstNode* dtype){
 	struct DataType* dt = (struct DataType*)dtype;
 	if(dt->value) free(dt->value);
 
 	free(dt);
 }
 
-static void freeAssignmentOp(void* vAssign){
+static void freeAssignmentOp(struct AstNode* vAssign){
 	char* op = ((struct VariableAssign*)vAssign)->op;
 	free(op);
 }
 
-static void freeElsifStatement(void* ifStmt){
+static void freeElsifStatement(struct AstNode* ifStmt){
 	struct IfStatement* ifs = (struct IfStatement*)ifStmt;
 	free(ifs);
 }
 
-static void freeBlockArray(void* arr){
-	FreeBlockArray((Dba*)arr);
+static void freeBlockArray(struct DynamicBlockArray* arr){
+	FreeBlockArray(arr);
 }
 
-static void freeExpression(void* expr){
-   enum ExpressionType type = {0};
-	type = ((struct Expression*)expr)->type;
+static void freeExpression(struct Expression* expr){
+   enum ExpressionType type = expr->type;
 
    switch(type) {
 
@@ -77,9 +70,9 @@ static void freeExpression(void* expr){
 
       case BINARY_EXPR:{
          struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
-         freeExpression((void*)bexp->left);
+         freeExpression(bexp->left);
          free(bexp->op);
-         freeExpression((void*)bexp->right);
+         freeExpression(bexp->right);
 			free(bexp);
          break;
       }
@@ -98,7 +91,7 @@ static void freeExpression(void* expr){
    }
 }
 
-static void freeRange(void* rng){
+static void freeRange(struct AstNode* rng){
 	struct Range* range = (struct Range*)rng;
 
 	if(range->left) freeExpression(range->left);
@@ -112,15 +105,15 @@ static void freeSpecial(struct AstNode* node){
 	switch(node->type){
 
 		case AST_PROGRAM:
-			freeProgram((void*)node);
+			freeProgram(node);
 			break;
 
 		case AST_ELSIF:
-			freeElsifStatement((void*)node);
+			freeElsifStatement(node);
 			break;
 
 		case AST_VASSIGN:
-			freeAssignmentOp((void*)node);
+			freeAssignmentOp(node);
 			break;
 
 		default:
@@ -133,23 +126,23 @@ static void freeDefault(struct AstNode* node){
 	switch(node->type){
 
 		case AST_USE:
-			freeUse((void*)node);
+			freeUse(node);
 			break;
 
 		case AST_IDENTIFIER:
-			freeIdentifier((void*)node);
+			freeIdentifier(node);
 			break;
 
 		case AST_PMODE:
-			freePortMode((void*)node);
+			freePortMode(node);
 			break;
 
 		case AST_DTYPE:
-			freeDataType((void*)node);
+			freeDataType(node);
 			break;
 
 		case AST_RANGE:
-			freeRange((void*)node);
+			freeRange(node);
 			break;
 
 		default:
@@ -160,18 +153,17 @@ static void freeDefault(struct AstNode* node){
 void FreeProgram(struct Program* prog){
 	
 	// setup block
-	struct OperationBlock* opBlk = InitOperationBlock();
-	opBlk->doDefaultOp				= freeDefault;
-	opBlk->doSpecialOp				= freeSpecial;
-	opBlk->doBlockArrayOp 			= freeBlockArray;
-	opBlk->doExpressionOp			= freeExpression;
+	struct OperationBlock opBlk = {
+		.doDefaultOp 		= freeDefault,
+		.doSpecialOp		= freeSpecial,
+		.doExpressionOp	= freeExpression,
+		.doBlockArrayOp	= freeBlockArray,
+	};
 	
-	WalkTree(prog, opBlk);
+	WalkTree(prog, &opBlk);
 
 	if(p->currToken.literal) free(p->currToken.literal);
 	if(p->peekToken.literal) free(p->peekToken.literal);
-
-	free(opBlk);
 }
 
 #endif // INC_FREE_H
