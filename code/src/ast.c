@@ -11,10 +11,11 @@ struct OperationBlock* InitOperationBlock(void){
 
 	op->doDefaultOp					= noDefaultOp;
 	op->doCloseOp						= noDefaultOp;
+	op->doSpecialOp					= noDefaultOp;
+	op->doExpressionOp				= noOp;
 	op->doProgOp 						= noOp;
 	op->doBlockArrayOp 				= noOp;
 	op->doUseStatementOp				= noOp;
-	op->doDesignUnitOp				= noOp;
 	op->doEntityDeclOp				= noOp;
 	op->doArchDeclOp					= noOp;
 	op->doArchDeclOpenOp				= noOp;
@@ -40,7 +41,6 @@ struct OperationBlock* InitOperationBlock(void){
 	op->doPortModeOp 					= noOp;
 	op->doDataTypeOp 					= noOp;
 	op->doRangeOp	 					= noOp;
-	op->doExpressionOp				= noOp;
 
 	return op;
 }
@@ -49,12 +49,12 @@ struct OperationBlock* InitOperationBlock(void){
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
 
 static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
-	op->doVariableDeclOp((void*)varDecl);
+	op->doDefaultOp(&(varDecl->self));
 	if(varDecl->name){
-		op->doIdentifierOp((void*)varDecl->name);
+		op->doDefaultOp(&(varDecl->name->self.root));
 	}
 	if(varDecl->dtype){
-		op->doDataTypeOp((void*)varDecl->dtype);
+		op->doDefaultOp(&(varDecl->dtype->self));
 	}	
 	if(varDecl->expression){
 		op->doExpressionOp((void*)varDecl->expression);
@@ -63,12 +63,12 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 }
 
 static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBlock* op){
-	op->doSignalDeclOp((void*)sigDecl);
+	op->doDefaultOp(&(sigDecl->self));
 	if(sigDecl->name){
-		op->doIdentifierOp((void*)sigDecl->name);
+		op->doDefaultOp(&(sigDecl->name->self.root));
 	}
 	if(sigDecl->dtype){
-		op->doDataTypeOp((void*)sigDecl->dtype);
+		op->doDefaultOp(&(sigDecl->dtype->self));
 	}	
 	if(sigDecl->expression){
 		op->doExpressionOp((void*)sigDecl->expression);
@@ -77,12 +77,12 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 }
 
 static void walkForStatement(struct ForStatement* fStmt, struct OperationBlock* op){
-	op->doForStatementOp((void*)fStmt);
+	op->doDefaultOp(&(fStmt->self));
 	if(fStmt->parameter){
-		op->doIdentifierOp(fStmt->parameter);
+		op->doDefaultOp(&(fStmt->parameter->self.root));
 	}
 	if(fStmt->range){
-		op->doRangeOp(fStmt->range);
+		op->doDefaultOp(&(fStmt->range->self));
 	}
 	op->doForOpenOp((void*)fStmt);
 	if(fStmt->statements){
@@ -92,7 +92,7 @@ static void walkForStatement(struct ForStatement* fStmt, struct OperationBlock* 
 }
 
 static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* op){
-	op->doIfStatementOp((void*)ifStmt);
+	op->doDefaultOp(&(ifStmt->self));
 	if(ifStmt->antecedent){
 		op->doExpressionOp(ifStmt->antecedent);
 	}
@@ -105,13 +105,13 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 		op->doIfStatementElsifOp((void*)ifStmt->elsif);
 	}	
 	if(ifStmt->alternativeStatements){
-		op->doIfStatementElseOp((void*)ifStmt);
+		op->doSpecialOp(&(ifStmt->self));
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
 	}
 }
 
 static void walkLoopStatement(struct LoopStatement* lStmt, struct OperationBlock* op){
-	op->doLoopStatementOp((void*)lStmt);
+	op->doDefaultOp(&(lStmt->self));
 	if(lStmt->statements){
 		walkSequentialStatements(lStmt->statements, op);
 	}
@@ -119,7 +119,7 @@ static void walkLoopStatement(struct LoopStatement* lStmt, struct OperationBlock
 }
 
 static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlock* op){
-	op->doWhileStatementOp((void*)wStmt);
+	op->doDefaultOp(&(wStmt->self));
 	if(wStmt->condition){
 		op->doExpressionOp(wStmt->condition);
 	}
@@ -131,9 +131,9 @@ static void walkWhileStatement(struct WhileStatement* wStmt, struct OperationBlo
 }
 
 static void walkWaitStatement(struct WaitStatement* wStmt, struct OperationBlock* op){
-	op->doWaitStatementOp((void*)wStmt);
+	op->doDefaultOp(&(wStmt->self));
 	if(wStmt->sensitivityList){
-		op->doIdentifierOp((void*)wStmt->sensitivityList);
+		op->doDefaultOp(&(wStmt->sensitivityList->self.root));
 	}
 	if(wStmt->condition){
 		op->doExpressionOp(wStmt->condition);
@@ -144,12 +144,12 @@ static void walkWaitStatement(struct WaitStatement* wStmt, struct OperationBlock
 }
 
 static void walkVariableAssignment(struct VariableAssign* varAssign, struct OperationBlock* op){
-	op->doVariableAssignOp((void*)varAssign);
+	op->doDefaultOp(&(varAssign->self));
 	if(varAssign->target){
-		op->doIdentifierOp((void*)varAssign->target);
+		op->doDefaultOp(&(varAssign->target->self.root));
 	}
 	if(varAssign->op){
-		op->doAssignmentOp((void*)varAssign->op);
+		op->doSpecialOp(&(varAssign->self));
 	}
 	if(varAssign->expression){
 		op->doExpressionOp((void*)varAssign->expression);
@@ -158,9 +158,9 @@ static void walkVariableAssignment(struct VariableAssign* varAssign, struct Oper
 }
 
 static void walkSignalAssignment(struct SignalAssign* sigAssign, struct OperationBlock* op){
-	op->doSignalAssignOp((void*)sigAssign);
+	op->doDefaultOp(&(sigAssign->self));
 	if(sigAssign->target){
-		op->doIdentifierOp((void*)sigAssign->target);
+		op->doDefaultOp(&(sigAssign->target->self.root));
 	}
 	if(sigAssign->expression){
 		op->doExpressionOp((void*)sigAssign->expression);
@@ -238,7 +238,7 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
 	op->doDefaultOp(&(proc->self));
 	if(proc->sensitivityList){
-		op->doIdentifierOp((void*)proc->sensitivityList);
+		op->doDefaultOp(&(proc->sensitivityList->self.root));
 	}
 	if(proc->declarations){
 		walkDeclarations(proc->declarations, op);
@@ -274,10 +274,10 @@ static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 static void walkArchitecture(struct ArchitectureDecl* archDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(archDecl->self));
 	if(archDecl->archName){
-		op->doIdentifierOp((void*)archDecl->archName);
+		op->doDefaultOp(&(archDecl->archName->self.root));
 	}
 	if(archDecl->entName){
-		op->doIdentifierOp((void*)archDecl->entName);
+		op->doDefaultOp(&(archDecl->entName->self.root));
 	}
 	if(archDecl->declarations){
 		walkDeclarations(archDecl->declarations, op);
@@ -292,7 +292,7 @@ static void walkArchitecture(struct ArchitectureDecl* archDecl, struct Operation
 static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(entDecl->self));
 	if(entDecl->name){
-		op->doIdentifierOp((void*)entDecl->name);
+		op->doDefaultOp(&(entDecl->name->self.root));
 	}
 	if(entDecl->ports){
 		Dba* ports = entDecl->ports;
@@ -301,13 +301,13 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 			struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
 			op->doDefaultOp(&(portDecl->self));
 			if(portDecl->name){
-				op->doIdentifierOp((void*)portDecl->name);
+				op->doDefaultOp(&(portDecl->name->self.root));
 			}
 			if(portDecl->pmode){
-				op->doPortModeOp((void*)portDecl->pmode);
+				op->doDefaultOp(&(portDecl->pmode->self));
 			}
 			if(portDecl->dtype){
-				op->doDataTypeOp((void*)portDecl->dtype);
+				op->doDefaultOp(&(portDecl->dtype->self));
 			}	
 			op->doCloseOp(&(portDecl->self));
 		}
@@ -319,7 +319,6 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 static void walkDesignUnits(Dba* arr, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(arr); i++){
 		struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(arr, i);
-		op->doDesignUnitOp((void*)unit);
 		switch(unit->type){
 			case ENTITY: {
 				walkEntity(&(unit->as.entity), op);
@@ -355,6 +354,7 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 		if(prog->units){
 			walkDesignUnits(prog->units, op);
 		}
+		// TODO: used in FreeProgram
 		op->doProgOp((void*)prog);
 	}
 }

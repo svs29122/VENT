@@ -24,10 +24,6 @@ static char shift(){
 	return ' ';
 }
 
-static void printClose(struct AstNode* none){
-	indent--;
-}
-
 static void printProgram(){
 	printf("\e[1;32m""Program\r\n");
 }
@@ -37,19 +33,13 @@ static void printUseStatement(void* stmt){
 	printf("\e[1;36m""%cUseStatement: %s\r\n",shift(), ((struct UseStatement*)stmt)->value);
 }
 
-static void printDesignUnit(void* unit){
-	indent = 0;
-	printf("\e[1;32m""%cDesignUnit\r\n", shift());
-	indent++;
-}
-
 static void printEntityDecl(void* eDecl){
-	printf("\e[0;32m""%cEntityDecl\r\n", shift());
+	printf("\e[1;32m""%cEntityDecl\r\n", shift());
 	indent++;
 }
 
 static void printArchDecl(void* aDecl){
-	printf("\e[0;32m""%cArchDecl\r\n", shift());
+	printf("\e[1;32m""%cArchDecl\r\n", shift());
 	indent++;
 }
 
@@ -124,7 +114,8 @@ static void printDataType(void* dType){
 	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
 }
 
-static void printAssignmentOp(void* op){
+static void printAssignmentOp(void* vAssign){
+	char* op = (struct VariableAssign*)vAssign)->op;
 	printf("\e[0;35m""%cOperator:   \'%s\'\r\n", shift(), (char*)op);
 }
 
@@ -166,13 +157,6 @@ static void printSubExpression(void* expr){
 	}
 }
 
-static void printExpression(void* expr){
-	printf("\e[0;35m""%cExpression: \'", shift());
-	
-	printSubExpression(expr);	
-	printf("\'\r\n");
-}
-
 static void printRange(void* rng){
 	printf("\e[0;35m""%cRange: ", shift());
 
@@ -189,6 +173,38 @@ static void printRange(void* rng){
 		printSubExpression(range->right);
 	}
 	printf("\r\n");
+}
+
+
+// Operation Block ops
+static void printExpression(void* expr){
+	printf("\e[0;35m""%cExpression: \'", shift());
+	
+	printSubExpression(expr);	
+	printf("\'\r\n");
+}
+
+static void printSpecial(struct AstNode* node){
+
+	switch(node->type){
+
+		case AST_VASSIGN:
+			printAssignmentOp((void*)node);
+			break;
+
+		case AST_IF:
+			printElseClause((void*)node);
+			break;
+
+		default:
+			printf("Unknown node type in SpecialOp...\e[0m\r\n");
+			break;
+			
+	}
+}
+
+static void printClose(struct AstNode* none){
+	indent--;
 }
 
 static void printDefault(struct AstNode* node){
@@ -218,38 +234,74 @@ static void printDefault(struct AstNode* node){
 		case AST_PROCESS:
 			printProcessStatement((void*)node);
 			break;
+
+		case AST_FOR:
+			printForStatement((void*)node);
+			break;
+
+		case AST_IF:
+			printIfStatement((void*)node);
+			break;
+
+		case AST_LOOP:
+			printLoopStatement((void*)node);
+			break;
+
+		case AST_WAIT:
+			printWaitStatement((void*)node);
+			break;
+
+		case AST_WHILE:
+			printWhileStatement((void*)node);
+			break;
+
+		case AST_SASSIGN:
+			printSignalAssign((void*)node);
+			break;
+
+		case AST_VASSIGN:
+			printVariableAssign((void*)node);
+			break;
+
+		case AST_SDECL:
+			printSignalDecl((void*)node);
+			break;
+
+		case AST_VDECL:
+			printVariableDecl((void*)node);
+			break;
+
+		case AST_IDENTIFIER:
+			printIdentifier((void*)node);
+			break;
+
+		case AST_PMODE:
+			printPortMode((void*)node);
+			break;
+
+		case AST_DTYPE:
+			printDataType((void*)node);
+			break;
+
+		case AST_RANGE:
+			printRange((void*)node);
+			break;
+
+		default:
+			printf("Unknown node type in DefaultOp...\e[0m\r\n");
+			break;
+
 	}
 }
-
-static void setupDisplayOpBlock(struct OperationBlock* opBlk){
-	opBlk->doDesignUnitOp 				= printDesignUnit;
-	opBlk->doSignalDeclOp 				= printSignalDecl;
-	opBlk->doVariableDeclOp 			= printVariableDecl;
-	opBlk->doSignalAssignOp 			= printSignalAssign;
-	opBlk->doVariableAssignOp 			= printVariableAssign;
-	opBlk->doAssignmentOp				= printAssignmentOp;
-	opBlk->doForStatementOp 			= printForStatement;
-	opBlk->doIfStatementOp 				= printIfStatement;
-	opBlk->doIfStatementElseOp			= printElseClause;
-	opBlk->doLoopStatementOp 			= printLoopStatement;
-	opBlk->doWaitStatementOp 			= printWaitStatement;
-	opBlk->doWhileStatementOp 			= printWhileStatement;
-	opBlk->doProcessOp 					= printProcessStatement;
-	opBlk->doIdentifierOp 				= printIdentifier;
-	opBlk->doPortModeOp 					= printPortMode;
-	opBlk->doDataTypeOp 					= printDataType;
-	opBlk->doRangeOp 						= printRange;
-	opBlk->doExpressionOp 				= printExpression;
-	opBlk->doDefaultOp					= printDefault;
-	opBlk->doCloseOp						= printClose;
-}
-
 
 void PrintProgram(struct Program * prog){
 	
 	// setup block
-	struct OperationBlock* opBlk = InitOperationBlock();
-	setupDisplayOpBlock(opBlk);
+	struct OperationBlock* opBlk 		= InitOperationBlock();
+	opBlk->doDefaultOp					= printDefault;
+	opBlk->doCloseOp						= printClose;
+	opBlk->doSpecialOp					= printSpecial;
+	opBlk->doExpressionOp 				= printExpression;
 	
 	WalkTree(prog, opBlk);
 
