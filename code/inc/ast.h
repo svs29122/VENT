@@ -13,6 +13,20 @@ enum AstNodeType {
 	AST_ARCHITECTURE,
 	AST_PORT,
 	AST_PROCESS,
+	AST_FOR,
+	AST_IF,
+	AST_LOOP,
+	AST_WAIT,
+	AST_WHILE,
+	AST_SASSIGN,
+	AST_VASSIGN,
+	AST_SDECL,
+	AST_VDECL,
+	AST_IDENTIFIER,
+	AST_PMODE,
+	AST_DTYPE,
+	AST_RANGE,
+	AST_EXPRESSION,
 };
 
 struct AstNode {
@@ -36,13 +50,13 @@ typedef void (*astNodeOpPtr) (void*);
 
 struct OperationBlock {
 	visitPtr doDefaultOp;
-	visitPtr doOpeneOp;
+	visitPtr doOpenOp;
 	visitPtr doCloseOp;
-	visitPtr doExtraOp;
+	visitPtr doSpecialOp;
+	astNodeOpPtr doExpressionOp;
 	astNodeOpPtr doProgOp;
 	astNodeOpPtr doBlockArrayOp;
 	astNodeOpPtr doUseStatementOp;
-	astNodeOpPtr doDesignUnitOp;
 	astNodeOpPtr doEntityDeclOp;
 	astNodeOpPtr doEntityDeclCloseOp;
 	astNodeOpPtr doArchDeclOp;
@@ -80,7 +94,6 @@ struct OperationBlock {
 	astNodeOpPtr doPortModeOp;
 	astNodeOpPtr doDataTypeOp;
 	astNodeOpPtr doRangeOp;
-	astNodeOpPtr doExpressionOp;
 };
 
 enum ExpressionType{
@@ -140,6 +153,8 @@ struct Identifier {
 };
 
 struct Range {
+	struct AstNode self;
+
 	struct Expression* left;
 	bool descending;
 	struct Expression* right;

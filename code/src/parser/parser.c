@@ -179,9 +179,9 @@ static struct Expression* parseExpression(enum Precedence precedence){
 static struct Expression* parseIdentifier(){
 	struct Identifier* ident = calloc(1, sizeof(struct Identifier));
 #ifdef DEBUG
-	memcpy(&(ident->self.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(ident->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
-
+	ident->self.root.type = AST_IDENTIFIER;
 	ident->self.type = NAME_EXPR;
 
 	int size = strlen(p->currToken.literal) + 1;
@@ -194,8 +194,9 @@ static struct Expression* parseIdentifier(){
 static struct Expression* parseCharLiteral(){
 	struct CharExpr* chexp = calloc(1, sizeof(struct CharExpr));
 #ifdef DEBUG
-	memcpy(&(chexp->self.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(chexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
+	chexp->self.root.type = AST_EXPRESSION;
 
 	chexp->self.type = CHAR_EXPR;
 
@@ -209,8 +210,9 @@ static struct Expression* parseCharLiteral(){
 static struct Expression* parseNumericLiteral(){
 	struct NumExpr* nexp = calloc(1, sizeof(struct NumExpr));
 #ifdef DEBUG
-	memcpy(&(nexp->self.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(nexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
+	nexp->self.root.type = AST_EXPRESSION;
 
 	nexp->self.type = NUM_EXPR;
 
@@ -224,8 +226,9 @@ static struct Expression* parseNumericLiteral(){
 static struct Expression* parseBinary(struct Expression* expr){
 	struct BinaryExpr* biexp = calloc(1, sizeof(struct BinaryExpr));
 #ifdef DEBUG
-	memcpy(&(biexp->self.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(biexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
+	biexp->self.root.type = AST_EXPRESSION;
 
 	biexp->self.type = BINARY_EXPR;
 	biexp->left = expr;
@@ -244,6 +247,7 @@ static struct Expression* parseBinary(struct Expression* expr){
 
 static struct Range* parseRange(){
 	struct Range* rng = calloc(1, sizeof(struct Range));
+	rng->self.type = AST_RANGE;
 	
 	rng->left = parseExpression(LOWEST_PREC);
 
@@ -271,8 +275,9 @@ static char* parseAssignmentOperator(){
 static struct DataType* parseDataType(char* val){
 	struct DataType* dt = calloc(1, sizeof(struct DataType));
 #ifdef DEBUG
-	memcpy(&(dt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(dt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	dt->self.type = AST_DTYPE;
 
 	int size = strlen(val) + 1;
 	dt->value = calloc(size, sizeof(char));
@@ -284,8 +289,9 @@ static struct DataType* parseDataType(char* val){
 static struct PortMode* parsePortMode(char* val){
 	struct PortMode* pm = calloc(1, sizeof(struct PortMode));
 #ifdef DEBUG
-	memcpy(&(pm->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(pm->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	pm->self.type = AST_PMODE;
 
 	int size = strlen(val) +1;
 	pm->value = calloc(size, sizeof(char));
@@ -295,6 +301,7 @@ static struct PortMode* parsePortMode(char* val){
 }
 
 static void parseVariableDeclaration(struct VariableDecl* decl){
+	decl->self.type = AST_VDECL;
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after var keyword in variable declaration");
 	decl->name = (struct Identifier*)parseIdentifier();
@@ -315,6 +322,7 @@ static void parseVariableDeclaration(struct VariableDecl* decl){
 }
 
 static void parseSignalDeclaration(struct SignalDecl* decl){
+	decl->self.type = AST_SDECL;
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after sig keyword in signal declaration");
 	decl->name = (struct Identifier*)parseIdentifier();
@@ -336,8 +344,9 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 
 static void parseVariableAssignment(struct VariableAssign *varAssign){
 #ifdef DEBUG
-	memcpy(&(varAssign->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(varAssign->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	varAssign->self.type = AST_VASSIGN;
 
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	varAssign->target = (struct Identifier*)parseIdentifier();
@@ -360,8 +369,9 @@ static void parseVariableAssignment(struct VariableAssign *varAssign){
 
 static void parseSignalAssignment(struct SignalAssign *sigAssign){
 #ifdef DEBUG
-	memcpy(&(sigAssign->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	sigAssign->self.type = AST_SASSIGN;
 
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	sigAssign->target = (struct Identifier*)parseIdentifier();
@@ -406,8 +416,9 @@ static Dba* parseSequentialStatements();
 
 static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 #ifdef DEBUG
-	memcpy(&(ifStmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(ifStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	ifStmt->self.type = AST_IF;
 
 	if(!parsingElsif){
 		consume(TOKEN_IF, "Expect token if at start of if statement");
@@ -454,8 +465,9 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 
 static void parseForStatement(struct ForStatement* fStmt){
 #ifdef DEBUG
-	memcpy(&(fStmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(fStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	fStmt->self.type = AST_FOR;	
 
 	consume(TOKEN_FOR, "Expect token for at start of for statement");
 	consumeNext(TOKEN_LPAREN, "Expect '(' after for token");	
@@ -480,8 +492,9 @@ static void parseForStatement(struct ForStatement* fStmt){
 
 static void parseLoopStatement(struct LoopStatement* lStmt){
 #ifdef DEBUG
-	memcpy(&(lStmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(lStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	lStmt->self.type = AST_LOOP;
 
 	consume(TOKEN_LOOP, "Expect token loop at start of loop statement");
 	consumeNext(TOKEN_LBRACE, "Expect '{' at start of while body");
@@ -496,8 +509,9 @@ static void parseLoopStatement(struct LoopStatement* lStmt){
 
 static void parseWhileStatement(struct WhileStatement* wStmt){
 #ifdef DEBUG
-	memcpy(&(wStmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(wStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	wStmt->self.type = AST_WHILE;
 
 	consume(TOKEN_WHILE, "Expect token while at start of while statement");
 	consumeNext(TOKEN_LPAREN, "Expect '(' after while token");	
@@ -519,8 +533,9 @@ static void parseWhileStatement(struct WhileStatement* wStmt){
 
 static void parseWaitStatement(struct WaitStatement* wStmt){
 #ifdef DEBUG
-	memcpy(&(wStmt->token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(wStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
+	wStmt->self.type = AST_WAIT;
 
 	consume(TOKEN_WAIT, "Expect token wait at start of wait statement");
 	nextToken();
