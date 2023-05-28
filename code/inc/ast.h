@@ -15,6 +15,7 @@ enum AstNodeType {
 	AST_PROCESS,
 	AST_FOR,
 	AST_IF,
+	AST_ELSIF,
 	AST_LOOP,
 	AST_WAIT,
 	AST_WHILE,
@@ -54,8 +55,8 @@ struct OperationBlock {
 	visitPtr doCloseOp;
 	visitPtr doSpecialOp;
 	astNodeOpPtr doExpressionOp;
-	astNodeOpPtr doProgOp;
 	astNodeOpPtr doBlockArrayOp;
+	astNodeOpPtr doProgOp;
 	astNodeOpPtr doUseStatementOp;
 	astNodeOpPtr doEntityDeclOp;
 	astNodeOpPtr doEntityDeclCloseOp;

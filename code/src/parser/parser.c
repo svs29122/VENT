@@ -418,7 +418,11 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 #ifdef DEBUG
 	memcpy(&(ifStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
-	ifStmt->self.type = AST_IF;
+	if(!parsingElsif){
+		ifStmt->self.type = AST_IF;
+	} else {
+		ifStmt->self.type = AST_ELSIF;	
+	}
 
 	if(!parsingElsif){
 		consume(TOKEN_IF, "Expect token if at start of if statement");

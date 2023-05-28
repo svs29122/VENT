@@ -102,7 +102,7 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	op->doCloseOp(&(ifStmt->self));
 	if(ifStmt->elsif){
 		walkIfStatement(ifStmt->elsif, op);
-		op->doIfStatementElsifOp((void*)ifStmt->elsif);
+		op->doSpecialOp(&(ifStmt->elsif->self));
 	}	
 	if(ifStmt->alternativeStatements){
 		op->doSpecialOp(&(ifStmt->self));
@@ -354,7 +354,6 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 		if(prog->units){
 			walkDesignUnits(prog->units, op);
 		}
-		// TODO: used in FreeProgram
-		op->doProgOp((void*)prog);
+		op->doSpecialOp(&(prog->self));
 	}
 }
