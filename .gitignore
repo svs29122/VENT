@@ -16,6 +16,7 @@ code/sandbox
 code/*.vhdl
 
 docs/*.png
+docs/*.pdf
 
 spec/notes
 
