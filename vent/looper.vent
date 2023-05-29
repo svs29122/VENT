@@ -46,11 +46,11 @@ arch myArch(looper) {
 		}
 
 		for (i : 0 to 5) {
-			report "hit" severity note;
+			//report "hit" severity note;
 		}
 
 		for (op : Opcode) {
-			report "op" severity note;
+			//report "op" severity note;
 		}
 
 	}

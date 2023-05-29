@@ -27,7 +27,7 @@ static struct Expression* parseIdentifier();
 static struct Expression* parseCharLiteral();
 static struct Expression* parseNumericLiteral();
 
-struct ParseRule rules[] = {
+static struct ParseRule rules[] = {
 	[TOKEN_IDENTIFIER] 	= {parseIdentifier		, NULL				, LOWEST_PREC},
 	[TOKEN_CHARLIT] 		= {parseCharLiteral		, NULL				, LOWEST_PREC},
 	[TOKEN_NUMBERLIT] 	= {parseNumericLiteral	, NULL				, LOWEST_PREC},

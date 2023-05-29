@@ -34,8 +34,6 @@ static char* readFile(const char* path){
 	return buffer;
 }
 
-extern bool hadError;
-
 static void doTranspile(char* fileName, bool printProgramTree, bool printTokens){
 		char* ventSrc = readFile(fileName);
 		
