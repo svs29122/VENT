@@ -110,7 +110,15 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
-		case 'd': return checkKeyword(1, 5, size, lit, "ownto", TOKEN_DOWNTO);
+		case 'c': return checkKeyword(1, 3, size, lit, "ase", TOKEN_CASE);
+		case 'd':
+			if(size > 1) {
+				switch(lit[1]){
+					case 'e':	return checkKeyword(2, 5, size, lit, "fault", TOKEN_DEFAULT);
+					case 'o':	return checkKeyword(2, 4, size, lit, "wnto", TOKEN_DOWNTO);
+				}
+			} 
+			break;
 		case 'e': 
 			if(size > 1){
 				switch(lit[1]){
@@ -142,6 +150,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			}
 			break;
 		case 'l': return checkKeyword(1, 3, size, lit, "oop", TOKEN_LOOP);
+		case 'n': return checkKeyword(1, 3, size, lit, "ull", TOKEN_NULL);
 		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
 		case 'r': return checkKeyword(1, 5, size, lit, "eport", TOKEN_REPORT);
 		case 's': 
@@ -163,11 +172,11 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 								case 'l':
 									if(size > 3) return checkKeyword(3, 1, size, lit, "v", TOKEN_STLV);
 									else return TOKEN_STL;
-								case 'r': 
-									if(size > 3) return checkKeyword(3, 3, size, lit, "ing", TOKEN_STRING); 
+								case 'r': return checkKeyword(3, 3, size, lit, "ing", TOKEN_STRING); 
 							}
 						}
 						break;
+					case 'w': return checkKeyword(2, 4, size, lit, "itch", TOKEN_SWITCH);
 				}
 			}
 			break;
@@ -450,6 +459,7 @@ struct Token NextToken() {
 		case '{' : return newToken(TOKEN_LBRACE, ch);
 		case '}' : return newToken(TOKEN_RBRACE, ch);
 		case ',' : return newToken(TOKEN_COMMA, ch);
+		case '|' : return newToken(TOKEN_BAR, ch);
 		case '/' : 
 			if(peek() == '=') return newMultiCharToken(TOKEN_SLASH_EQUAL, 2); 			
 			return newToken(TOKEN_SLASH, ch);
@@ -510,7 +520,10 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_RBRACE:		return "TOKEN_RBRACE";
 		case TOKEN_COMMA:			return "TOKEN_COMMA";
 		case TOKEN_TICK:			return "TOKEN_TICK";
+		case TOKEN_BAR:			return "TOKEN_BAR";
 		case TOKEN_SLASH:			return "TOKEN_SLASH";
+		case TOKEN_TO:				return "TOKEN_TO";
+		case TOKEN_DOWNTO:		return "TOKEN_DOWNTO";
 		case TOKEN_STAR:			return "TOKEN_STAR";
 		case TOKEN_MINUS: 		return "TOKEN_MINUS";
 		case TOKEN_PLUS:	 		return "TOKEN_PLUS";
@@ -560,6 +573,8 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_EOP:	 		return "TOKEN_EOP";
 		case TOKEN_REPORT:	 	return "TOKEN_REPORT";
 		case TOKEN_SEVERITY:	 	return "TOKEN_SEVERITY";
+		case TOKEN_SWITCH:	 	return "TOKEN_SWITCH";
+		case TOKEN_CASE:	 		return "TOKEN_CASE";
 		case TOKEN_ILLEGAL: 		return "TOKEN_ILLEGAL";
 		default: 			return "";
 	}

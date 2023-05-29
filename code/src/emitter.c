@@ -105,7 +105,7 @@ static void emitArchitectureDeclarationClose(struct AstNode* aDecl){
 
 	char* archName = archDecl->archName->value;
 	
-	fprintf(vhdlFile, "\nend architecture %s;\n", archName);
+	fprintf(vhdlFile, "\nend architecture %s;\n\n", archName);
 }
 
 static void emitProcess(struct AstNode* proc){

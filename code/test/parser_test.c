@@ -627,7 +627,7 @@ void TestParseProgram_ProcessWithSwitchCase(CuTest *tc){
 						B <= '1';\n \
 					case 2 to 15:\n \
 						C <= '1';\n \
-					case 16 | 20 | 25;\n \
+					case 16 | 20 | 25:\n \
 						B <= '1';\n \
 						C <= '1';\n \
 						D <= '1';\n \

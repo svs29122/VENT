@@ -39,7 +39,7 @@ $(POBJ):
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall print
+.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall linecount print
 
 help:
 	@echo "  build tvt: 'make tvt' or just 'make'"
@@ -90,6 +90,9 @@ cleanv:
 	rm -f *.vhdl	
 
 cleanall: clean cleand cleant cleanv
+
+linecount:
+	wc -l inc/*.* src/*.* src/parser/*.* main.c
 
 print:
 	@echo $(CFLAGS)

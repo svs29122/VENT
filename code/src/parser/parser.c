@@ -411,8 +411,80 @@ static void parseSequentialAssignment(struct SequentialStatement* seqStmt){
 	}
 }
 
+static struct Choice* parseCaseChoices(){
+	struct Choice* listOfChoices = calloc(1, sizeof(struct Choice));	
+	struct Choice* choice = listOfChoices;
+
+	while(!match(TOKEN_COLON)){
+		if(peek(TOKEN_TO)){
+			choice->as.range = parseRange();	
+		} else if (match(TOKEN_BAR)){
+			choice->nextChoice = calloc(1, sizeof(struct Choice));
+			choice = choice->nextChoice;
+		} else {
+			choice->as.numExpr = parseNumericLiteral();
+		}
+		nextToken();
+	}
+
+	return listOfChoices;
+}
+
 //need this forward declaration because sequentials can nest
 static Dba* parseSequentialStatements();
+
+static Dba* parseCaseStatements(){
+	Dba* cstmts = InitBlockArray(sizeof(struct CaseStatement));
+
+	while(match(TOKEN_CASE) || match(TOKEN_DEFAULT)){
+		struct CaseStatement caseStmt = {0};
+		
+		if(match(TOKEN_CASE)){
+			consume(TOKEN_CASE, "Expect token case at start of case statement");
+		} else {
+			consume(TOKEN_DEFAULT, "Expect token default if no token case in case statement");
+		}
+
+		nextToken();
+		if(!match(TOKEN_COLON)){
+			//TODO: flag error when case statement has no choice before colon?
+			caseStmt.choices = parseCaseChoices();
+		}
+		consume(TOKEN_COLON, "Expect colon after choices in case statement");
+
+		nextToken();
+		caseStmt.statements = parseSequentialStatements();
+		
+		WriteBlockArray(cstmts, (char*)(&caseStmt)); 
+	}
+
+	return cstmts;
+}
+
+static void parseSwitchStatement(struct SwitchStatement* switchStmt){
+#ifdef DEBUG
+	memcpy(&(switchStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	switchStmt->self.type = AST_SWITCH;
+	
+	consume(TOKEN_SWITCH, "Expect token switch at start of switch statement");
+	consumeNext(TOKEN_LPAREN, "Expect '(' after if token");	
+
+	nextToken();
+	if(match(TOKEN_RPAREN)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid expression in switch  statement");
+	} else {
+		switchStmt->expression = parseExpression(LOWEST_PREC);
+	}
+	consume(TOKEN_RPAREN, "Expect ')' after switch expression");
+	consumeNext(TOKEN_LBRACE, "Expect '{' at start of switch statement body");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		switchStmt->cases = parseCaseStatements();
+	}
+	consume(TOKEN_RBRACE, "expect '}' at end of if statement");
+};
 
 static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 #ifdef DEBUG
@@ -494,6 +566,17 @@ static void parseForStatement(struct ForStatement* fStmt){
 	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
 }
 
+static void parseNullStatement(struct NullStatement* nStmt){
+#ifdef DEBUG
+	memcpy(&(nStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	nStmt->self.type = AST_NULL;
+
+	consume(TOKEN_NULL, "Expect token null at start of null statement");
+
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of null statement");	
+}
+
 static void parseLoopStatement(struct LoopStatement* lStmt){
 #ifdef DEBUG
 	memcpy(&(lStmt->self.token), &(p->currToken), sizeof(struct Token));
@@ -552,7 +635,7 @@ static void parseWaitStatement(struct WaitStatement* wStmt){
 static Dba* parseSequentialStatements(){
 	Dba* stmts = InitBlockArray(sizeof(struct SequentialStatement));
 	
-	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_CASE) && !match(TOKEN_DEFAULT) && !match(TOKEN_EOP)){
 		
 		struct SequentialStatement seqStmt = {0};
 		
@@ -577,6 +660,18 @@ static Dba* parseSequentialStatements(){
 			case TOKEN_LOOP: {
 				seqStmt.type = LOOP_STATEMENT;
 				parseLoopStatement(&(seqStmt.as.loopStatement));
+				break;
+			}
+
+			case TOKEN_NULL: {
+				seqStmt.type = NULL_STATEMENT;
+				parseNullStatement(&(seqStmt.as.nullStatement));
+				break;
+			}
+
+			case TOKEN_SWITCH: {
+				seqStmt.type = SWITCH_STATEMENT;
+				parseSwitchStatement(&(seqStmt.as.switchStatement));
 				break;
 			}
 

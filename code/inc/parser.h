@@ -1,6 +1,8 @@
 #ifndef INC_PARSER_H
 #define INC_PARSER_H
 
+#include <stdbool.h>
+
 extern bool hadError;
 
 void SetPrintTokenFlag();

@@ -36,6 +36,8 @@ enum AstNodeType {
 	AST_IF,
 	AST_ELSIF,
 	AST_LOOP,
+	AST_NULL,
+	AST_SWITCH,
 	AST_WAIT,
 	AST_WHILE,
 	AST_SASSIGN,
@@ -176,6 +178,28 @@ struct Declaration {
 	} as;
 };
 
+struct Choice {
+	union {
+		struct Expression* numExpr;
+		struct Range* range;
+	} as;
+	struct Choice* nextChoice;
+};
+
+struct CaseStatement {
+	struct Choice* choices;
+	struct DynamicBlockArray* statements;
+};
+
+struct SwitchStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* expression;
+	struct DynamicBlockArray* cases;	
+	struct CaseStatement defaultCase;
+};
+
 struct ForStatement {
 	struct AstNode self;
 
@@ -200,6 +224,12 @@ struct LoopStatement {
 
 	struct Label* label;
 	struct DynamicBlockArray* statements;
+};
+
+struct NullStatement {
+	struct AstNode self;
+
+	struct Label* label;
 };
 
 struct WhileStatement {
@@ -241,17 +271,20 @@ struct SequentialStatement {
 		FOR_STATEMENT,
 		IF_STATEMENT,
 		LOOP_STATEMENT,
+		NULL_STATEMENT,
 		QSIGNAL_ASSIGNMENT,
+		SWITCH_STATEMENT,
 		VARIABLE_ASSIGNMENT,
 		WAIT_STATEMENT,
 		WHILE_STATEMENT,
-		//CASE,
 	} type;
 	union {
 		struct ForStatement forStatement;
 		struct IfStatement ifStatement;
 		struct LoopStatement loopStatement;
+		struct NullStatement nullStatement;
 		struct SignalAssign signalAssignment;
+		struct SwitchStatement switchStatement;
 		struct VariableAssign variableAssignment;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
@@ -337,11 +370,5 @@ struct Program {
 	struct DynamicBlockArray* useStatements;
 	struct DynamicBlockArray* units;
 };
-
-#define lambda(function_body) \
-({ \
-	void __fn__ function_body \
-			__fn__; \
-})
 
 #endif //INC_AST_H
