@@ -38,6 +38,7 @@ enum AstNodeType {
 	AST_LOOP,
 	AST_NULL,
 	AST_SWITCH,
+	AST_CASE,
 	AST_WAIT,
 	AST_WHILE,
 	AST_SASSIGN,
@@ -179,6 +180,10 @@ struct Declaration {
 };
 
 struct Choice {
+	enum {
+		CHOICE_NUMEXPR,
+		CHOICE_RANGE,
+	} type;
 	union {
 		struct Expression* numExpr;
 		struct Range* range;
@@ -187,7 +192,10 @@ struct Choice {
 };
 
 struct CaseStatement {
+	struct AstNode self;
+
 	struct Choice* choices;
+	bool defaultCase;
 	struct DynamicBlockArray* statements;
 };
 
@@ -197,7 +205,6 @@ struct SwitchStatement {
 	struct Label* label;
 	struct Expression* expression;
 	struct DynamicBlockArray* cases;	
-	struct CaseStatement defaultCase;
 };
 
 struct ForStatement {

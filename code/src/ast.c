@@ -8,7 +8,7 @@ void noExpOp(struct Expression* p){return;}
 void noBlkOp(struct DynamicBlockArray* p){return;}
 
 static void getOperationBlockReady(struct OperationBlock* op){
-	
+
 	// if NULL set to noOp
 	if(!(op->doDefaultOp)) op->doDefaultOp = noOp;
 	if(!(op->doOpenOp)) op->doOpenOp = noOp;
@@ -49,19 +49,66 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 	op->doCloseOp(&(sigDecl->self));
 }
 
-static void walkForStatement(struct ForStatement* fStmt, struct OperationBlock* op){
-	op->doDefaultOp(&(fStmt->self));
-	if(fStmt->parameter){
-		op->doDefaultOp(&(fStmt->parameter->self.root));
+static void walkNullStatement(struct NullStatement* nullStmt, struct OperationBlock* op){
+	op->doDefaultOp(&(nullStmt->self));
+}
+
+static void walkCaseStatements(Dba* cases, struct OperationBlock* op){
+	for(int i=0; i<BlockCount(cases); i++){
+		struct CaseStatement* aCase = (struct CaseStatement*) ReadBlockArray(cases, i);
+		op->doDefaultOp(&(aCase->self));
+
+		struct Choice* choice = aCase->choices;		
+		while(choice != NULL){
+			switch(choice->type) {
+
+				case CHOICE_NUMEXPR: {
+					op->doExpressionOp(choice->as.numExpr);
+					break;
+				}
+	
+				case CHOICE_RANGE: {
+					op->doDefaultOp(&(choice->as.range->self));
+					break;
+				}	
+
+				default:
+					break;
+			}
+			choice = choice->nextChoice;
+		}
+
+		if(aCase->statements){
+			walkSequentialStatements(aCase->statements, op);
+		}
+		op->doCloseOp(&(aCase->self));
 	}
-	if(fStmt->range){
-		op->doDefaultOp(&(fStmt->range->self));
+}
+
+static void walkSwitchStatement(struct SwitchStatement* switchStmt, struct OperationBlock* op){
+	op->doDefaultOp(&(switchStmt->self));
+	if(switchStmt->expression){
+		op->doExpressionOp(switchStmt->expression);
 	}
-	op->doOpenOp(&(fStmt->self));
-	if(fStmt->statements){
-		walkSequentialStatements(fStmt->statements, op);
+	if(switchStmt->cases){
+		walkCaseStatements(switchStmt->cases, op);
 	}
-	op->doCloseOp(&(fStmt->self));
+	op->doCloseOp(&(switchStmt->self));
+}
+
+static void walkForStatement(struct ForStatement* forStmt, struct OperationBlock* op){
+	op->doDefaultOp(&(forStmt->self));
+	if(forStmt->parameter){
+		op->doDefaultOp(&(forStmt->parameter->self.root));
+	}
+	if(forStmt->range){
+		op->doDefaultOp(&(forStmt->range->self));
+	}
+	op->doOpenOp(&(forStmt->self));
+	if(forStmt->statements){
+		walkSequentialStatements(forStmt->statements, op);
+	}
+	op->doCloseOp(&(forStmt->self));
 }
 
 static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* op){
@@ -157,6 +204,16 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 		
 			case LOOP_STATEMENT: {
 				walkLoopStatement(&(qstmt->as.loopStatement), op);
+				break;
+			}
+
+			case NULL_STATEMENT: {
+				walkNullStatement(&(qstmt->as.nullStatement), op);
+				break;
+			}
+
+			case SWITCH_STATEMENT: {
+				walkSwitchStatement(&(qstmt->as.switchStatement), op);
 				break;
 			}
 

@@ -417,14 +417,17 @@ static struct Choice* parseCaseChoices(){
 
 	while(!match(TOKEN_COLON)){
 		if(peek(TOKEN_TO)){
+			choice->type = CHOICE_RANGE;
 			choice->as.range = parseRange();	
-		} else if (match(TOKEN_BAR)){
-			choice->nextChoice = calloc(1, sizeof(struct Choice));
-			choice = choice->nextChoice;
 		} else {
-			choice->as.numExpr = parseNumericLiteral();
+			if(match(TOKEN_BAR)){
+				choice->nextChoice = calloc(1, sizeof(struct Choice));
+				choice = choice->nextChoice;
+			} else {
+				choice->as.numExpr = parseNumericLiteral();
+			}
+			nextToken();
 		}
-		nextToken();
 	}
 
 	return listOfChoices;
@@ -438,11 +441,17 @@ static Dba* parseCaseStatements(){
 
 	while(match(TOKEN_CASE) || match(TOKEN_DEFAULT)){
 		struct CaseStatement caseStmt = {0};
+#ifdef DEBUG
+		memcpy(&(caseStmt.self.token), &(p->currToken), sizeof(struct Token));
+#endif
+		caseStmt.self.type = AST_CASE;
+	
 		
 		if(match(TOKEN_CASE)){
 			consume(TOKEN_CASE, "Expect token case at start of case statement");
 		} else {
 			consume(TOKEN_DEFAULT, "Expect token default if no token case in case statement");
+			caseStmt.defaultCase = true;
 		}
 
 		nextToken();

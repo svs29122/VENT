@@ -81,6 +81,26 @@ static void printLoopStatement(struct AstNode* wStmt){
 	indent++;
 }
 
+static void printSwitchStatement(struct AstNode* swStmt){
+	printf("\e[0;33m""%cSwitchStatement\r\n", shift());
+	indent++;
+}
+
+static void printCaseStatement(struct AstNode* cStmt){
+	struct CaseStatement* caseStatement = (struct CaseStatement*)cStmt;
+
+	if(caseStatement->defaultCase){
+		printf("\e[0;33m""%cDefaultCase\r\n", shift());
+	} else {
+		printf("\e[0;33m""%cCaseStatement\r\n", shift());
+	}
+	indent++;
+}
+
+static void printNullStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cNullStatement\r\n", shift());
+}
+
 static void printWhileStatement(struct AstNode* wStmt){
 	printf("\e[0;33m""%cWhileStatement\r\n", shift());
 	indent++;
@@ -243,6 +263,18 @@ static void printDefault(struct AstNode* node){
 
 		case AST_LOOP:
 			printLoopStatement(node);
+			break;
+
+		case AST_NULL:
+			printNullStatement(node);
+			break;
+
+		case AST_SWITCH:
+			printSwitchStatement(node);
+			break;
+
+		case AST_CASE:
+			printCaseStatement(node);
 			break;
 
 		case AST_WAIT:
