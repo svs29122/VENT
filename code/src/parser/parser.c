@@ -416,7 +416,7 @@ static struct Choice* parseCaseChoices(){
 	struct Choice* choice = listOfChoices;
 
 	while(!match(TOKEN_COLON)){
-		if(peek(TOKEN_TO)){
+		if(peek(TOKEN_TO) || peek(TOKEN_DOWNTO)){
 			choice->type = CHOICE_RANGE;
 			choice->as.range = parseRange();	
 		} else {

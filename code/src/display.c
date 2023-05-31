@@ -73,7 +73,8 @@ static void printIfStatement(struct AstNode* ifStmt){
 }
 
 static void printElseClause(struct AstNode* ifStmt){
-	printf("\e[0;34m""%c/*ElseBlock*/\r\n", shift());
+	printf("\e[0;34m""%c/*Else*/\r\n", shift());
+	indent++;
 }
 
 static void printLoopStatement(struct AstNode* wStmt){
@@ -257,6 +258,7 @@ static void printDefault(struct AstNode* node){
 			printForStatement(node);
 			break;
 
+		case AST_IF:
 		case AST_ELSIF:
 			printIfStatement(node);
 			break;

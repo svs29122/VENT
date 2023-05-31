@@ -127,6 +127,7 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->alternativeStatements){
 		op->doSpecialOp(&(ifStmt->self));
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
+		op->doCloseOp(&(ifStmt->self));
 	}
 }
 
