@@ -36,6 +36,9 @@ enum AstNodeType {
 	AST_IF,
 	AST_ELSIF,
 	AST_LOOP,
+	AST_NEXT,
+	AST_EXIT,
+	AST_RETURN,
 	AST_NULL,
 	AST_SWITCH,
 	AST_CASE,
@@ -50,6 +53,8 @@ enum AstNodeType {
 	AST_DTYPE,
 	AST_RANGE,
 	AST_EXPRESSION,
+	AST_ASSERT,
+	AST_REPORT,
 };
 
 struct AstNode {
@@ -98,6 +103,11 @@ struct NameExpr {
 };
 
 struct CharExpr {
+	struct Expression self;
+	char* literal;
+};
+
+struct StringExpr {
 	struct Expression self;
 	char* literal;
 };
@@ -233,10 +243,33 @@ struct LoopStatement {
 	struct DynamicBlockArray* statements;
 };
 
+struct NextStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Label* loopLabel;
+	struct Expression* condition;
+};
+
+struct ExitStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Label* loopLabel;
+	struct Expression* condition;
+};
+
 struct NullStatement {
 	struct AstNode self;
 
 	struct Label* label;
+};
+
+struct ReturnStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* expression;
 };
 
 struct WhileStatement {
@@ -254,6 +287,32 @@ struct WaitStatement {
 	struct Identifier* sensitivityList;
 	struct Expression* condition;
 	struct Expression* time;
+};
+
+struct SeverityStatement{
+	enum {
+		SEVERITY_NOTE,
+		SEVERITY_WARNING,
+		SEVERITY_ERROR,
+		SEVERITY_FAILURE,
+	} level;
+};
+
+struct ReportStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct StrExpr* stringExpr;
+	struct SeverityStatement severity;
+};
+
+struct AssertStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* condition;
+	struct ReportStatement* reportString;
+	struct SeverityStatement severity;
 };
 
 struct VariableAssign {
@@ -278,23 +337,33 @@ struct SequentialStatement {
 		FOR_STATEMENT,
 		IF_STATEMENT,
 		LOOP_STATEMENT,
+		NEXT_STATEMENT,
+		EXIT_STATEMENT,
+		RETURN_STATEMENT,
 		NULL_STATEMENT,
 		QSIGNAL_ASSIGNMENT,
 		SWITCH_STATEMENT,
 		VARIABLE_ASSIGNMENT,
 		WAIT_STATEMENT,
 		WHILE_STATEMENT,
+		ASSERT_STATEMENT,
+		REPORT_STATEMENT,
 	} type;
 	union {
 		struct ForStatement forStatement;
 		struct IfStatement ifStatement;
 		struct LoopStatement loopStatement;
+		struct NextStatement nextStatement;
+		struct ExitStatement exitStatement;
+		struct ReturnStatement returnStatement;
 		struct NullStatement nullStatement;
 		struct SignalAssign signalAssignment;
 		struct SwitchStatement switchStatement;
 		struct VariableAssign variableAssignment;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
+		struct AssertStatement assertStatement;
+		struct ReportStatement reportStatement;
 	} as;
 };
 

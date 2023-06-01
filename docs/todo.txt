@@ -47,10 +47,9 @@ VI) Overall ToDo
 
 VII) Proc ToDo
 	1) sequential statements to implement:
-		i) wait, assert, report
+		i) wait, assert, report, next, exit, return
 		### DONE ###	ii) signal and variable assignment
 		### DONE ###	iii) if, case for, while, loop
-			- next, exit, return
 		### DONE ###	iv) null
 		v) procedure call
 
