@@ -494,12 +494,12 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 				var myVar stl;\n \
 				if (a>5) {\n \
 				} elsif (b) {\n \
-					if ( c = 255 ) {\n \
+					if ( c == 255 ) {\n \
 						temp <= '0';\n \
-					} elsif (d='0') {\n \
+					} elsif (d=='0') {\n \
 						temp <= '1';\n \
 					} else {\n \
-						if ( q = y ) {\n \
+						if ( q == y ) {\n \
 							temp <= '1';\n \
 						}\n \
 						myVar := '1';\n \
@@ -544,9 +544,9 @@ void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
 					a <= '1';\n \
 				} elsif (b<a){\n \
 					b <= '1';\n \
-					if(c = '1'){\n \
+					if(c == '1'){\n \
 						b <= '0';\n \
-					} elsif (c = '0') {\n \
+					} elsif (c == '0') {\n \
 						b <= '1';\n \
 					} else {\n \
 						b <= '3';\n \
@@ -641,7 +641,33 @@ void TestParseProgram_ProcessWithSwitchCase(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
-	PrintProgram(prog);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithAssert(CuTest *tc){
+	char* input = strdup(" \
+		arch tb(uut){\n \
+			\n \
+			proc(clk) {\n \
+				var test int := 1;\n \
+				while(test != 10){\n \
+					test++;\n \
+					report \"bumping test\" severity note;\n \
+					\n \
+				}\n \
+				assert(test != 11) ;\n \
+				assert(test != 11) report \"Test out of bounds!\" severity error;\n \
+				report \"Test Passed!!!\";\n \
+			}\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	if(!hadError) PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -679,6 +705,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithInfiniteLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithForLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

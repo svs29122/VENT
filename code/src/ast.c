@@ -49,6 +49,26 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 	op->doCloseOp(&(sigDecl->self));
 }
 
+static void walkReportStatement(struct ReportStatement* rStmt, struct OperationBlock* op){
+	op->doDefaultOp(&(rStmt->self));
+	if(rStmt->stringExpr){
+		op->doExpressionOp(rStmt->stringExpr);
+	}
+	if(rStmt->severity.level != SEVERITY_NULL){
+		op->doSpecialOp(&(rStmt->self));
+	}
+	op->doCloseOp(&(rStmt->self));
+}
+
+static void walkAssertStatement(struct AssertStatement* aStmt, struct OperationBlock* op){
+	op->doDefaultOp(&(aStmt->self));
+	if(aStmt->condition){
+		op->doExpressionOp(aStmt->condition);
+	}
+	walkReportStatement(&(aStmt->report), op);
+	op->doCloseOp(&(aStmt->self));
+}
+
 static void walkNullStatement(struct NullStatement* nullStmt, struct OperationBlock* op){
 	op->doDefaultOp(&(nullStmt->self));
 }
@@ -210,6 +230,16 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op){
 
 			case NULL_STATEMENT: {
 				walkNullStatement(&(qstmt->as.nullStatement), op);
+				break;
+			}
+
+			case ASSERT_STATEMENT: {
+				walkAssertStatement(&(qstmt->as.assertStatement), op);
+				break;
+			}
+
+			case REPORT_STATEMENT: {
+				walkReportStatement(&(qstmt->as.reportStatement), op);
 				break;
 			}
 

@@ -24,20 +24,20 @@ void TestNextToken_SingleToken(CuTest *tc){
 }
 
 void TestNextToken_MultipleTokens(CuTest *tc){
-	char* input = strdup("():{},'=/-+*");
+	char* input = strdup("():{},'/-+*");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken[12] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
+	enum TOKEN_TYPE expToken[11] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
 											TOKEN_LBRACE, TOKEN_RBRACE,TOKEN_COMMA,
-											TOKEN_TICK, TOKEN_EQUAL, TOKEN_SLASH,
+											TOKEN_TICK, TOKEN_SLASH,
 											TOKEN_MINUS, TOKEN_PLUS,TOKEN_STAR};
 	
-	char expLiteralArr[12] = {'(', ')', ':', 
+	char expLiteralArr[11] = {'(', ')', ':', 
 								 '{', '}',',',
-								 '\'','=', '/',
+								 '\'', '/',
 								  '-','+', '*'};
 
-	for(int i=0; i<12; i++){
+	for(int i=0; i<11; i++){
 		struct Token nt = NextToken();
 		CuAssertStrEquals(tc, TokenToString(expToken[i]), TokenToString(nt.type)); 
 		free(nt.literal);	

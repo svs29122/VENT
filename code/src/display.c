@@ -98,6 +98,22 @@ static void printCaseStatement(struct AstNode* cStmt){
 	indent++;
 }
 
+static void printAssertStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cAssertStatement\r\n", shift());
+	indent++;
+}
+
+static void printReportStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cReportStatement\r\n", shift());
+	indent++;
+}
+
+static void printSeverity(struct AstNode* nStmt){
+	struct ReportStatement* rStmt = (struct ReportStatement*)nStmt;
+	
+	printf("\e[0;35m""%cSeverity: %d\r\n", shift(), rStmt->severity.level);
+}
+
 static void printNullStatement(struct AstNode* nStmt){
 	printf("\e[0;33m""%cNullStatement\r\n", shift());
 }
@@ -148,6 +164,12 @@ static void printSubExpression(struct Expression* expr){
 		case CHAR_EXPR: {
 			struct CharExpr* chexp = (struct CharExpr*)expr;
 			printf("%s", chexp->literal);
+			break;
+		}
+
+		case STRING_EXPR: {
+			struct StringExpr* stexp = (struct StringExpr*)expr;
+			printf("%s", stexp->literal);
 			break;
 		}
 
@@ -216,6 +238,10 @@ static void printSpecial(struct AstNode* node){
 		case AST_IF:
 			printElseClause(node);
 			break;
+	
+		case AST_REPORT:
+			printSeverity(node);
+			break;
 
 		default:
 			break;
@@ -265,6 +291,14 @@ static void printDefault(struct AstNode* node){
 
 		case AST_LOOP:
 			printLoopStatement(node);
+			break;
+
+		case AST_ASSERT:
+			printAssertStatement(node);
+			break;
+
+		case AST_REPORT:
+			printReportStatement(node);
 			break;
 
 		case AST_NULL:

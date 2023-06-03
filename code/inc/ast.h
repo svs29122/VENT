@@ -291,6 +291,7 @@ struct WaitStatement {
 
 struct SeverityStatement{
 	enum {
+		SEVERITY_NULL = 0,
 		SEVERITY_NOTE,
 		SEVERITY_WARNING,
 		SEVERITY_ERROR,
@@ -302,7 +303,7 @@ struct ReportStatement {
 	struct AstNode self;
 
 	struct Label* label;
-	struct StrExpr* stringExpr;
+	struct Expression* stringExpr;
 	struct SeverityStatement severity;
 };
 
@@ -311,8 +312,7 @@ struct AssertStatement {
 
 	struct Label* label;
 	struct Expression* condition;
-	struct ReportStatement* reportString;
-	struct SeverityStatement severity;
+	struct ReportStatement report;
 };
 
 struct VariableAssign {

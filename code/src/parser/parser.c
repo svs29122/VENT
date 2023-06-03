@@ -169,10 +169,6 @@ static struct Expression* parseExpression(enum Precedence precedence){
 		leftExp = infixRule(leftExp);
 	}
 
-	if(peek(TOKEN_SCOLON)){
-		nextToken();
-	}
-
 	return leftExp;
 }
 
@@ -205,6 +201,22 @@ static struct Expression* parseCharLiteral(){
 	memcpy(chexp->literal, p->currToken.literal, size);
 	
 	return &(chexp->self);
+}
+
+static struct Expression* parseStringLiteral(){
+	struct StringExpr* stexp = calloc(1, sizeof(struct StringExpr));
+#ifdef DEBUG
+	memcpy(&(stexp->self.root.token), &(p->currToken), sizeof(struct Token));
+#endif
+	stexp->self.root.type = AST_EXPRESSION;
+
+	stexp->self.type = STRING_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	stexp->literal = calloc(size, sizeof(char));
+	memcpy(stexp->literal, p->currToken.literal, size);
+	
+	return &(stexp->self);
 }
 
 static struct Expression* parseNumericLiteral(){
@@ -586,6 +598,83 @@ static void parseNullStatement(struct NullStatement* nStmt){
 	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of null statement");	
 }
 
+static struct SeverityStatement parseSeverityStatement(){
+	struct SeverityStatement sevStmt = {0};
+
+	nextToken();
+	switch(p->currToken.type){
+		case TOKEN_NOTE:
+			sevStmt.level = SEVERITY_NOTE;
+			break;
+
+		case TOKEN_WARNING:
+			sevStmt.level = SEVERITY_WARNING;
+			break;
+
+		case TOKEN_ERROR:
+			sevStmt.level = SEVERITY_ERROR;
+			break;
+
+		case TOKEN_FAILURE:
+			sevStmt.level = SEVERITY_FAILURE;
+			break;
+
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid Severity level in severity statement");
+			break;
+	}	
+	
+	return sevStmt;
+}
+
+static void parseReportStatement(struct ReportStatement* rStmt){
+#ifdef DEBUG
+	memcpy(&(rStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	rStmt->self.type = AST_REPORT;
+
+	consume(TOKEN_REPORT, "Expect token report at start of report statement");
+
+	nextToken();
+	if(!match(TOKEN_STRINGLIT)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect string literalin report statement");
+	}
+	rStmt->stringExpr = parseStringLiteral();
+
+	nextToken();
+	if(match(TOKEN_SEVERITY)){
+		rStmt->severity = parseSeverityStatement();
+		nextToken();
+	}
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of report statement");	
+}
+
+static void parseAssertStatement(struct AssertStatement * aStmt){
+#ifdef DEBUG
+	memcpy(&(aStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	aStmt->self.type = AST_ASSERT;
+
+	consume(TOKEN_ASSERT, "Expect token assert at start of assert statement");
+	consumeNext(TOKEN_LPAREN, "Expect '(' after assert token");	
+
+	nextToken();
+	if(match(TOKEN_RPAREN)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid condition in assert statement");
+	} else {
+		aStmt->condition = parseExpression(LOWEST_PREC);
+	}
+	consume(TOKEN_RPAREN, "Expect ')' after assert condition");	
+
+	nextToken();
+	if(match(TOKEN_REPORT)){
+		parseReportStatement(&(aStmt->report));
+	}	
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of assert statement");	
+}
+
 static void parseLoopStatement(struct LoopStatement* lStmt){
 #ifdef DEBUG
 	memcpy(&(lStmt->self.token), &(p->currToken), sizeof(struct Token));
@@ -675,6 +764,18 @@ static Dba* parseSequentialStatements(){
 			case TOKEN_NULL: {
 				seqStmt.type = NULL_STATEMENT;
 				parseNullStatement(&(seqStmt.as.nullStatement));
+				break;
+			}
+
+			case TOKEN_ASSERT: {
+				seqStmt.type = ASSERT_STATEMENT;
+				parseAssertStatement(&(seqStmt.as.assertStatement));
+				break;
+			}
+
+			case TOKEN_REPORT: {
+				seqStmt.type = REPORT_STATEMENT;
+				parseReportStatement(&(seqStmt.as.reportStatement));
 				break;
 			}
 

@@ -25,11 +25,13 @@ struct ParseRule{
 static struct Expression* parseBinary(struct Expression* expr);
 static struct Expression* parseIdentifier();
 static struct Expression* parseCharLiteral();
+static struct Expression* parseStringLiteral();
 static struct Expression* parseNumericLiteral();
 
 static struct ParseRule rules[] = {
 	[TOKEN_IDENTIFIER] 	= {parseIdentifier		, NULL				, LOWEST_PREC},
 	[TOKEN_CHARLIT] 		= {parseCharLiteral		, NULL				, LOWEST_PREC},
+	[TOKEN_STRINGLIT] 	= {parseStringLiteral	, NULL				, LOWEST_PREC},
 	[TOKEN_NUMBERLIT] 	= {parseNumericLiteral	, NULL				, LOWEST_PREC},
 	[TOKEN_AND] 			= {NULL						, parseBinary		, LOGICAL_PREC},
 	[TOKEN_OR]	 			= {NULL						, parseBinary		, LOGICAL_PREC},

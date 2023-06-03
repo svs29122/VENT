@@ -8,5 +8,4 @@ static void error(int line, char* where, const char* message){
 	hadError = true;
 }
 
-
 #endif //INC_ERROR_H
