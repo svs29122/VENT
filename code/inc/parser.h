@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-extern bool hadError;
+bool ThereWasAnError();
 
 void SetPrintTokenFlag();
 

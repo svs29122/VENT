@@ -560,8 +560,8 @@ void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -583,6 +583,7 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -608,6 +609,7 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -641,6 +643,7 @@ void TestParseProgram_ProcessWithSwitchCase(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -667,7 +670,8 @@ void TestParseProgram_ProcessWithAssert(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
-	if(!hadError) PrintProgram(prog);
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

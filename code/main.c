@@ -43,7 +43,7 @@ static void doTranspile(char* fileName, bool printProgramTree, bool printTokens)
 		TranspileProgram(prog, fileName);
 
 		printf("Transpilation complete");
-		if(hadError){
+		if(ThereWasAnError()){
 			printf(" with errors");
 		}
 		printf("!\r\n");		
