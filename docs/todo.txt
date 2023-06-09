@@ -1,6 +1,7 @@
 This is a TODO list for VENT work:
 
 I) Lexer ToDo
+	1) Build out robust handling for Illegal tokens
 
 II) AST ToDo
 ### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
@@ -24,10 +25,12 @@ III) Parser ToDo
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
+
 IV) Transpiler ToDo
 	1) Need to add validation to transpile_test.c
 		i) we currently only produce a file with 0 asserting or checking
 	
+
 V) Refactor ToDo
 ### DONE ###  	1) Go through Valgrind output and fix memory leaks
 ### DONE ###  	2) Go add static keyword to any variables that should be static
@@ -51,8 +54,15 @@ VII) Proc ToDo
 		### DONE ###	ii) signal and variable assignment
 		### DONE ###	iii) if, case for, while, loop
 		### DONE ###	iv) null
-		v) assert, report
+		### DONE ###	v) assert, report
 		vi) next, exit
 		vii) procedure call, return
 
+
+VIII) Components
+	0) Labels
+	1) Declaration
+	2) Instantiation/Mapping
+	3) Generic mapping
+	4) Direct entity instantation
 
