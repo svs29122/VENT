@@ -1,7 +1,7 @@
 # Makefile for building parser
 #
 # Notes:
-#			parser object files get linked together into single uint parser_mod.o 
+#			parser object files get linked together into a single unit 'parser_mod.o'
 #
 
 IDIR=../../inc

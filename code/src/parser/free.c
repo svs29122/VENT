@@ -39,6 +39,17 @@ static void freeDataType(struct AstNode* dtype){
 	free(dt);
 }
 
+static void freeCaseChoices(struct AstNode* caseStmt){
+	struct CaseStatement* cstmt = (struct CaseStatement*)caseStmt;
+	
+	struct Choice* choice = cstmt->choices;
+	while(choice != NULL){
+		struct Choice* prev = choice;
+		choice = choice->nextChoice;
+		free(prev);
+	}
+}
+
 static void freeAssignmentOp(struct AstNode* vAssign){
 	char* op = ((struct VariableAssign*)vAssign)->op;
 	free(op);
@@ -89,6 +100,13 @@ static void freeExpression(struct Expression* expr){
          free(ident);
          break;
       }
+	
+		case STRING_EXPR: {
+			struct StringExpr* strexp = (struct StringExpr*)expr;
+			free(strexp->literal);
+			free(strexp);
+			break;
+		}
 
       default:
          break;
@@ -107,6 +125,10 @@ static void freeRange(struct AstNode* rng){
 static void freeSpecial(struct AstNode* node){
 
 	switch(node->type){
+
+		case AST_CASE:
+			freeCaseChoices(node);
+			break;
 
 		case AST_PROGRAM:
 			freeProgram(node);

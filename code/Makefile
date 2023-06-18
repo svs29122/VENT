@@ -48,9 +48,16 @@ help:
 	@echo "  build and run unit tests: 'make runtest'"
 	@echo "  "
 	@echo "  clean output products: 'make clean'"
+	@echo "  clean everything: 'make cleanall'"
 	@echo "  clean debug output products: 'make cleand'"
 	@echo "  clean test output products: 'make cleant'"
-	@echo "  clean everything: 'make cleanall'"
+	@echo "  clean parser intermediate products: 'make cleanp'"
+	@echo "  clean vhdl output products: 'make cleanv'"
+	@echo "  "
+	@echo "  check for memory leaks: 'make checkleaks'"
+	@echo "  display number of lines in source code: 'make linecount'"
+	@echo "  display active items in todo list: 'make todo'"
+	@echo "  print flags 'make print'"
 
 debug: 
 	$(MAKE) debug -C ./src/parser

@@ -97,12 +97,14 @@ static void walkCaseStatements(Dba* cases, struct OperationBlock* op){
 			}
 			choice = choice->nextChoice;
 		}
+		op->doSpecialOp(&(aCase->self));
 
 		if(aCase->statements){
 			walkSequentialStatements(aCase->statements, op);
 		}
 		op->doCloseOp(&(aCase->self));
 	}
+	op->doBlockArrayOp(cases);
 }
 
 static void walkSwitchStatement(struct SwitchStatement* switchStmt, struct OperationBlock* op){
