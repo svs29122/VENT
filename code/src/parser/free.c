@@ -1,5 +1,9 @@
-#ifndef INC_FREE_H
-#define INC_FREE_H
+#include <stdlib.h>
+#include <stddef.h>
+
+#include <ast.h>
+
+#include "parser_internal.h"
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
@@ -162,8 +166,5 @@ void FreeProgram(struct Program* prog){
 	
 	WalkTree(prog, &opBlk);
 
-	if(p->currToken.literal) free(p->currToken.literal);
-	if(p->peekToken.literal) free(p->peekToken.literal);
+	freeParserTokens();
 }
-
-#endif // INC_FREE_H

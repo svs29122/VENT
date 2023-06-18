@@ -109,19 +109,14 @@
 #include <ast.h>
 #include <lexer.h>
 
-struct parser {
-	bool printTokenFlag;
-	struct Token currToken;
-	struct Token peekToken;
-} static parser;
-
-static struct parser *p = &parser;
-
 //private includes
+#include "parser_internal.h"
 #include "error.h"
 #include "expression.h"
 #include "utils.h"
-#include "free.h"
+
+static struct parser parser;
+struct parser *p = &parser;
 
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
@@ -139,7 +134,12 @@ static void initParser(){
 	p->peekToken = NextToken();	
 }
 
-static struct Token nextToken(){	
+void freeParserTokens(){
+	if(p->currToken.literal) free(p->currToken.literal);
+	if(p->peekToken.literal) free(p->peekToken.literal);
+}
+
+void nextToken(){	
 	
 	if(p->printTokenFlag) PrintToken(p->currToken);
 
@@ -147,6 +147,10 @@ static struct Token nextToken(){
 
 	p->currToken = p->peekToken;
 	p->peekToken = NextToken();
+}
+
+struct ParseRule* getRule(enum TOKEN_TYPE type){
+   return &rules[type];
 }
 
 static struct Expression* parseExpression(enum Precedence precedence){

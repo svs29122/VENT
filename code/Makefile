@@ -15,7 +15,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = display.o lexer.o dba.o ast.o emitter.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_POBJ = parser.o
+_POBJ = parser_mod.o
 POBJ ?= $(patsubst %,$(ODIR)/%,$(_POBJ))
 
 MAIN=$(ODIR)/main.o
@@ -83,13 +83,16 @@ cleand:
 	rm -fr $(DDIR)
 	rm -f tvt_d
 
+cleanp:
+	$(MAKE) -C ./src/parser clean 
+
 cleant:
 	$(MAKE) -C ./test clean 
 
 cleanv:
 	rm -f *.vhdl	
 
-cleanall: clean cleand cleant cleanv
+cleanall: clean cleand cleanp cleant cleanv
 
 linecount:
 	wc -l inc/*.* src/*.* src/parser/*.* main.c
