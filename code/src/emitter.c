@@ -10,8 +10,9 @@ static FILE* vhdlFile;
 struct expressionStatus {
 	bool incoming;
 	bool close;
+	bool ignore;
 	char assignmentOp[4];
-} static eStat = {false, false, 0};
+} static eStat = {false, false, false, 0};
 
 static int indent = 1;
 static char emitIndent(){
@@ -134,15 +135,53 @@ static void emitWhileLoop(struct AstNode* wstmt){
 	}
 }
 
-static void emitWhileLoopOpen(struct AstNode* wstmt){
+static void emitForLoop(struct AstNode* fstmt){
+
+	struct ForStatement* forStat = (struct ForStatement*)fstmt;	
+	fprintf(vhdlFile, "%cfor", emitIndent());
+	indent++;
+}
+
+static void emitLoopOpen(struct AstNode* wstmt){
 	fprintf(vhdlFile, " loop\n");
 }
 
-static void emitWhileLoopClose(struct AstNode* wstmt){
+static void emitLoopClose(struct AstNode* wstmt){
 	indent--;
 	fprintf(vhdlFile, "%cend loop;\n\n", emitIndent());
 }
 
+static void emitLoop(struct AstNode* lstmt){
+	fprintf(vhdlFile, "%cloop\n", emitIndent());
+	indent++;
+}
+
+//TODO: may need to do Asserts and Reports together
+static void emitAssert(struct AstNode* astmt){
+	struct AssertStatement* aStat = (struct AssertStatement*)astmt;
+
+	fprintf(vhdlFile, "%cassert", emitIndent());
+	//fprintf(vhdlFile, ";\n");
+}
+
+static void emitReport(struct AstNode* rstmt){
+	struct ReportStatement* rStat = (struct ReportStatement*)rstmt;	
+
+	fprintf(vhdlFile, "%creport ", emitIndent());
+
+	if(rStat->stringExpr){
+		eStat.ignore = true;
+
+		struct StringExpr* stexp = (struct StringExpr*)rStat->stringExpr;
+		fprintf(vhdlFile, "%s", stexp->literal);
+	}
+
+	if(rStat->severity.level != SEVERITY_NULL) {
+		fprintf(vhdlFile, " severity;\n");
+	} else {
+		fprintf(vhdlFile, ";\n");
+	}
+}
 
 static void emitSignalDeclaration(struct AstNode* sDecl){
 	struct SignalDecl* sigDecl = (struct SignalDecl*) sDecl;
@@ -194,6 +233,28 @@ static void emitVariableAssignment(struct AstNode* vAssign){
 		eStat.close = true;
 		memcpy(eStat.assignmentOp, ":=", 3);
 	}
+
+	if(varAssign->op){
+		if(strcmp(varAssign->op, "+=") == 0) {
+			fprintf(vhdlFile, ":= %s +", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		} else if(strcmp(varAssign->op, "++") == 0) {
+			fprintf(vhdlFile, ":= %s + 1;\n", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		} else if(strcmp(varAssign->op, "-=") == 0) {
+			fprintf(vhdlFile, ":= %s -", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		} else if(strcmp(varAssign->op, "--") == 0) {
+			fprintf(vhdlFile, ":= %s + 1;\n", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		} else if(strcmp(varAssign->op, "*=") == 0) {
+			fprintf(vhdlFile, ":= %s *", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		} else if(strcmp(varAssign->op, "/=") == 0) {
+			fprintf(vhdlFile, ":= %s /", target);
+			memcpy(eStat.assignmentOp, "\0", 1);
+		}
+	}
 }
 
 static void emitDataType(struct AstNode* dtype){
@@ -221,6 +282,12 @@ static void emitSubExpression(struct Expression* expr){
 		case CHAR_EXPR: {
 			struct CharExpr* chexp = (struct CharExpr*)expr;
 			fprintf(vhdlFile, "'%s'", chexp->literal);
+			break;
+		}
+
+		case STRING_EXPR: {
+			struct StringExpr* stexp = (struct StringExpr*)expr;
+			fprintf(vhdlFile, "%s", stexp->literal);
 			break;
 		}
 
@@ -252,11 +319,13 @@ static void emitSubExpression(struct Expression* expr){
 }
 
 static void emitExpression(struct Expression* expr){
-	
-	fprintf(vhdlFile, "%s ", eStat.assignmentOp);	
-	emitSubExpression(expr);
-	if(eStat.close){
-		fprintf(vhdlFile, ";\n");
+
+	if(eStat.ignore != true) {	
+		fprintf(vhdlFile, "%s ", eStat.assignmentOp);	
+		emitSubExpression(expr);
+		if(eStat.close){
+			fprintf(vhdlFile, ";\n");
+		}
 	}
 
 	memset(&eStat, 0, sizeof(struct expressionStatus));
@@ -279,7 +348,9 @@ static void emitClose(struct AstNode* node){
 			break;
 		
 		case AST_WHILE:
-			emitWhileLoopClose(node);
+		case AST_FOR:
+		case AST_LOOP:
+			emitLoopClose(node);
 			break;
 		
 		default:
@@ -304,7 +375,8 @@ static void emitOpen(struct AstNode* node){
 			break;
 		
 		case AST_WHILE:
-			emitWhileLoopOpen(node);
+		case AST_FOR:
+			emitLoopOpen(node);
 			break;
 		
 		default:
@@ -316,6 +388,9 @@ static void emitDefault(struct AstNode* node){
 
 	switch(node->type){
 		
+      case AST_PROGRAM:
+         break;
+
       case AST_USE:
          emitUseStatement(node);
          break;
@@ -337,12 +412,14 @@ static void emitDefault(struct AstNode* node){
          break;
 
       case AST_FOR:
+			emitForLoop(node);
          break;
 
       case AST_ELSIF:
          break;
 
       case AST_LOOP:
+			emitLoop(node);
          break;
 
       case AST_WAIT:
@@ -382,7 +459,16 @@ static void emitDefault(struct AstNode* node){
       case AST_RANGE:
          break;
 
+      case AST_ASSERT:
+			emitAssert(node);
+         break;
+
+      case AST_REPORT:
+			emitReport(node);
+         break;
+
       default:
+			printf("Unhandled AST node: %d\r\n", node->type); 
          break;
 	}
 }

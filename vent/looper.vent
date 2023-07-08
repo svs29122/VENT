@@ -43,16 +43,22 @@ arch myArch(looper) {
 			count := count + 1;
 			count += 1;
 			count++; 
+			count := count - 1;
+			count -= 1;
+			count--; 
+			count *= 2;
+			count /= 4;
 		}
+	}
 
+	proc () {
 		for (i : 0 to 5) {
-			//report "hit" severity note;
+			assert (i != 10) report "i out of bounds" severity error;
 		}
 
 		for (op : Opcode) {
-			//report "op" severity note;
+			report "op" severity note;
 		}
-
 	}
 } 
 

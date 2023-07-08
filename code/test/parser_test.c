@@ -574,6 +574,8 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 			\n \
 			proc() {\n \
 				loop {\n \
+					count := count + 1;\n \
+					count += 1;\n \
 					count++;\n \
 				}\n \
 			}\n \
@@ -610,7 +612,7 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
-	//PrintProgram(prog);
+	PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

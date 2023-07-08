@@ -37,7 +37,6 @@ Dead Keywords
 port
 begin
 end
-loop
 generate
 
 
