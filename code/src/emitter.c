@@ -156,6 +156,10 @@ static void emitLoop(struct AstNode* lstmt){
 	indent++;
 }
 
+static void emitWait(struct AstNode* wstmt){
+	fprintf(vhdlFile, "%cwait;\n", emitIndent());
+}
+
 //TODO: may need to do Asserts and Reports together
 static void emitAssert(struct AstNode* astmt){
 	struct AssertStatement* aStat = (struct AssertStatement*)astmt;
@@ -423,6 +427,7 @@ static void emitDefault(struct AstNode* node){
          break;
 
       case AST_WAIT:
+			emitWait(node);
          break;
 
     	case AST_WHILE:

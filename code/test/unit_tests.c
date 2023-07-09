@@ -15,6 +15,7 @@ CuSuite* ParserTestGetSuite();
 CuSuite* TranspileTestGetSuite();
 
 void RunAllTests(void){
+	printf("*** Running VENT unit tests ***\r\n");
 	CuString *output = CuStringNew();
 	CuSuite* masterSuite = CuSuiteNew();
 
