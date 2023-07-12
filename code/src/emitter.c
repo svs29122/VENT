@@ -136,9 +136,9 @@ static void emitWhileLoop(struct AstNode* wstmt){
 }
 
 static void emitForLoop(struct AstNode* fstmt){
-
 	struct ForStatement* forStat = (struct ForStatement*)fstmt;	
-	fprintf(vhdlFile, "%cfor", emitIndent());
+
+	fprintf(vhdlFile, "%cfor %s in ", emitIndent(), forStat->parameter->value);
 	indent++;
 }
 
@@ -180,11 +180,29 @@ static void emitReport(struct AstNode* rstmt){
 		fprintf(vhdlFile, "%s", stexp->literal);
 	}
 
-	if(rStat->severity.level != SEVERITY_NULL) {
-		fprintf(vhdlFile, " severity;\n");
-	} else {
-		fprintf(vhdlFile, ";\n");
+	int severity = rStat->severity.level;
+	if(severity != SEVERITY_NULL) {
+		fprintf(vhdlFile, " severity ");
+		
+		switch(severity) {
+			case SEVERITY_NOTE:
+				fprintf(vhdlFile, "note");
+				break;
+			case SEVERITY_WARNING:
+				fprintf(vhdlFile, "warning");
+				break;
+			case SEVERITY_ERROR:
+				fprintf(vhdlFile, "error");
+				break;
+			case SEVERITY_FAILURE:
+				fprintf(vhdlFile, "failure");
+				break;
+			default:
+				break;
+		}
 	}
+
+	fprintf(vhdlFile, ";\n");
 }
 
 static void emitSignalDeclaration(struct AstNode* sDecl){
@@ -278,6 +296,17 @@ static void emitDataType(struct AstNode* dtype){
 	}
 }
 
+static void emitBinaryOp(char* bop){
+	
+	if(strcmp(bop, "!=") == 0){
+		fprintf(vhdlFile, " /= ");
+	} else if (strcmp(bop, "==") == 0) {
+		fprintf(vhdlFile, " = ");
+	} else {
+		fprintf(vhdlFile, " %s ", bop);
+	}
+}
+
 static void emitSubExpression(struct Expression* expr){
 	enum ExpressionType type = expr->type;
 
@@ -304,7 +333,7 @@ static void emitSubExpression(struct Expression* expr){
 		case BINARY_EXPR:{
           struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
           emitSubExpression(bexp->left);
-          fprintf(vhdlFile, " %s ", bexp->op);
+			 emitBinaryOp(bexp->op);
           emitSubExpression(bexp->right);
           break;
        }
@@ -320,6 +349,21 @@ static void emitSubExpression(struct Expression* expr){
        default:
           break;
 	}	
+}
+
+static void emitRange(struct AstNode* rstmt){
+	struct Range* range = (struct Range*)rstmt;
+
+	if(range->left) {
+		emitSubExpression(range->left);
+	}
+
+	if(range->right) {
+		if(range->descending) fprintf(vhdlFile, " downto ");
+		else fprintf(vhdlFile, " to ");
+
+		emitSubExpression(range->right);
+	}
 }
 
 static void emitExpression(struct Expression* expr){
@@ -462,6 +506,7 @@ static void emitDefault(struct AstNode* node){
          break;
 
       case AST_RANGE:
+			emitRange(node);
          break;
 
       case AST_ASSERT:

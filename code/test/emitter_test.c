@@ -175,7 +175,6 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
 				wait; \
    		} \
 		 \
-			/* \
    		proc () { \
       		for (i : 0 to 5) { \
          		assert (i != 10) report \"i out of bounds\" severity error; \
@@ -186,7 +185,6 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
       		} \
 				wait; \
    		} \
-			*/ \
 		} \
 			 \
 		");
