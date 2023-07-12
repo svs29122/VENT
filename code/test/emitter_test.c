@@ -128,12 +128,87 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_WithLoops(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		\
+		ent looper { \
+			a -> stl; \
+			b -> stl; \
+			y <- stl; \
+		} \
+		\
+		arch behavioral(looper) { \
+ 		\
+   		sig temp1 stl; \
+   		sig temp2 stl := '1'; \
+      	sig s stl := '0'; \
+ 			\
+   		y <= '0'; \
+ 			\
+   		proc () { \
+      		var i int; \
+   			\
+      		while(i < 10){ \
+         		s <= '1'; \
+         		i := i + 2; \
+      		}    \
+      		wait; \
+   		}    \
+		}  \
+		\
+		\
+		arch myArch(looper) { \
+   		proc () { \
+      		var count int := 0;     \
+				 \
+      		loop { \
+         		count := count + 1; \
+         		count += 1; \
+         		count++;  \
+         		count := count - 1; \
+         		count -= 1; \
+         		count--;  \
+         		count *= 2; \
+         		count /= 4; \
+      		} \
+				wait; \
+   		} \
+		 \
+			/* \
+   		proc () { \
+      		for (i : 0 to 5) { \
+         		assert (i != 10) report \"i out of bounds\" severity error; \
+      		} \
+		 		\
+      		for (op : Opcode) { \
+         		report \"op\" severity note; \
+      		} \
+				wait; \
+   		} \
+			*/ \
+		} \
+			 \
+		");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+	checkForSyntaxErrors(tc);
+	
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 CuSuite* TranspileTestGetSuite(){
 
 	CuSuite* suite = CuSuiteNew();
 
 	SUITE_ADD_TEST(suite, TestTranspileProgram_Simple);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithProcess);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithLoops);
 
 	return suite;
 }
