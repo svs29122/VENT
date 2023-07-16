@@ -26,7 +26,7 @@ struct OperationBlock {
 void WalkTree(struct Program* prog, struct OperationBlock* op);
 
 enum AstNodeType {
-	AST_PROGRAM = 0,
+	AST_PROGRAM = 1,
 	AST_USE,
 	AST_ENTITY,
 	AST_ARCHITECTURE,
@@ -36,10 +36,17 @@ enum AstNodeType {
 	AST_IF,
 	AST_ELSIF,
 	AST_LOOP,
+	AST_NEXT,
+	AST_EXIT,
+	AST_RETURN,
+	AST_NULL,
+	AST_SWITCH,
+	AST_CASE,
 	AST_WAIT,
 	AST_WHILE,
 	AST_SASSIGN,
 	AST_VASSIGN,
+	AST_TDECL,
 	AST_SDECL,
 	AST_VDECL,
 	AST_IDENTIFIER,
@@ -47,6 +54,8 @@ enum AstNodeType {
 	AST_DTYPE,
 	AST_RANGE,
 	AST_EXPRESSION,
+	AST_ASSERT,
+	AST_REPORT,
 };
 
 struct AstNode {
@@ -99,6 +108,11 @@ struct CharExpr {
 	char* literal;
 };
 
+struct StringExpr {
+	struct Expression self;
+	char* literal;
+};
+
 struct NumExpr {
 	struct Expression self;
 	char* literal;
@@ -138,6 +152,18 @@ struct PortMode {
 	char* value;
 };
 
+struct ExpressionList {
+	struct Expression* expression;
+	struct ExpressionList* next;
+};
+
+struct TypeDecl {
+	struct AstNode self;
+	
+	struct Identifier* typeName;
+	struct ExpressionList *enumList;
+}; 
+
 struct VariableDecl {
 	struct AstNode self;
 
@@ -162,7 +188,7 @@ struct Declaration {
 		//PROCEDURE_BODY,
 		//FUNCTION_DECLARATION,
 		//FUNCTION_BODY,
-		//TYPE_DECLARATION,
+		TYPE_DECLARATION,
 		//SUBTYPE_DECLARATION,
 		//CONSTANT_DECLARATION,
 		SIGNAL_DECLARATION,
@@ -171,9 +197,38 @@ struct Declaration {
 		//COMPONENT_DECLARATION,
 	} type;
 	union {
+		struct TypeDecl typeDeclaration;
 		struct SignalDecl signalDeclaration;
 		struct VariableDecl variableDeclaration;
 	} as;
+};
+
+struct Choice {
+	enum {
+		CHOICE_NUMEXPR,
+		CHOICE_RANGE,
+	} type;
+	union {
+		struct Expression* numExpr;
+		struct Range* range;
+	} as;
+	struct Choice* nextChoice;
+};
+
+struct CaseStatement {
+	struct AstNode self;
+
+	struct Choice* choices;
+	bool defaultCase;
+	struct DynamicBlockArray* statements;
+};
+
+struct SwitchStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* expression;
+	struct DynamicBlockArray* cases;	
 };
 
 struct ForStatement {
@@ -202,6 +257,35 @@ struct LoopStatement {
 	struct DynamicBlockArray* statements;
 };
 
+struct NextStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Label* loopLabel;
+	struct Expression* condition;
+};
+
+struct ExitStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Label* loopLabel;
+	struct Expression* condition;
+};
+
+struct NullStatement {
+	struct AstNode self;
+
+	struct Label* label;
+};
+
+struct ReturnStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* expression;
+};
+
 struct WhileStatement {
 	struct AstNode self;
 
@@ -217,6 +301,32 @@ struct WaitStatement {
 	struct Identifier* sensitivityList;
 	struct Expression* condition;
 	struct Expression* time;
+};
+
+struct SeverityStatement{
+	enum {
+		SEVERITY_NULL = 0,
+		SEVERITY_NOTE,
+		SEVERITY_WARNING,
+		SEVERITY_ERROR,
+		SEVERITY_FAILURE,
+	} level;
+};
+
+struct ReportStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* stringExpr;
+	struct SeverityStatement severity;
+};
+
+struct AssertStatement {
+	struct AstNode self;
+
+	struct Label* label;
+	struct Expression* condition;
+	struct ReportStatement report;
 };
 
 struct VariableAssign {
@@ -241,20 +351,33 @@ struct SequentialStatement {
 		FOR_STATEMENT,
 		IF_STATEMENT,
 		LOOP_STATEMENT,
+		NEXT_STATEMENT,
+		EXIT_STATEMENT,
+		RETURN_STATEMENT,
+		NULL_STATEMENT,
 		QSIGNAL_ASSIGNMENT,
+		SWITCH_STATEMENT,
 		VARIABLE_ASSIGNMENT,
 		WAIT_STATEMENT,
 		WHILE_STATEMENT,
-		//CASE,
+		ASSERT_STATEMENT,
+		REPORT_STATEMENT,
 	} type;
 	union {
 		struct ForStatement forStatement;
 		struct IfStatement ifStatement;
 		struct LoopStatement loopStatement;
+		struct NextStatement nextStatement;
+		struct ExitStatement exitStatement;
+		struct ReturnStatement returnStatement;
+		struct NullStatement nullStatement;
 		struct SignalAssign signalAssignment;
+		struct SwitchStatement switchStatement;
 		struct VariableAssign variableAssignment;
 		struct WaitStatement waitStatement;
 		struct WhileStatement whileStatement;
+		struct AssertStatement assertStatement;
+		struct ReportStatement reportStatement;
 	} as;
 };
 
@@ -337,11 +460,5 @@ struct Program {
 	struct DynamicBlockArray* useStatements;
 	struct DynamicBlockArray* units;
 };
-
-#define lambda(function_body) \
-({ \
-	void __fn__ function_body \
-			__fn__; \
-})
 
 #endif //INC_AST_H

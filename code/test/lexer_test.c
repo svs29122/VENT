@@ -7,6 +7,15 @@
 
 #include "cutest.h"
 
+static void testNextToken(CuTest* tc,  enum TOKEN_TYPE type, char* lit){
+
+	struct Token tk = NextToken();
+	if(lit != NULL)
+		CuAssertStrEquals(tc, lit, tk.literal); 
+	CuAssertStrEquals(tc, TokenToString(type), TokenToString(tk.type));
+	free(tk.literal);	
+}
+
 void TestNextToken_SingleToken(CuTest *tc){
 	char* input = strdup("+");
 	InitLexer(input);
@@ -24,20 +33,20 @@ void TestNextToken_SingleToken(CuTest *tc){
 }
 
 void TestNextToken_MultipleTokens(CuTest *tc){
-	char* input = strdup("():{},'=/-+*");
+	char* input = strdup("():{},'/-+*");
 	InitLexer(input);
 
-	enum TOKEN_TYPE expToken[12] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
+	enum TOKEN_TYPE expToken[11] = {TOKEN_LPAREN,TOKEN_RPAREN,TOKEN_COLON, 
 											TOKEN_LBRACE, TOKEN_RBRACE,TOKEN_COMMA,
-											TOKEN_TICK, TOKEN_EQUAL, TOKEN_SLASH,
+											TOKEN_TICK, TOKEN_SLASH,
 											TOKEN_MINUS, TOKEN_PLUS,TOKEN_STAR};
 	
-	char expLiteralArr[12] = {'(', ')', ':', 
+	char expLiteralArr[11] = {'(', ')', ':', 
 								 '{', '}',',',
-								 '\'','=', '/',
+								 '\'', '/',
 								  '-','+', '*'};
 
-	for(int i=0; i<12; i++){
+	for(int i=0; i<11; i++){
 		struct Token nt = NextToken();
 		CuAssertStrEquals(tc, TokenToString(expToken[i]), TokenToString(nt.type)); 
 		free(nt.literal);	
@@ -344,6 +353,27 @@ void TestNextToken_ProcessDeclaration (CuTest *tc){
 	free(input);
 }
 
+void TestNextToken_Type (CuTest *tc){
+	char* input = strdup("type state { start, stop, pause, continue, end };");
+	InitLexer(input);
+
+	testNextToken(tc, TOKEN_TYPE, "type");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "state");
+	testNextToken(tc, TOKEN_LBRACE, "{");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "start");
+	testNextToken(tc, TOKEN_COMMA, ",");
+	testNextToken(tc, TOKEN_IDENTIFIER, "stop");
+	testNextToken(tc, TOKEN_COMMA, ",");
+	testNextToken(tc, TOKEN_IDENTIFIER, "pause");
+	testNextToken(tc, TOKEN_COMMA, ",");
+	testNextToken(tc, TOKEN_IDENTIFIER, "continue");
+	testNextToken(tc, TOKEN_COMMA, ",");
+	testNextToken(tc, TOKEN_IDENTIFIER, "end");
+	testNextToken(tc, TOKEN_RBRACE, "}");	
+	
+	free(input);
+}
+
 void TestNextToken_ (CuTest *tc){
 	char* input = strdup("");
 	InitLexer(input);
@@ -371,6 +401,7 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_EntityDeclaration);
 	SUITE_ADD_TEST(suite, TestNextToken_PortDirections);
 	SUITE_ADD_TEST(suite, TestNextToken_ProcessDeclaration);
+	SUITE_ADD_TEST(suite, TestNextToken_Type);
 
 	return suite;
 }

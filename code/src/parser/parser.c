@@ -109,19 +109,14 @@
 #include <ast.h>
 #include <lexer.h>
 
-struct parser {
-	bool printTokenFlag;
-	struct Token currToken;
-	struct Token peekToken;
-} static parser;
-
-static struct parser *p = &parser;
-
 //private includes
+#include "parser_internal.h"
 #include "error.h"
 #include "expression.h"
 #include "utils.h"
-#include "free.h"
+
+static struct parser parser;
+struct parser *p = &parser;
 
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
@@ -139,7 +134,12 @@ static void initParser(){
 	p->peekToken = NextToken();	
 }
 
-static struct Token nextToken(){	
+void freeParserTokens(){
+	if(p->currToken.literal) free(p->currToken.literal);
+	if(p->peekToken.literal) free(p->peekToken.literal);
+}
+
+void nextToken(){	
 	
 	if(p->printTokenFlag) PrintToken(p->currToken);
 
@@ -147,6 +147,10 @@ static struct Token nextToken(){
 
 	p->currToken = p->peekToken;
 	p->peekToken = NextToken();
+}
+
+struct ParseRule* getRule(enum TOKEN_TYPE type){
+   return &rules[type];
 }
 
 static struct Expression* parseExpression(enum Precedence precedence){
@@ -167,10 +171,6 @@ static struct Expression* parseExpression(enum Precedence precedence){
 		}
 
 		leftExp = infixRule(leftExp);
-	}
-
-	if(peek(TOKEN_SCOLON)){
-		nextToken();
 	}
 
 	return leftExp;
@@ -205,6 +205,22 @@ static struct Expression* parseCharLiteral(){
 	memcpy(chexp->literal, p->currToken.literal, size);
 	
 	return &(chexp->self);
+}
+
+static struct Expression* parseStringLiteral(){
+	struct StringExpr* stexp = calloc(1, sizeof(struct StringExpr));
+#ifdef DEBUG
+	memcpy(&(stexp->self.root.token), &(p->currToken), sizeof(struct Token));
+#endif
+	stexp->self.root.type = AST_EXPRESSION;
+
+	stexp->self.type = STRING_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	stexp->literal = calloc(size, sizeof(char));
+	memcpy(stexp->literal, p->currToken.literal, size);
+	
+	return &(stexp->self);
 }
 
 static struct Expression* parseNumericLiteral(){
@@ -321,6 +337,55 @@ static void parseVariableDeclaration(struct VariableDecl* decl){
 	consume(TOKEN_SCOLON, "Expect semicolon at end of variable declaration");
 }
 
+struct ExpressionList* parseEnumerationList(){
+
+	struct ExpressionList* elist = calloc(1, sizeof(struct ExpressionList));
+	struct ExpressionList *currList = elist;
+	
+	while(!match(TOKEN_RBRACE)){
+				
+		struct Token prevToken = copyToken(p->currToken);
+		
+		struct Expression* curr = parseExpression(LOWEST_PREC);	
+		if(curr == NULL) return NULL;
+
+		if(curr->type != NAME_EXPR && curr->type != CHAR_EXPR){
+			error(prevToken.lineNumber, prevToken.literal, "Expect only identifier or char literal in type enumeration list");
+		} else {
+			currList->expression = curr;
+		}
+		destroyToken(prevToken);
+	
+		if(!match(TOKEN_RBRACE)) {		
+			consume(TOKEN_COMMA, "Expect comma after expression in expression list");
+			nextToken();
+
+			currList->next = calloc(1, sizeof(struct ExpressionList));
+			currList = currList->next; 
+		}
+	}
+		
+	return elist;
+}
+
+static void parseTypeDeclaration(struct TypeDecl* decl){
+	decl->self.type = AST_TDECL;
+
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after type keyword in type declaration");
+	decl->typeName = (struct Identifier*)parseIdentifier();
+	consumeNext(TOKEN_LBRACE, "Expect { after typeName in type declaration");
+
+	nextToken();
+	if(match(TOKEN_RBRACE)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect non-empty enumeration list in type declaration");
+	} else {
+		decl->enumList = parseEnumerationList();
+	}
+
+	consume(TOKEN_RBRACE, "Expect } after last enum in type declaration");
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of type declaration");
+}
+
 static void parseSignalDeclaration(struct SignalDecl* decl){
 	decl->self.type = AST_SDECL;
 
@@ -411,8 +476,89 @@ static void parseSequentialAssignment(struct SequentialStatement* seqStmt){
 	}
 }
 
+static struct Choice* parseCaseChoices(){
+	struct Choice* listOfChoices = calloc(1, sizeof(struct Choice));	
+	struct Choice* choice = listOfChoices;
+
+	while(!match(TOKEN_COLON)){
+		if(peek(TOKEN_TO) || peek(TOKEN_DOWNTO)){
+			choice->type = CHOICE_RANGE;
+			choice->as.range = parseRange();	
+		} else {
+			if(match(TOKEN_BAR)){
+				choice->nextChoice = calloc(1, sizeof(struct Choice));
+				choice = choice->nextChoice;
+			} else {
+				choice->as.numExpr = parseNumericLiteral();
+			}
+			nextToken();
+		}
+	}
+
+	return listOfChoices;
+}
+
 //need this forward declaration because sequentials can nest
 static Dba* parseSequentialStatements();
+
+static Dba* parseCaseStatements(){
+	Dba* cstmts = InitBlockArray(sizeof(struct CaseStatement));
+
+	while(match(TOKEN_CASE) || match(TOKEN_DEFAULT)){
+		struct CaseStatement caseStmt = {0};
+#ifdef DEBUG
+		memcpy(&(caseStmt.self.token), &(p->currToken), sizeof(struct Token));
+#endif
+		caseStmt.self.type = AST_CASE;
+	
+		
+		if(match(TOKEN_CASE)){
+			consume(TOKEN_CASE, "Expect token case at start of case statement");
+		} else {
+			consume(TOKEN_DEFAULT, "Expect token default if no token case in case statement");
+			caseStmt.defaultCase = true;
+		}
+
+		nextToken();
+		if(!match(TOKEN_COLON)){
+			//TODO: flag error when case statement has no choice before colon?
+			caseStmt.choices = parseCaseChoices();
+		}
+		consume(TOKEN_COLON, "Expect colon after choices in case statement");
+
+		nextToken();
+		caseStmt.statements = parseSequentialStatements();
+		
+		WriteBlockArray(cstmts, (char*)(&caseStmt)); 
+	}
+
+	return cstmts;
+}
+
+static void parseSwitchStatement(struct SwitchStatement* switchStmt){
+#ifdef DEBUG
+	memcpy(&(switchStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	switchStmt->self.type = AST_SWITCH;
+	
+	consume(TOKEN_SWITCH, "Expect token switch at start of switch statement");
+	consumeNext(TOKEN_LPAREN, "Expect '(' after if token");	
+
+	nextToken();
+	if(match(TOKEN_RPAREN)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid expression in switch  statement");
+	} else {
+		switchStmt->expression = parseExpression(LOWEST_PREC);
+	}
+	consume(TOKEN_RPAREN, "Expect ')' after switch expression");
+	consumeNext(TOKEN_LBRACE, "Expect '{' at start of switch statement body");
+
+	nextToken();
+	if(!match(TOKEN_RBRACE)){
+		switchStmt->cases = parseCaseStatements();
+	}
+	consume(TOKEN_RBRACE, "expect '}' at end of if statement");
+};
 
 static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 #ifdef DEBUG
@@ -494,6 +640,94 @@ static void parseForStatement(struct ForStatement* fStmt){
 	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
 }
 
+static void parseNullStatement(struct NullStatement* nStmt){
+#ifdef DEBUG
+	memcpy(&(nStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	nStmt->self.type = AST_NULL;
+
+	consume(TOKEN_NULL, "Expect token null at start of null statement");
+
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of null statement");	
+}
+
+static struct SeverityStatement parseSeverityStatement(){
+	struct SeverityStatement sevStmt = {0};
+
+	nextToken();
+	switch(p->currToken.type){
+		case TOKEN_NOTE:
+			sevStmt.level = SEVERITY_NOTE;
+			break;
+
+		case TOKEN_WARNING:
+			sevStmt.level = SEVERITY_WARNING;
+			break;
+
+		case TOKEN_ERROR:
+			sevStmt.level = SEVERITY_ERROR;
+			break;
+
+		case TOKEN_FAILURE:
+			sevStmt.level = SEVERITY_FAILURE;
+			break;
+
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid Severity level in severity statement");
+			break;
+	}	
+	
+	return sevStmt;
+}
+
+static void parseReportStatement(struct ReportStatement* rStmt){
+#ifdef DEBUG
+	memcpy(&(rStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	rStmt->self.type = AST_REPORT;
+
+	consume(TOKEN_REPORT, "Expect token report at start of report statement");
+
+	nextToken();
+	if(!match(TOKEN_STRINGLIT)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect string literalin report statement");
+	}
+	rStmt->stringExpr = parseStringLiteral();
+
+	nextToken();
+	if(match(TOKEN_SEVERITY)){
+		rStmt->severity = parseSeverityStatement();
+		nextToken();
+	}
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of report statement");	
+}
+
+static void parseAssertStatement(struct AssertStatement * aStmt){
+#ifdef DEBUG
+	memcpy(&(aStmt->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	aStmt->self.type = AST_ASSERT;
+
+	consume(TOKEN_ASSERT, "Expect token assert at start of assert statement");
+	consumeNext(TOKEN_LPAREN, "Expect '(' after assert token");	
+
+	nextToken();
+	if(match(TOKEN_RPAREN)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid condition in assert statement");
+	} else {
+		aStmt->condition = parseExpression(LOWEST_PREC);
+	}
+	consume(TOKEN_RPAREN, "Expect ')' after assert condition");	
+
+	nextToken();
+	if(match(TOKEN_REPORT)){
+		parseReportStatement(&(aStmt->report));
+	}	
+
+	consume(TOKEN_SCOLON, "Expect semicolon at end of assert statement");	
+}
+
 static void parseLoopStatement(struct LoopStatement* lStmt){
 #ifdef DEBUG
 	memcpy(&(lStmt->self.token), &(p->currToken), sizeof(struct Token));
@@ -552,7 +786,7 @@ static void parseWaitStatement(struct WaitStatement* wStmt){
 static Dba* parseSequentialStatements(){
 	Dba* stmts = InitBlockArray(sizeof(struct SequentialStatement));
 	
-	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_CASE) && !match(TOKEN_DEFAULT) && !match(TOKEN_EOP)){
 		
 		struct SequentialStatement seqStmt = {0};
 		
@@ -577,6 +811,30 @@ static Dba* parseSequentialStatements(){
 			case TOKEN_LOOP: {
 				seqStmt.type = LOOP_STATEMENT;
 				parseLoopStatement(&(seqStmt.as.loopStatement));
+				break;
+			}
+
+			case TOKEN_NULL: {
+				seqStmt.type = NULL_STATEMENT;
+				parseNullStatement(&(seqStmt.as.nullStatement));
+				break;
+			}
+
+			case TOKEN_ASSERT: {
+				seqStmt.type = ASSERT_STATEMENT;
+				parseAssertStatement(&(seqStmt.as.assertStatement));
+				break;
+			}
+
+			case TOKEN_REPORT: {
+				seqStmt.type = REPORT_STATEMENT;
+				parseReportStatement(&(seqStmt.as.reportStatement));
+				break;
+			}
+
+			case TOKEN_SWITCH: {
+				seqStmt.type = SWITCH_STATEMENT;
+				parseSwitchStatement(&(seqStmt.as.switchStatement));
 				break;
 			}
 
@@ -612,6 +870,7 @@ static Dba* parseProcessBodyDeclarations(){
 		struct Declaration decl = {0};
 
 		switch(p->currToken.type){
+			// TODO: VHDL does not support SIGNAL declarations in process declaration zone need to remove this and fix tests
 			case TOKEN_SIG: {
 				decl.type = SIGNAL_DECLARATION;
 				parseSignalDeclaration(&(decl.as.signalDeclaration));
@@ -703,6 +962,12 @@ static Dba* parseArchBodyDeclarations(){
 		struct Declaration decl = {0};
 
 		switch(p->currToken.type){
+			case TOKEN_TYPE: {
+				decl.type = TYPE_DECLARATION;
+				parseTypeDeclaration(&(decl.as.typeDeclaration));
+				break;
+			}
+
 			case TOKEN_SIG: {
 				decl.type = SIGNAL_DECLARATION;
 				parseSignalDeclaration(&(decl.as.signalDeclaration));
@@ -710,7 +975,7 @@ static Dba* parseArchBodyDeclarations(){
 			}
 
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid declaration statement in architecture declarations");
 				break;
 		}
 

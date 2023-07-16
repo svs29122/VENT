@@ -15,7 +15,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = display.o lexer.o dba.o ast.o emitter.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_POBJ = parser.o
+_POBJ = parser_mod.o
 POBJ ?= $(patsubst %,$(ODIR)/%,$(_POBJ))
 
 MAIN=$(ODIR)/main.o
@@ -39,7 +39,7 @@ $(POBJ):
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanall print
+.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall linecount todo print
 
 help:
 	@echo "  build tvt: 'make tvt' or just 'make'"
@@ -48,9 +48,16 @@ help:
 	@echo "  build and run unit tests: 'make runtest'"
 	@echo "  "
 	@echo "  clean output products: 'make clean'"
+	@echo "  clean everything: 'make cleanall'"
 	@echo "  clean debug output products: 'make cleand'"
 	@echo "  clean test output products: 'make cleant'"
-	@echo "  clean everything: 'make cleanall'"
+	@echo "  clean parser intermediate products: 'make cleanp'"
+	@echo "  clean vhdl output products: 'make cleanv'"
+	@echo "  "
+	@echo "  check for memory leaks: 'make checkleaks'"
+	@echo "  display number of lines in source code: 'make linecount'"
+	@echo "  display active items in todo list: 'make todo'"
+	@echo "  print flags 'make print'"
 
 debug: 
 	$(MAKE) debug -C ./src/parser
@@ -83,10 +90,22 @@ cleand:
 	rm -fr $(DDIR)
 	rm -f tvt_d
 
+cleanp:
+	$(MAKE) -C ./src/parser clean 
+
 cleant:
 	$(MAKE) -C ./test clean 
-	
-cleanall: clean cleand cleant 
+
+cleanv:
+	rm -f *.vhdl	
+
+cleanall: clean cleand cleanp cleant cleanv
+
+linecount:
+	wc -l inc/*.* src/*.* src/parser/*.* main.c
+
+todo:
+	@clear && grep -v '###' ../docs/todo.txt | grep -v -e ^[[:space:]]*\$
 
 print:
 	@echo $(CFLAGS)

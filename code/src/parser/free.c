@@ -1,5 +1,9 @@
-#ifndef INC_FREE_H
-#define INC_FREE_H
+#include <stdlib.h>
+#include <stddef.h>
+
+#include <ast.h>
+
+#include "parser_internal.h"
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
@@ -33,6 +37,17 @@ static void freeDataType(struct AstNode* dtype){
 	if(dt->value) free(dt->value);
 
 	free(dt);
+}
+
+static void freeCaseChoices(struct AstNode* caseStmt){
+	struct CaseStatement* cstmt = (struct CaseStatement*)caseStmt;
+	
+	struct Choice* choice = cstmt->choices;
+	while(choice != NULL){
+		struct Choice* prev = choice;
+		choice = choice->nextChoice;
+		free(prev);
+	}
 }
 
 static void freeAssignmentOp(struct AstNode* vAssign){
@@ -85,6 +100,13 @@ static void freeExpression(struct Expression* expr){
          free(ident);
          break;
       }
+	
+		case STRING_EXPR: {
+			struct StringExpr* strexp = (struct StringExpr*)expr;
+			free(strexp->literal);
+			free(strexp);
+			break;
+		}
 
       default:
          break;
@@ -100,9 +122,26 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
+static void freeExpressionList(struct AstNode* tdecl){
+	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
+
+	struct ExpressionList *curr, *prev;
+	curr = typeDecl->enumList;
+
+	while(curr){
+		prev = curr;
+		curr = curr->next;
+		free(prev);
+	}
+}
+
 static void freeSpecial(struct AstNode* node){
 
 	switch(node->type){
+
+		case AST_CASE:
+			freeCaseChoices(node);
+			break;
 
 		case AST_PROGRAM:
 			freeProgram(node);
@@ -114,6 +153,10 @@ static void freeSpecial(struct AstNode* node){
 
 		case AST_VASSIGN:
 			freeAssignmentOp(node);
+			break;
+
+		case AST_TDECL:
+			freeExpressionList(node);
 			break;
 
 		default:
@@ -162,8 +205,5 @@ void FreeProgram(struct Program* prog){
 	
 	WalkTree(prog, &opBlk);
 
-	if(p->currToken.literal) free(p->currToken.literal);
-	if(p->peekToken.literal) free(p->peekToken.literal);
+	freeParserTokens();
 }
-
-#endif // INC_FREE_H

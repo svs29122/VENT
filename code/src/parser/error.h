@@ -1,12 +1,9 @@
 #ifndef INC_ERROR_H
 #define INC_ERROR_H
 
-bool hadError;
+#include <stdbool.h>
 
-void error(int line, char* where, const char* message){
-	fprintf(stderr, "\e[0;31m[line %d] Error at \'%s\': %s\n\e[0m", line, where, message);
-	hadError = true;
-}
-
+void error(int line, char* where, const char* message);
+bool ThereWasAnError(void);
 
 #endif //INC_ERROR_H

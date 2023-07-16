@@ -1,0 +1,34 @@
+/*
+	component.vent
+*/
+
+
+arch behavioral(uut){
+	
+	comp counter {
+		clk -> stl;
+		reset -> stl;
+		upDown -> stl := '0';
+		Q <- stlv(3 downto 0);
+	}
+
+// ...
+
+	C1: counter map (clk32, rst, open, count);
+
+	C2: counter map (
+		clk => clk32,
+		reset => rst,
+		upDown => open,
+		Q(3) => Q2MHz,
+		Q(2) => open,
+		Q(1 downto 0) => Cnt2
+	);
+
+	C3: count map(*);
+
+	C4: ent work.counter(rtl) map (clk32, rst, open, count);
+
+	C5: ent counter map (clk32, rst, open, count);
+
+}

@@ -1,6 +1,7 @@
 This is a TODO list for VENT work:
 
 I) Lexer ToDo
+	1) Build out robust handling for Illegal tokens
 
 II) AST ToDo
 ### DONE ###	1) Implement variable size arrays for syntax tree units requiring it
@@ -10,23 +11,26 @@ II) AST ToDo
 	### DONE ###	ii) wondering if I could use a set of callbacks e.g. handleEntityDecl() that the caller sets to keep it generic 
 			 ###			- this way a caller wanting to print could set handleEntityDecl equal to some print function, while the parser may set handleEntityDecl equal to some function that frees mallocs
 			 ###			- this is something like the well-known strategy pattern 
-	### DONE ###	4) Refactor Walk Tree into readable units
+### DONE ###	4) Refactor Walk Tree into readable units
+### DONE ### 5) Refactor Operation Block into a small set of operations that depend on the client checking the node type
 			
 			
 III) Parser ToDo
 ### DONE ###	1) Unit tests for basic parser functions
-### DONE ###		i) flesh this out fully for ents before adding much more functionality
-		ii) thinking I want a set of tests for the public API and for the private
-			e.g. parser_test.c for public
-				 parser_test_internals.c for private
+	### DONE ###		i) flesh this out fully for ents before adding much more functionality
+	### DROPPED ### ii) thinking I want a set of tests for the public API and for the private
+					###	e.g. parser_test.c for public
+					###		 parser_test_internals.c for private
 ### DONE ###   2) Implement error strategy e.g. the wrong token follows an ent decl
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	
+
 IV) Transpiler ToDo
 	1) Need to add validation to transpile_test.c
 		i) we currently only produce a file with 0 asserting or checking
 	
+
 V) Refactor ToDo
 ### DONE ###  	1) Go through Valgrind output and fix memory leaks
 ### DONE ###  	2) Go add static keyword to any variables that should be static
@@ -46,11 +50,19 @@ VI) Overall ToDo
 
 VII) Proc ToDo
 	1) sequential statements to implement:
-		i) wait, assert, report
-		### DONE ###  		ii) signal and variable assignment
-		iii) if, case for, while, loop
-			- next, exit, return
-		iv) null
-		v) procedure call
+		i) wait
+		### DONE ###	ii) signal and variable assignment
+		### DONE ###	iii) if, case for, while, loop
+		### DONE ###	iv) null
+		### DONE ###	v) assert, report
+		vi) next, exit
+		vii) procedure call, return
 
+
+VIII) Components
+	0) Labels
+	1) Declaration
+	2) Instantiation/Mapping
+	3) Generic mapping
+	4) Direct entity instantation
 

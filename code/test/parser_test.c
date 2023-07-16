@@ -494,12 +494,12 @@ void TestParseProgram_ProcessWithIf(CuTest *tc){
 				var myVar stl;\n \
 				if (a>5) {\n \
 				} elsif (b) {\n \
-					if ( c = 255 ) {\n \
+					if ( c == 255 ) {\n \
 						temp <= '0';\n \
-					} elsif (d='0') {\n \
+					} elsif (d=='0') {\n \
 						temp <= '1';\n \
 					} else {\n \
-						if ( q = y ) {\n \
+						if ( q == y ) {\n \
 							temp <= '1';\n \
 						}\n \
 						myVar := '1';\n \
@@ -544,9 +544,9 @@ void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
 					a <= '1';\n \
 				} elsif (b<a){\n \
 					b <= '1';\n \
-					if(c = '1'){\n \
+					if(c == '1'){\n \
 						b <= '0';\n \
-					} elsif (c = '0') {\n \
+					} elsif (c == '0') {\n \
 						b <= '1';\n \
 					} else {\n \
 						b <= '3';\n \
@@ -560,8 +560,8 @@ void TestParseProgram_ProcessWithNestedIf(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	struct Process* proc = getProcess(getConStatement(getArch(getDesignUnit(prog, 0)), 0));
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -574,6 +574,8 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 			\n \
 			proc() {\n \
 				loop {\n \
+					count := count + 1;\n \
+					count += 1;\n \
 					count++;\n \
 				}\n \
 			}\n \
@@ -583,6 +585,7 @@ void TestParseProgram_ProcessWithInfiniteLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -608,6 +611,94 @@ void TestParseProgram_ProcessWithForLoop(CuTest *tc){
 
 	struct Program* prog = ParseProgram(input);
 
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithSwitchCase(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(switcher){\n \
+			\n \
+			proc() {\n \
+				switch(ADDRESS) {\n \
+					case 0:\n \
+						A <= '1';\n \
+					case 1:\n \
+						A <= '1';\n \
+						B <= '1';\n \
+					case 2 to 15:\n \
+						C <= '1';\n \
+					case 16 | 10 downto 20 | 25:\n \
+						B <= '1';\n \
+						C <= '1';\n \
+						D := '1';\n \
+					default:\n \
+						null;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithAssert(CuTest *tc){
+	char* input = strdup(" \
+		arch tb(uut){\n \
+			\n \
+			proc(clk) {\n \
+				var test int := 1;\n \
+				while(test != 10){\n \
+					test++;\n \
+					report \"bumping test\" severity note;\n \
+					\n \
+				}\n \
+				assert(test != 11) ;\n \
+				assert(test != 11) report \"Test out of bounds!\" severity error;\n \
+				report \"Test Passed!!!\";\n \
+			}\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ProcessWithTypeDefinition(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(looper){\n \
+			\n \
+			sig temp stl;\n \
+			type OpCode {Idle, Start, Stop, Clear};\n \
+			type myLogic {'0', '1', '2', 'F'};\n \
+			\n \
+			proc() {\n \
+				for (op : Opcode) {\n \
+					temp <= op;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
 
 	FreeProgram(prog);
@@ -645,6 +736,9 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithNestedIf);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithInfiniteLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithForLoop);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithTypeDefinition);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

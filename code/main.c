@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 
 #include <parser.h>
@@ -34,8 +33,6 @@ static char* readFile(const char* path){
 	return buffer;
 }
 
-extern bool hadError;
-
 static void doTranspile(char* fileName, bool printProgramTree, bool printTokens){
 		char* ventSrc = readFile(fileName);
 		
@@ -46,7 +43,7 @@ static void doTranspile(char* fileName, bool printProgramTree, bool printTokens)
 		TranspileProgram(prog, fileName);
 
 		printf("Transpilation complete");
-		if(hadError){
+		if(ThereWasAnError()){
 			printf(" with errors");
 		}
 		printf("!\r\n");		

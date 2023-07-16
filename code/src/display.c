@@ -52,6 +52,11 @@ static void printPortDecl(struct AstNode* pDecl){
 	indent++;
 }
 
+static void printTypeDecl(struct AstNode* tDecl){
+	printf("\e[0;32m""%cTypeDecl\r\n", shift());
+	indent++;
+}
+
 static void printSignalDecl(struct AstNode* sDecl){
 	printf("\e[0;32m""%cSignalDecl\r\n", shift());
 	indent++;
@@ -73,12 +78,49 @@ static void printIfStatement(struct AstNode* ifStmt){
 }
 
 static void printElseClause(struct AstNode* ifStmt){
-	printf("\e[0;34m""%c/*ElseBlock*/\r\n", shift());
+	printf("\e[0;34m""%c/*Else*/\r\n", shift());
+	indent++;
 }
 
 static void printLoopStatement(struct AstNode* wStmt){
 	printf("\e[0;33m""%cLoopStatement\r\n", shift());
 	indent++;
+}
+
+static void printSwitchStatement(struct AstNode* swStmt){
+	printf("\e[0;33m""%cSwitchStatement\r\n", shift());
+	indent++;
+}
+
+static void printCaseStatement(struct AstNode* cStmt){
+	struct CaseStatement* caseStatement = (struct CaseStatement*)cStmt;
+
+	if(caseStatement->defaultCase){
+		printf("\e[0;33m""%cDefaultCase\r\n", shift());
+	} else {
+		printf("\e[0;33m""%cCaseStatement\r\n", shift());
+	}
+	indent++;
+}
+
+static void printAssertStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cAssertStatement\r\n", shift());
+	indent++;
+}
+
+static void printReportStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cReportStatement\r\n", shift());
+	indent++;
+}
+
+static void printSeverity(struct AstNode* nStmt){
+	struct ReportStatement* rStmt = (struct ReportStatement*)nStmt;
+	
+	printf("\e[0;35m""%cSeverity: %d\r\n", shift(), rStmt->severity.level);
+}
+
+static void printNullStatement(struct AstNode* nStmt){
+	printf("\e[0;33m""%cNullStatement\r\n", shift());
 }
 
 static void printWhileStatement(struct AstNode* wStmt){
@@ -127,6 +169,12 @@ static void printSubExpression(struct Expression* expr){
 		case CHAR_EXPR: {
 			struct CharExpr* chexp = (struct CharExpr*)expr;
 			printf("%s", chexp->literal);
+			break;
+		}
+
+		case STRING_EXPR: {
+			struct StringExpr* stexp = (struct StringExpr*)expr;
+			printf("%s", stexp->literal);
 			break;
 		}
 
@@ -195,6 +243,10 @@ static void printSpecial(struct AstNode* node){
 		case AST_IF:
 			printElseClause(node);
 			break;
+	
+		case AST_REPORT:
+			printSeverity(node);
+			break;
 
 		default:
 			break;
@@ -237,12 +289,33 @@ static void printDefault(struct AstNode* node){
 			printForStatement(node);
 			break;
 
+		case AST_IF:
 		case AST_ELSIF:
 			printIfStatement(node);
 			break;
 
 		case AST_LOOP:
 			printLoopStatement(node);
+			break;
+
+		case AST_ASSERT:
+			printAssertStatement(node);
+			break;
+
+		case AST_REPORT:
+			printReportStatement(node);
+			break;
+
+		case AST_NULL:
+			printNullStatement(node);
+			break;
+
+		case AST_SWITCH:
+			printSwitchStatement(node);
+			break;
+
+		case AST_CASE:
+			printCaseStatement(node);
 			break;
 
 		case AST_WAIT:
@@ -259,6 +332,10 @@ static void printDefault(struct AstNode* node){
 
 		case AST_VASSIGN:
 			printVariableAssign(node);
+			break;
+	
+		case AST_TDECL:
+			printTypeDecl(node);
 			break;
 
 		case AST_SDECL:

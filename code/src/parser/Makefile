@@ -1,12 +1,14 @@
-# Makefile for building and running UnitTests
+# Makefile for building parser
 #
-# NOTE:
-# 	- running "clean" target will clean up all test objects, but leave behind app objects
-# 		~ e.g. lexer_test.o will be cleaned but lexer.o will stick around
-
+# Notes:
+#			parser object files get linked together into a single unit 'parser_mod.o'
+#
 
 IDIR=../../inc
 SDIR=./
+
+LODIR?=$(SDIR)/obj
+
 ODIR?=$(SDIR)../obj
 DDIR=$(SDIR)../obj_d
 
@@ -14,18 +16,29 @@ CC=gcc
 CFLAGS=-I$(IDIR)
 DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 
-_DEP = parser.h ast.h dba.h lexer.h token.h error.h 
+_DEP = parser.h ast.h dba.h lexer.h token.h error.h util.h expression.h 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = parser.o
-OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
+_OBJ = parser.o free.o error.o utils.o
+OBJ ?= $(patsubst %,$(LODIR)/%,$(_OBJ))
 
-all: $(OBJ)
+OBJ_FINAL = $(ODIR)/parser_mod.o
+
+all: $(OBJ_FINAL)
+
+$(OBJ_FINAL): $(OBJ) | $(ODIR)
+	ld -r $^ -o $@
+
+$(LODIR):
+	mkdir -p $@
 
 $(ODIR):
 	mkdir -p $@
 
-$(ODIR)/parser.o: parser.c | $(ODIR)
+$(DDIR):
+	mkdir -p $@
+
+$(LODIR)/%.o: %.c | $(LODIR)
 	$(CC) -c $^ $(CFLAGS) -o $@ 
  
 .PHONY: clean all
@@ -34,8 +47,8 @@ debug:
 	$(MAKE) all CFLAGS="$(DFLAGS)" ODIR=$(DDIR)
 
 clean:
-	rm $(ODIR)/parser.o
-	rm $(ODIR)/error.o
+	rm -rf $(LODIR)
+	rm -f $(ODIR)/parser_mod.o
 
 cleand:
 	$(MAKE) clean ODIR=$(DDIR)

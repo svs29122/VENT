@@ -9,6 +9,7 @@ IDIR=../inc
 SDIR=../src
 TDIR=.
 SODIR=$(SDIR)/obj
+PODIR=$(SDIR)/parser/obj
 TODIR=$(TDIR)/obj
 
 CC=gcc
@@ -20,7 +21,7 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 _OBJ = dba.o lexer.o display.o ast.o emitter.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
-_POBJ = parser.o
+_POBJ = parser_mod.o
 POBJS ?= $(patsubst %,$(SODIR)/%,$(_POBJ))
 
 _TOBJ = parser_test.o lexer_test.o unit_tests.o cutest.o emitter_test.o dba_test.o
@@ -55,6 +56,7 @@ runtest: UnitTests
 clean:
 	rm -fr $(TODIR)
 	rm -fr $(SODIR)
+	rm -fr $(PODIR)
 	rm -f UnitTests
 
 print:
