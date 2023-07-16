@@ -11,6 +11,9 @@ bool peek(enum TOKEN_TYPE type);
 void consume(enum TOKEN_TYPE type, const char* msg);
 void consumeNext(enum TOKEN_TYPE type, const char* msg);
 
+struct Token copyToken(struct Token oldToken);
+void destroyToken(struct Token thisToken);
+
 bool validDataType();
 bool validAssignment();
 

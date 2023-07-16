@@ -337,6 +337,55 @@ static void parseVariableDeclaration(struct VariableDecl* decl){
 	consume(TOKEN_SCOLON, "Expect semicolon at end of variable declaration");
 }
 
+struct ExpressionList* parseEnumerationList(){
+
+	struct ExpressionList* elist = calloc(1, sizeof(struct ExpressionList));
+	struct ExpressionList *currList = elist;
+	
+	while(!match(TOKEN_RBRACE)){
+				
+		struct Token prevToken = copyToken(p->currToken);
+		
+		struct Expression* curr = parseExpression(LOWEST_PREC);	
+		if(curr == NULL) return NULL;
+
+		if(curr->type != NAME_EXPR && curr->type != CHAR_EXPR){
+			error(prevToken.lineNumber, prevToken.literal, "Expect only identifier or char literal in type enumeration list");
+		} else {
+			currList->expression = curr;
+		}
+		destroyToken(prevToken);
+	
+		if(!match(TOKEN_RBRACE)) {		
+			consume(TOKEN_COMMA, "Expect comma after expression in expression list");
+			nextToken();
+
+			currList->next = calloc(1, sizeof(struct ExpressionList));
+			currList = currList->next; 
+		}
+	}
+		
+	return elist;
+}
+
+static void parseTypeDeclaration(struct TypeDecl* decl){
+	decl->self.type = AST_TDECL;
+
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after type keyword in type declaration");
+	decl->typeName = (struct Identifier*)parseIdentifier();
+	consumeNext(TOKEN_LBRACE, "Expect { after typeName in type declaration");
+
+	nextToken();
+	if(match(TOKEN_RBRACE)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect non-empty enumeration list in type declaration");
+	} else {
+		decl->enumList = parseEnumerationList();
+	}
+
+	consume(TOKEN_RBRACE, "Expect } after last enum in type declaration");
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of type declaration");
+}
+
 static void parseSignalDeclaration(struct SignalDecl* decl){
 	decl->self.type = AST_SDECL;
 
@@ -821,6 +870,7 @@ static Dba* parseProcessBodyDeclarations(){
 		struct Declaration decl = {0};
 
 		switch(p->currToken.type){
+			// TODO: VHDL does not support SIGNAL declarations in process declaration zone need to remove this and fix tests
 			case TOKEN_SIG: {
 				decl.type = SIGNAL_DECLARATION;
 				parseSignalDeclaration(&(decl.as.signalDeclaration));
@@ -912,6 +962,12 @@ static Dba* parseArchBodyDeclarations(){
 		struct Declaration decl = {0};
 
 		switch(p->currToken.type){
+			case TOKEN_TYPE: {
+				decl.type = TYPE_DECLARATION;
+				parseTypeDeclaration(&(decl.as.typeDeclaration));
+				break;
+			}
+
 			case TOKEN_SIG: {
 				decl.type = SIGNAL_DECLARATION;
 				parseSignalDeclaration(&(decl.as.signalDeclaration));
@@ -919,7 +975,7 @@ static Dba* parseArchBodyDeclarations(){
 			}
 
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid declaration statement in architecture declarations");
 				break;
 		}
 

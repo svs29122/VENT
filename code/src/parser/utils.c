@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include <token.h>
 
 #include "utils.h"
@@ -32,6 +35,19 @@ void consumeNext(enum TOKEN_TYPE type, const char* msg){
 	consume(type, msg);
 }
 
+struct Token copyToken(struct Token oldToken){
+	struct Token newToken = oldToken;
+
+	newToken.literal = calloc(1, sizeof(strlen(oldToken.literal)));
+	strncpy(newToken.literal,  oldToken.literal, sizeof(strlen(oldToken.literal)));
+
+	return newToken;
+}
+
+void destroyToken(struct Token thisToken){
+	free(thisToken.literal);
+}
+
 bool validDataType(){
 	bool valid = false; 
 	
@@ -61,7 +77,8 @@ bool thereAreDeclarations(){
 	bool valid = false;
 
 	valid = 	match(TOKEN_SIG)		|| match(TOKEN_VAR)		||
-				match(TOKEN_COMP)		|| match(TOKEN_FILE);
+				match(TOKEN_TYPE)		|| match(TOKEN_COMP)		|| 
+				match(TOKEN_FILE);
 
 	return valid;
 }

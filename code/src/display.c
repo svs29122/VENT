@@ -52,6 +52,11 @@ static void printPortDecl(struct AstNode* pDecl){
 	indent++;
 }
 
+static void printTypeDecl(struct AstNode* tDecl){
+	printf("\e[0;32m""%cTypeDecl\r\n", shift());
+	indent++;
+}
+
 static void printSignalDecl(struct AstNode* sDecl){
 	printf("\e[0;32m""%cSignalDecl\r\n", shift());
 	indent++;
@@ -327,6 +332,10 @@ static void printDefault(struct AstNode* node){
 
 		case AST_VASSIGN:
 			printVariableAssign(node);
+			break;
+	
+		case AST_TDECL:
+			printTypeDecl(node);
 			break;
 
 		case AST_SDECL:

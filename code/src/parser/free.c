@@ -122,6 +122,19 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
+static void freeExpressionList(struct AstNode* tdecl){
+	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
+
+	struct ExpressionList *curr, *prev;
+	curr = typeDecl->enumList;
+
+	while(curr){
+		prev = curr;
+		curr = curr->next;
+		free(prev);
+	}
+}
+
 static void freeSpecial(struct AstNode* node){
 
 	switch(node->type){
@@ -140,6 +153,10 @@ static void freeSpecial(struct AstNode* node){
 
 		case AST_VASSIGN:
 			freeAssignmentOp(node);
+			break;
+
+		case AST_TDECL:
+			freeExpressionList(node);
 			break;
 
 		default:

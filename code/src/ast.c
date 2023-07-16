@@ -35,6 +35,29 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 	op->doCloseOp(&(varDecl->self));
 }
 
+static void walkExpressionList(struct ExpressionList* eList, struct OperationBlock* op){
+	struct ExpressionList* currList = eList;
+	do {
+		if(currList->expression){
+			op->doExpressionOp(currList->expression);
+		}	
+		currList = currList->next;
+	} while(currList);
+}
+
+static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock* op){
+	op->doDefaultOp(&(typeDecl->self));
+	if(typeDecl->typeName){
+		op->doDefaultOp(&(typeDecl->typeName->self.root));
+	}
+	if(typeDecl->enumList){
+		walkExpressionList(typeDecl->enumList, op);
+
+		op->doSpecialOp(&(typeDecl->self));
+	}
+	op->doCloseOp(&(typeDecl->self));
+}
+
 static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(sigDecl->self));
 	if(sigDecl->name){
@@ -281,6 +304,12 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(decls); i++){
 		struct Declaration* decl = (struct Declaration*) ReadBlockArray(decls, i);
 		switch (decl->type){
+			
+			case TYPE_DECLARATION: {
+				walkTypeDeclaration(&(decl->as.typeDeclaration), op);
+				break;
+			}
+		
 			case SIGNAL_DECLARATION: {
 				walkSignalDeclaration(&(decl->as.signalDeclaration), op);
 				break;

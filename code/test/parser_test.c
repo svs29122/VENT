@@ -679,6 +679,32 @@ void TestParseProgram_ProcessWithAssert(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ProcessWithTypeDefinition(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(looper){\n \
+			\n \
+			sig temp stl;\n \
+			type OpCode {Idle, Start, Stop, Clear};\n \
+			type myLogic {'0', '1', '2', 'F'};\n \
+			\n \
+			proc() {\n \
+				for (op : Opcode) {\n \
+					temp <= op;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -712,6 +738,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithForLoop);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithTypeDefinition);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

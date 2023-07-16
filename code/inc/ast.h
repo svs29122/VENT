@@ -46,6 +46,7 @@ enum AstNodeType {
 	AST_WHILE,
 	AST_SASSIGN,
 	AST_VASSIGN,
+	AST_TDECL,
 	AST_SDECL,
 	AST_VDECL,
 	AST_IDENTIFIER,
@@ -151,6 +152,18 @@ struct PortMode {
 	char* value;
 };
 
+struct ExpressionList {
+	struct Expression* expression;
+	struct ExpressionList* next;
+};
+
+struct TypeDecl {
+	struct AstNode self;
+	
+	struct Identifier* typeName;
+	struct ExpressionList *enumList;
+}; 
+
 struct VariableDecl {
 	struct AstNode self;
 
@@ -175,7 +188,7 @@ struct Declaration {
 		//PROCEDURE_BODY,
 		//FUNCTION_DECLARATION,
 		//FUNCTION_BODY,
-		//TYPE_DECLARATION,
+		TYPE_DECLARATION,
 		//SUBTYPE_DECLARATION,
 		//CONSTANT_DECLARATION,
 		SIGNAL_DECLARATION,
@@ -184,6 +197,7 @@ struct Declaration {
 		//COMPONENT_DECLARATION,
 	} type;
 	union {
+		struct TypeDecl typeDeclaration;
 		struct SignalDecl signalDeclaration;
 		struct VariableDecl variableDeclaration;
 	} as;

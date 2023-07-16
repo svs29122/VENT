@@ -196,7 +196,14 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 				}
 			}
 			break;
-		case 't': return checkKeyword(1, 1, size, lit, "o", TOKEN_TO);
+		case 't': 
+			if(size > 1){
+				switch(lit[1]){
+					case 'o': return checkKeyword(2, 0, size, lit, "", TOKEN_TO);
+					case 'y': return checkKeyword(2, 2, size, lit, "pe", TOKEN_TYPE);
+				}
+			}
+			break;
 		case 'u':
 			if(size > 1){
 				switch(lit[1]){
@@ -575,6 +582,7 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_BITV: 			return "TOKEN_BITV";
 		case TOKEN_SIGNED: 		return "TOKEN_SIGNED";
 		case TOKEN_UNSIGNED: 	return "TOKEN_UNSIGNED";
+		case TOKEN_TYPE: 			return "TOKEN_TYPE";
 		case TOKEN_IDENTIFIER:	return "TOKEN_IDENTIFIER";
 		case TOKEN_CHARLIT: 		return "TOKEN_CHARLIT";
 		case TOKEN_NUMBERLIT:	return "TOKEN_NUMBERLIT";

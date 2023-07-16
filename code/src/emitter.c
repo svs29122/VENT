@@ -11,8 +11,9 @@ struct expressionStatus {
 	bool incoming;
 	bool close;
 	bool ignore;
+	bool list;
 	char assignmentOp[4];
-} static eStat = {false, false, false, 0};
+} static eStat = {false, false, false, false, 0};
 
 static int indent = 1;
 static char emitIndent(){
@@ -205,6 +206,23 @@ static void emitReport(struct AstNode* rstmt){
 	fprintf(vhdlFile, ";\n");
 }
 
+static void emitTypeDeclaration(struct AstNode* tDecl){
+	struct TypeDecl* typeDecl = (struct TypeDecl*) tDecl;
+	
+	char* typeName = typeDecl->typeName->value;
+	fprintf(vhdlFile, "%ctype %s is (", emitIndent(), typeName);		
+	
+	eStat.list = true;
+}
+
+static void emitTypeDeclarationClose(struct AstNode* tDecl){
+	//overwrite that last comma
+	fseek(vhdlFile, -1, SEEK_CUR);
+
+	fprintf(vhdlFile, ");\n");		
+	eStat.list = false;
+}
+
 static void emitSignalDeclaration(struct AstNode* sDecl){
 	struct SignalDecl* sigDecl = (struct SignalDecl*) sDecl;
 
@@ -374,9 +392,15 @@ static void emitExpression(struct Expression* expr){
 		if(eStat.close){
 			fprintf(vhdlFile, ";\n");
 		}
+		if(eStat.list){
+			fprintf(vhdlFile, ",");
+		}
 	}
 
-	memset(&eStat, 0, sizeof(struct expressionStatus));
+	eStat.incoming = 0;
+	eStat.ignore = 0;
+	eStat.close = 0;
+	eStat.assignmentOp[0] = 0;
 }
 
 static void emitClose(struct AstNode* node){
@@ -401,6 +425,9 @@ static void emitClose(struct AstNode* node){
 			emitLoopClose(node);
 			break;
 		
+		case AST_TDECL:
+			emitTypeDeclarationClose(node);
+
 		default:
 			break;
 	}
@@ -484,6 +511,10 @@ static void emitDefault(struct AstNode* node){
 
       case AST_VASSIGN:
          emitVariableAssignment(node);
+         break;
+
+      case AST_TDECL:
+         emitTypeDeclaration(node);
          break;
 
       case AST_SDECL:
