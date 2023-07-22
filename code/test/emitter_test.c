@@ -138,27 +138,8 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
 			y <- stl; \
 		} \
 		\
-		arch behavioral(looper) { \
- 		\
-   		sig temp1 stl; \
-   		sig temp2 stl := '1'; \
-      	sig s stl := '0'; \
- 			\
-   		y <= '0'; \
- 			\
-   		proc () { \
-      		var i int; \
-   			\
-      		while(i < 10){ \
-         		s <= '1'; \
-         		i := i + 2; \
-      		}    \
-      		wait; \
-   		}    \
-		}  \
-		\
-		\
 		arch myArch(looper) { \
+			sig s stl; \
 			type opCode {Idle, Start, Stop, Clear, 'Q'}; \
 			\
    		proc () { \
@@ -177,6 +158,16 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
 				wait; \
    		} \
 		 \
+   		proc () { \
+      		var i int; \
+   			\
+      		while(i < 10){ \
+         		s <= '1'; \
+         		i := i + 2; \
+      		}    \
+      		wait; \
+   		}    \
+		  \
    		proc () { \
       		for (i : 0 to 5) { \
          		assert (i != 10) report \"i out of bounds\" severity error; \
@@ -202,6 +193,156 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_WithIfs(CuTest* tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		\
+		ent ifer { \
+			a <- stl; \
+		} \
+		\
+      arch myArch(ifer){\n \
+         \n \
+         proc () {\n \
+				var i int := 1;\n \
+				\n \
+            if(i<1){\n \
+               a <= '0';\n \
+            } elsif (i>2){\n \
+               a <= '1';\n \
+            } else {\n \
+               a <= 'Z';\n \
+            }\n \
+				\n \
+				wait;\n \
+         }\n \
+      }\n \
+   ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+	//checkForSyntaxErrors(tc);
+	
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_WithMultipleIfs(CuTest* tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		\
+		ent ifer { \
+			a <- stl; \
+		} \
+		\
+      arch myArch(ifer){\n \
+         \n \
+         proc () {\n \
+				var i int := 1;\n \
+				\n \
+            if(i<1){\n \
+               a <= '0';\n \
+            }\n \
+				\n \
+				if(i==2){\n \
+					a <= 'X';\n \
+				} elsif (i>2){\n \
+               a <= '1';\n \
+            }\n \
+				\n \
+				if(i==7){\n \
+					a <= '0';\n \
+				} else {\n \
+               a <= 'Z';\n \
+            }\n \
+				\n \
+				wait;\n \
+         }\n \
+      }\n \
+   ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+	//checkForSyntaxErrors(tc);
+	
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_WithNestedIfs(CuTest* tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		\
+		ent ifer { \
+			a <- stl; \
+			b <- stl; \
+			c <- stl; \
+		} \
+		\
+      arch myArch(ifer){\n \
+         \n \
+         proc () {\n \
+				var i int := 1;\n \
+				var j int := 2;\n \
+				var k int := 3;\n \
+				\n \
+            if(i<j){\n \
+               a <= '1';\n \
+            } elsif (j<i){\n \
+               b <= '1';\n \
+               if(k == 1){\n \
+                  b <= '0';\n \
+               } elsif (k == 0) {\n \
+                  b <= '1';\n \
+               } else {\n \
+                  b <= '0';\n \
+               }\n \
+            } else {\n \
+               a <= '0';\n \
+               b <= '0';\n \
+            }\n \
+				\n \
+				wait;\n \
+         }\n \
+      }\n \
+   ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+	//checkForSyntaxErrors(tc);
+	
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent oneEr {\n \
+			y <- stl;\n \
+		}\n \
+		arch doOne(oneEr){\n \
+			y <= '1';\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+	//checkForSyntaxErrors(tc);
+	//system("cp ./a.vhdl ./tmp.vhdl");
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 CuSuite* TranspileTestGetSuite(){
 
 	CuSuite* suite = CuSuiteNew();
@@ -209,6 +350,10 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_Simple);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithProcess);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithLoops);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithIfs);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultipleIfs);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithNestedIfs);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_);
 
 	return suite;
 }

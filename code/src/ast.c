@@ -161,10 +161,10 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->antecedent){
 		op->doExpressionOp(ifStmt->antecedent);
 	}
+	op->doOpenOp(&(ifStmt->self));
 	if(ifStmt->consequentStatements){
 		walkSequentialStatements(ifStmt->consequentStatements, op);
 	}
-	op->doCloseOp(&(ifStmt->self));
 	if(ifStmt->elsif){
 		walkIfStatement(ifStmt->elsif, op);
 		op->doSpecialOp(&(ifStmt->elsif->self));
@@ -172,8 +172,8 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->alternativeStatements){
 		op->doSpecialOp(&(ifStmt->self));
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
-		op->doCloseOp(&(ifStmt->self));
 	}
+	op->doCloseOp(&(ifStmt->self));
 }
 
 static void walkLoopStatement(struct LoopStatement* lStmt, struct OperationBlock* op){

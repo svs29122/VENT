@@ -1,0 +1,36 @@
+use ieee.std_logic_1164.all; 
+      
+ent ifer { 
+ a <- stl; 
+ b <- stl; 
+ c <- stl; 
+} 
+
+arch myArch(ifer){ 
+  
+ proc (){ 
+    var i int := 1; 
+    var j int := 2; 
+    var k int := 3; 
+     
+    if(i<j){ 
+       a <= '1'; 
+    } elsif (j<i){ 
+       b <= '1'; 
+       
+       if(k == 1){ 
+          b <= '0'; 
+       } elsif (k == 0){ 
+          b <= '1'; 
+       } else { 
+          b <= '0'; 
+       } 
+    } else { 
+       a <= '0'; 
+       b <= '0'; 
+    }    
+    wait; 
+ }
+
+} 
+

@@ -560,20 +560,20 @@ static void parseSwitchStatement(struct SwitchStatement* switchStmt){
 	consume(TOKEN_RBRACE, "expect '}' at end of if statement");
 };
 
-static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
+static void parseIfStatement(struct IfStatement* ifStmt){
 #ifdef DEBUG
 	memcpy(&(ifStmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
-	if(!parsingElsif){
-		ifStmt->self.type = AST_IF;
-	} else {
+	if(ifStmt->inElsIf == true){
 		ifStmt->self.type = AST_ELSIF;	
+	} else {
+		ifStmt->self.type = AST_IF;
 	}
 
-	if(!parsingElsif){
-		consume(TOKEN_IF, "Expect token if at start of if statement");
-	} else {
+	if(ifStmt->inElsIf == true){
 		consume(TOKEN_ELSIF, "Expect token elsif at start of elsif statement");
+	} else {
+		consume(TOKEN_IF, "Expect token if at start of if statement");
 	}
 	consumeNext(TOKEN_LPAREN, "Expect '(' after if token");	
 
@@ -595,13 +595,14 @@ static void parseIfStatement(struct IfStatement* ifStmt, bool parsingElsif){
 	//check for elsif block
 	if(peek(TOKEN_ELSIF)){
 		ifStmt->elsif = calloc(1, sizeof(struct IfStatement));
+		ifStmt->elsif->inElsIf = true;		
 
 		nextToken();
-		parseIfStatement(ifStmt->elsif, true);
+		parseIfStatement(ifStmt->elsif);
 	}
 
 	// check for else block
-	if(!parsingElsif && peek(TOKEN_ELSE)){
+	if(!ifStmt->inElsIf && peek(TOKEN_ELSE)){
 		consumeNext(TOKEN_ELSE, "Expect else token");
 		consumeNext(TOKEN_LBRACE, "Expect '{' after else token");	
 		
@@ -798,7 +799,7 @@ static Dba* parseSequentialStatements(){
 
 			case TOKEN_IF: {
 				seqStmt.type = IF_STATEMENT;
-				parseIfStatement(&(seqStmt.as.ifStatement), false);
+				parseIfStatement(&(seqStmt.as.ifStatement));
 				break;
 			}
 

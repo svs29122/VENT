@@ -73,11 +73,20 @@ static void printForStatement(struct AstNode* fStmt){
 }
 
 static void printIfStatement(struct AstNode* ifStmt){
-	printf("\e[0;33m""%cIfStatement\r\n", shift());
+	struct IfStatement* ifStatement = (struct IfStatement*) ifStmt;
+	bool inElsIf = ifStatement->inElsIf;
+	
+	if(inElsIf) indent--;
+	printf("\e[0;33m""%c", shift());
+
+	if(inElsIf) printf("Els");
+	printf("IfStatement\r\n");
+
 	indent++;
 }
 
 static void printElseClause(struct AstNode* ifStmt){
+	indent--;
 	printf("\e[0;34m""%c/*Else*/\r\n", shift());
 	indent++;
 }
