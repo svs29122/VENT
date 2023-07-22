@@ -245,9 +245,12 @@ struct IfStatement {
 
 	struct Label* label;
 	struct Expression* antecedent;
+	
 	struct DynamicBlockArray* consequentStatements;
 	struct DynamicBlockArray* alternativeStatements;
+	
 	struct IfStatement* elsif;
+	bool inElsIf;
 };
 
 struct LoopStatement {

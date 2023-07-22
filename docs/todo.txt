@@ -66,3 +66,11 @@ VIII) Components
 	3) Generic mapping
 	4) Direct entity instantation
 
+
+IX) Language features
+	1) Components
+	2) Generics
+	3) With-Select
+	...
+	10) Packages
+

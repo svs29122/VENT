@@ -36,6 +36,9 @@ arch behavioral(looper) {
 
 
 arch myArch(looper) {
+	
+	type opcode {Start, Stop, Continue, Clear};
+	
 	proc () {
 		var count int := 0;		
 

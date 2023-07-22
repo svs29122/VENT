@@ -135,13 +135,22 @@ static void freeExpressionList(struct AstNode* tdecl){
 	}
 }
 
-static void freeSpecial(struct AstNode* node){
+static void freeOpen(struct AstNode* node){
 
 	switch(node->type){
 
 		case AST_CASE:
 			freeCaseChoices(node);
 			break;
+
+		default:
+			break;
+	}
+}
+
+static void freeSpecial(struct AstNode* node){
+
+	switch(node->type){
 
 		case AST_PROGRAM:
 			freeProgram(node);
@@ -198,6 +207,7 @@ void FreeProgram(struct Program* prog){
 	// setup block
 	struct OperationBlock opBlk = {
 		.doDefaultOp 		= freeDefault,
+		.doOpenOp 			= freeOpen,
 		.doSpecialOp		= freeSpecial,
 		.doExpressionOp	= freeExpression,
 		.doBlockArrayOp	= freeBlockArray,

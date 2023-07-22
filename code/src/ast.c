@@ -119,8 +119,9 @@ static void walkCaseStatements(Dba* cases, struct OperationBlock* op){
 					break;
 			}
 			choice = choice->nextChoice;
+			if(choice) op->doSpecialOp(&(aCase->self));
 		}
-		op->doSpecialOp(&(aCase->self));
+		op->doOpenOp(&(aCase->self));
 
 		if(aCase->statements){
 			walkSequentialStatements(aCase->statements, op);
@@ -135,6 +136,7 @@ static void walkSwitchStatement(struct SwitchStatement* switchStmt, struct Opera
 	if(switchStmt->expression){
 		op->doExpressionOp(switchStmt->expression);
 	}
+	op->doOpenOp(&(switchStmt->self));
 	if(switchStmt->cases){
 		walkCaseStatements(switchStmt->cases, op);
 	}
@@ -161,10 +163,10 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->antecedent){
 		op->doExpressionOp(ifStmt->antecedent);
 	}
+	op->doOpenOp(&(ifStmt->self));
 	if(ifStmt->consequentStatements){
 		walkSequentialStatements(ifStmt->consequentStatements, op);
 	}
-	op->doCloseOp(&(ifStmt->self));
 	if(ifStmt->elsif){
 		walkIfStatement(ifStmt->elsif, op);
 		op->doSpecialOp(&(ifStmt->elsif->self));
@@ -172,8 +174,8 @@ static void walkIfStatement(struct IfStatement* ifStmt, struct OperationBlock* o
 	if(ifStmt->alternativeStatements){
 		op->doSpecialOp(&(ifStmt->self));
 		walkSequentialStatements(ifStmt->alternativeStatements, op);
-		op->doCloseOp(&(ifStmt->self));
 	}
+	op->doCloseOp(&(ifStmt->self));
 }
 
 static void walkLoopStatement(struct LoopStatement* lStmt, struct OperationBlock* op){
