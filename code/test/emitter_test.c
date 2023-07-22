@@ -87,7 +87,9 @@ void TestTranspileProgram_Simple(CuTest *tc){
 
 	TranspileProgram(prog, NULL);
 
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 
 	FreeProgram(prog);
 	free(input);
@@ -121,7 +123,9 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 
 	TranspileProgram(prog, NULL);
 
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 	
 	FreeProgram(prog);
 	free(input);
@@ -186,7 +190,9 @@ void TestTranspileProgram_WithLoops(CuTest *tc){
 
 	TranspileProgram(prog, NULL);
 
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 	
 	FreeProgram(prog);
 	free(input);
@@ -222,7 +228,9 @@ void TestTranspileProgram_WithIfs(CuTest* tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 	
 	FreeProgram(prog);
 	free(input);
@@ -266,7 +274,9 @@ void TestTranspileProgram_WithMultipleIfs(CuTest* tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 	
 	FreeProgram(prog);
 	free(input);
@@ -314,11 +324,60 @@ void TestTranspileProgram_WithNestedIfs(CuTest* tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
-	//checkForSyntaxErrors(tc);
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
 	
 	FreeProgram(prog);
 	free(input);
 	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_WithSwitchCase(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent switcher {\n \
+			A <- stl;\n \
+			B <- stl;\n \
+			C <- stl;\n \
+			D <- stl;\n \
+		}\n \
+      arch behavioral(switcher){\n \
+         \n \
+         proc() {\n \
+				var ADDRESS int := 2;\n \
+				\n \
+            switch(ADDRESS) {\n \
+               case 0:\n \
+                  A <= '1';\n \
+               case 1:\n \
+                  A <= '1';\n \
+                  B <= '1';\n \
+               case 2 to 15:\n \
+                  C <= '1';\n \
+               case 16 | 10 downto 20 | 25:\n \
+                  B <= '1';\n \
+                  C <= '1';\n \
+                  D <= '1';\n \
+               default:\n \
+                  null;\n \
+            }\n \
+				wait;\n \
+         }\n \
+      }\n \
+      \
+   ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+#ifndef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	//remove("./a.vhdl");
 }
 
 void TestTranspileProgram_(CuTest *tc){
@@ -335,8 +394,10 @@ void TestTranspileProgram_(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
-	//checkForSyntaxErrors(tc);
-	//system("cp ./a.vhdl ./tmp.vhdl");
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+	system("cp ./a.vhdl ./tmp.vhdl");
 
 	FreeProgram(prog);
 	free(input);
@@ -353,7 +414,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithIfs);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultipleIfs);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithNestedIfs);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSwitchCase);
 
 	return suite;
 }

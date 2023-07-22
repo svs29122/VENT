@@ -119,8 +119,9 @@ static void walkCaseStatements(Dba* cases, struct OperationBlock* op){
 					break;
 			}
 			choice = choice->nextChoice;
+			if(choice) op->doSpecialOp(&(aCase->self));
 		}
-		op->doSpecialOp(&(aCase->self));
+		op->doOpenOp(&(aCase->self));
 
 		if(aCase->statements){
 			walkSequentialStatements(aCase->statements, op);
@@ -135,6 +136,7 @@ static void walkSwitchStatement(struct SwitchStatement* switchStmt, struct Opera
 	if(switchStmt->expression){
 		op->doExpressionOp(switchStmt->expression);
 	}
+	op->doOpenOp(&(switchStmt->self));
 	if(switchStmt->cases){
 		walkCaseStatements(switchStmt->cases, op);
 	}

@@ -152,9 +152,45 @@ static void emitElse(struct AstNode* efstmt){
 	indent++;
 }
 
-static void emitWhileLoop(struct AstNode* wstmt){
+static void emitSwitchStatement(struct AstNode* sstmt){
+	fprintf(vhdlFile, "%ccase", emitIndent());
+	indent++;
+}
 
+static void emitSwitchOpen(struct AstNode* sstmt){
+	fprintf(vhdlFile, " is\n");
+}
+
+static void emitSwitchClose(struct AstNode* sstmt){
+	indent--;
+	fprintf(vhdlFile, "%cend case;\n", emitIndent());
+}
+
+static void emitCaseStatement(struct AstNode* cstmt){
+	struct CaseStatement* caseStmt = (struct CaseStatement*)cstmt;	
+
+	fprintf(vhdlFile, "%cwhen", emitIndent());
+	
+	if(caseStmt->defaultCase) fprintf(vhdlFile, " others");
+	
+	indent++;
+}
+
+static void emitCaseOpen(struct AstNode* cstmt){
+	fprintf(vhdlFile, " =>\n");
+}
+
+static void emitCaseClose(struct AstNode* cstmt){
+	indent--;
+}
+
+static void emitCaseSpecial(struct AstNode* cstmt){
+	fprintf(vhdlFile, " |");
+}
+
+static void emitWhileLoop(struct AstNode* wstmt){
 	struct WhileStatement* whileStat = (struct WhileStatement*)wstmt;	
+
 	fprintf(vhdlFile, "%cwhile", emitIndent());
 	indent++;
 
@@ -167,7 +203,7 @@ static void emitWhileLoop(struct AstNode* wstmt){
 static void emitForLoop(struct AstNode* fstmt){
 	struct ForStatement* forStat = (struct ForStatement*)fstmt;	
 
-	fprintf(vhdlFile, "%cfor %s in ", emitIndent(), forStat->parameter->value);
+	fprintf(vhdlFile, "%cfor %s in", emitIndent(), forStat->parameter->value);
 	indent++;
 }
 
@@ -232,6 +268,10 @@ static void emitReport(struct AstNode* rstmt){
 	}
 
 	fprintf(vhdlFile, ";\n");
+}
+
+static void emitNull(struct AstNode* nstmt){
+	fprintf(vhdlFile, "%cnull;\n", emitIndent());
 }
 
 static void emitTypeDeclaration(struct AstNode* tDecl){
@@ -401,6 +441,7 @@ static void emitRange(struct AstNode* rstmt){
 	struct Range* range = (struct Range*)rstmt;
 
 	if(range->left) {
+		fprintf(vhdlFile, " ");
 		emitSubExpression(range->left);
 	}
 
@@ -439,6 +480,10 @@ static void emitSpecial(struct AstNode* node){
 			emitElse(node);
 			break;
 
+		case AST_CASE:
+			emitCaseSpecial(node);
+			break;
+	
 		default:
 			break;
 	}
@@ -464,6 +509,14 @@ static void emitClose(struct AstNode* node){
 			emitIfClose(node);
          break;
 
+		case AST_SWITCH:
+			emitSwitchClose(node);
+			break;
+
+		case AST_CASE:
+			emitCaseClose(node);
+			break;
+	
 		case AST_WHILE:
 		case AST_FOR:
 		case AST_LOOP:
@@ -499,6 +552,14 @@ static void emitOpen(struct AstNode* node){
 			emitIfOpen(node);
          break;
 
+		case AST_SWITCH:
+			emitSwitchOpen(node);
+			break;
+
+		case AST_CASE:
+			emitCaseOpen(node);
+			break;
+	
 		case AST_WHILE:
 		case AST_FOR:
 			emitLoopOpen(node);
@@ -545,6 +606,14 @@ static void emitDefault(struct AstNode* node){
 			emitIfStatement(node);
          break;
 
+		case AST_SWITCH:
+			emitSwitchStatement(node);
+			break;
+
+		case AST_CASE:
+			emitCaseStatement(node);
+			break;
+	
       case AST_LOOP:
 			emitLoop(node);
          break;
@@ -598,6 +667,10 @@ static void emitDefault(struct AstNode* node){
 
       case AST_REPORT:
 			emitReport(node);
+         break;
+
+      case AST_NULL:
+			emitNull(node);
          break;
 
       default:
