@@ -152,21 +152,21 @@ static void emitElse(struct AstNode* efstmt){
 	indent++;
 }
 
-static void emitSwitchStatement(struct AstNode* sstmt){
+static void emitCaseStatement(struct AstNode* sstmt){
 	fprintf(vhdlFile, "%ccase", emitIndent());
 	indent++;
 }
 
-static void emitSwitchOpen(struct AstNode* sstmt){
+static void emitCaseOpen(struct AstNode* sstmt){
 	fprintf(vhdlFile, " is\n");
 }
 
-static void emitSwitchClose(struct AstNode* sstmt){
+static void emitCaseClose(struct AstNode* sstmt){
 	indent--;
 	fprintf(vhdlFile, "%cend case;\n", emitIndent());
 }
 
-static void emitCaseStatement(struct AstNode* cstmt){
+static void emitWhenStatement(struct AstNode* cstmt){
 	struct CaseStatement* caseStmt = (struct CaseStatement*)cstmt;	
 
 	fprintf(vhdlFile, "%cwhen", emitIndent());
@@ -176,15 +176,15 @@ static void emitCaseStatement(struct AstNode* cstmt){
 	indent++;
 }
 
-static void emitCaseOpen(struct AstNode* cstmt){
+static void emitWhenOpen(struct AstNode* cstmt){
 	fprintf(vhdlFile, " =>\n");
 }
 
-static void emitCaseClose(struct AstNode* cstmt){
+static void emitWhenClose(struct AstNode* cstmt){
 	indent--;
 }
 
-static void emitCaseSpecial(struct AstNode* cstmt){
+static void emitWhenSpecial(struct AstNode* cstmt){
 	fprintf(vhdlFile, " |");
 }
 
@@ -481,7 +481,7 @@ static void emitSpecial(struct AstNode* node){
 			break;
 
 		case AST_CASE:
-			emitCaseSpecial(node);
+			emitWhenSpecial(node);
 			break;
 	
 		default:
@@ -510,11 +510,11 @@ static void emitClose(struct AstNode* node){
          break;
 
 		case AST_SWITCH:
-			emitSwitchClose(node);
+			emitCaseClose(node);
 			break;
 
 		case AST_CASE:
-			emitCaseClose(node);
+			emitWhenClose(node);
 			break;
 	
 		case AST_WHILE:
@@ -553,11 +553,11 @@ static void emitOpen(struct AstNode* node){
          break;
 
 		case AST_SWITCH:
-			emitSwitchOpen(node);
+			emitCaseOpen(node);
 			break;
 
 		case AST_CASE:
-			emitCaseOpen(node);
+			emitWhenOpen(node);
 			break;
 	
 		case AST_WHILE:
@@ -607,11 +607,11 @@ static void emitDefault(struct AstNode* node){
          break;
 
 		case AST_SWITCH:
-			emitSwitchStatement(node);
+			emitCaseStatement(node);
 			break;
 
 		case AST_CASE:
-			emitCaseStatement(node);
+			emitWhenStatement(node);
 			break;
 	
       case AST_LOOP:

@@ -371,13 +371,13 @@ void TestTranspileProgram_WithSwitchCase(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
-#ifndef CHECK_VHDL_SYNTAX
+#ifdef CHECK_VHDL_SYNTAX
 	checkForSyntaxErrors(tc);
 #endif
 
 	FreeProgram(prog);
 	free(input);
-	//remove("./a.vhdl");
+	remove("./a.vhdl");
 }
 
 void TestTranspileProgram_(CuTest *tc){
