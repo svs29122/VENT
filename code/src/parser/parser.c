@@ -1018,7 +1018,7 @@ static struct GenericDecl parseGenericDecl(){
 	struct GenericDecl generic = {0};		
 	generic.self.type = AST_GENERIC;
 
-	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
+	consume(TOKEN_IDENTIFIER, "Expect identifier at start of generic declaration");
 	generic.name = (struct Identifier*)parseIdentifier();
 		
 	nextToken();
@@ -1033,7 +1033,7 @@ static struct GenericDecl parseGenericDecl(){
 		generic.defaultValue = parseExpression(LOWEST_PREC);	
 	}
 	
-	consume(TOKEN_SCOLON, "Expect ; at end of port declaration");
+	consume(TOKEN_SCOLON, "Expect ; at end of generic declaration");
 		
 	return generic;
 }
@@ -1071,10 +1071,8 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
-			
 			struct PortDecl port = parsePortDecl();	
 			WriteBlockArray(ports, (char*)(&port));
-
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
 			WriteBlockArray(generics, (char*)(&generic));

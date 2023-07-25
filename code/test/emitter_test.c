@@ -87,7 +87,6 @@ void TestTranspileProgram_Simple(CuTest *tc){
 
 	TranspileProgram(prog, NULL);
 
-	system("cp ./a.vhdl ./tmp.vhdl");
 #ifdef CHECK_VHDL_SYNTAX
 	checkForSyntaxErrors(tc);
 #endif
@@ -427,10 +426,11 @@ void TestTranspileProgram_(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
+
 #ifdef CHECK_VHDL_SYNTAX
+	system("cp ./a.vhdl ./tmp.vhdl");
 	checkForSyntaxErrors(tc);
 #endif
-	system("cp ./a.vhdl ./tmp.vhdl");
 
 	FreeProgram(prog);
 	free(input);
