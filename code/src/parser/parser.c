@@ -1071,7 +1071,7 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
-			WriteBlockArray(ports, (char*)(&generic));
+			WriteBlockArray(generics, (char*)(&generic));
 		}
 
 		nextToken();

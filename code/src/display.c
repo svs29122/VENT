@@ -47,6 +47,11 @@ static void printIdentifier(struct AstNode* ident){
 	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(), ((struct Identifier*)ident)->value);
 }
 
+static void printGenericDecl(struct AstNode* gDecl){
+	printf("\e[0;32m""%cGenericDecl\r\n", shift());
+	indent++;
+}
+
 static void printPortDecl(struct AstNode* pDecl){
 	printf("\e[0;32m""%cPortDecl\r\n", shift());
 	indent++;
@@ -284,6 +289,10 @@ static void printDefault(struct AstNode* node){
 
 		case AST_ARCHITECTURE:
 			printArchDecl(node);
+			break;
+
+		case AST_GENERIC:
+			printGenericDecl(node);
 			break;
 
 		case AST_PORT:
