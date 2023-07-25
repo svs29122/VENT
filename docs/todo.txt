@@ -70,7 +70,11 @@ VIII) Components
 IX) Language features
 	1) Components
 	2) Generics
-	3) With-Select
+	3) Concurrent Statements
+		i) generate
+		ii) with-select
+		iii) functions/procedures
+		iv) blocks
 	...
 	10) Packages
 

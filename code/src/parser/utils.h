@@ -18,5 +18,6 @@ bool validDataType();
 bool validAssignment();
 
 bool thereAreDeclarations();
+bool thisIsAPort();
 
 #endif // INC_UTILS_H

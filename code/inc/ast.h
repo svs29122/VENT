@@ -31,6 +31,7 @@ enum AstNodeType {
 	AST_ENTITY,
 	AST_ARCHITECTURE,
 	AST_PORT,
+	AST_GENERIC,
 	AST_PROCESS,
 	AST_FOR,
 	AST_IF,
@@ -418,6 +419,14 @@ struct ArchitectureDecl {
 	struct DynamicBlockArray* statements;
 };
 
+struct GenericDecl {
+	struct AstNode self;
+
+	//need to add support for , separated identifier list
+	struct Identifier* name;
+	struct DataType* dtype; 
+};
+
 struct PortDecl {
 	struct AstNode self;
 
@@ -432,6 +441,7 @@ struct EntityDecl {
 
 	struct Identifier* name;
 	struct DynamicBlockArray* ports;
+	struct DynamicBlockArray* generics;
 };
 
 struct DesignUnit{
