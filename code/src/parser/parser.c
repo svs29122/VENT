@@ -1015,7 +1015,7 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 
 static struct GenericDecl parseGenericDecl(){
 
-	struct GenericDecl generic;		
+	struct GenericDecl generic = {0};		
 	generic.self.type = AST_GENERIC;
 
 	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
@@ -1026,15 +1026,21 @@ static struct GenericDecl parseGenericDecl(){
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
 	}	
 	generic.dtype = parseDataType(p->currToken.literal);
+
+	nextToken();
+	if(match(TOKEN_VASSIGN)){
+		nextToken();
+		generic.defaultValue = parseExpression(LOWEST_PREC);	
+	}
 	
-	consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
+	consume(TOKEN_SCOLON, "Expect ; at end of port declaration");
 		
 	return generic;
 }
 
 static struct PortDecl parsePortDecl(){
 
-	struct PortDecl port;		
+	struct PortDecl port = {0};		
 	port.self.type = AST_PORT;
 
 	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");

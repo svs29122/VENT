@@ -397,6 +397,9 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 		if(genericDecl->dtype){
 			op->doDefaultOp(&(genericDecl->dtype->self));
 		}	
+		if(genericDecl->defaultValue){
+			op->doExpressionOp(genericDecl->defaultValue);
+		}
 		op->doCloseOp(&(genericDecl->self));
 	}
 	

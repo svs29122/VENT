@@ -425,6 +425,7 @@ struct GenericDecl {
 	//need to add support for , separated identifier list
 	struct Identifier* name;
 	struct DataType* dtype; 
+	struct Expression* defaultValue;
 };
 
 struct PortDecl {

@@ -74,6 +74,12 @@ static void emitGenericDeclarationSpecial(struct AstNode* gDecl){
 static void emitGenericDeclaration(struct AstNode* gdecl){
 	struct GenericDecl* genericDecl = (struct GenericDecl*) gdecl;
 	fprintf(vhdlFile, "\t\t%s: ", genericDecl->name->value);
+	
+	if(genericDecl->defaultValue){
+		eStat.incoming = true;
+		eStat.close = true;
+		memcpy(eStat.assignmentOp, " :=", 4);
+	}
 }
 
 static void emitPortDeclarationOpen(struct AstNode* pDecl){

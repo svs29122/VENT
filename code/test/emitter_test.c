@@ -386,11 +386,11 @@ void TestTranspileProgram_WithGenerics(CuTest *tc){
 		use ieee.std_logic_1164.all; \
 		\
 		ent ander { \
-			g int;\
-			h int;\
+			g int := 1;\
+			h int := 2;\
 			a -> stl; \
 			b -> stl; \
-			k int;\
+			k int := 3;\
 			y <- stl; \
 		} \
 		\
