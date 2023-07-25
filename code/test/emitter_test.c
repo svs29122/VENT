@@ -380,24 +380,57 @@ void TestTranspileProgram_WithSwitchCase(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_WithGenerics(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		\
+		ent ander { \
+			g int := 1;\
+			h int := 2;\
+			a -> stl; \
+			b -> stl; \
+			k int := 3;\
+			y <- stl; \
+		} \
+		\
+		arch behavioral(ander){ \
+			sig temp stl := '0'; \
+		\
+			temp <= a and b; \
+			y <= temp; \
+			} \
+		");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
-		ent oneEr {\n \
-			y <- stl;\n \
+		ent space {\n \
 		}\n \
-		arch doOne(oneEr){\n \
-			y <= '1';\n \
+		arch empty(space){\n \
 		}\n \
 	");
 
 	struct Program* prog = ParseProgram(input);
 
 	TranspileProgram(prog, NULL);
+
 #ifdef CHECK_VHDL_SYNTAX
+	system("cp ./a.vhdl ./tmp.vhdl");
 	checkForSyntaxErrors(tc);
 #endif
-	system("cp ./a.vhdl ./tmp.vhdl");
 
 	FreeProgram(prog);
 	free(input);
@@ -415,6 +448,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultipleIfs);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithNestedIfs);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSwitchCase);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithGenerics);
 
 	return suite;
 }

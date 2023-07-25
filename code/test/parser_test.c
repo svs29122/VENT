@@ -705,6 +705,27 @@ void TestParseProgram_ProcessWithTypeDefinition(CuTest *tc){
 	free(input);
 }
 
+void TestParse_EntityWithGeneric(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent ander {\n \
+			g int;\n \
+			a -> stl;\n \
+			b -> stl;\n \
+			y <- stl; \n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -739,6 +760,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithTypeDefinition);
+	SUITE_ADD_TEST(suite, TestParse_EntityWithGeneric);
 	SUITE_ADD_TEST(suite, TestParse_);
 
 	return suite;

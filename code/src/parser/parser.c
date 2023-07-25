@@ -987,39 +987,6 @@ static Dba* parseArchBodyDeclarations(){
 	return decls;
 }
 
-static Dba* parsePortDecl(){
-	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
-
-	nextToken();
-
-	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
-		struct PortDecl port;		
-		port.self.type = AST_PORT;
-
-		consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
-		port.name = (struct Identifier*)parseIdentifier();
-		
-		nextToken();
-		if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
-			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
-		}	
-		port.pmode = parsePortMode(p->currToken.literal);
-		
-		nextToken();
-		if(!validDataType()){
-			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
-		}	
-		port.dtype = parseDataType(p->currToken.literal);
-		
-		consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
-		WriteBlockArray(ports, (char*)(&port));
-		
-		nextToken();
-	}
-
-	return ports;
-}
-
 static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 #ifdef DEBUG
 	memcpy(&(aDecl->self.token), &(p->currToken), sizeof(struct Token));
@@ -1046,6 +1013,78 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 	consume(TOKEN_RBRACE, "Expect } after architecture body");
 }
 
+static struct GenericDecl parseGenericDecl(){
+
+	struct GenericDecl generic = {0};		
+	generic.self.type = AST_GENERIC;
+
+	consume(TOKEN_IDENTIFIER, "Expect identifier at start of generic declaration");
+	generic.name = (struct Identifier*)parseIdentifier();
+		
+	nextToken();
+	if(!validDataType()){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
+	}	
+	generic.dtype = parseDataType(p->currToken.literal);
+
+	nextToken();
+	if(match(TOKEN_VASSIGN)){
+		nextToken();
+		generic.defaultValue = parseExpression(LOWEST_PREC);	
+	}
+	
+	consume(TOKEN_SCOLON, "Expect ; at end of generic declaration");
+		
+	return generic;
+}
+
+static struct PortDecl parsePortDecl(){
+
+	struct PortDecl port = {0};		
+	port.self.type = AST_PORT;
+
+	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
+	port.name = (struct Identifier*)parseIdentifier();
+		
+	nextToken();
+	if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
+	}	
+	port.pmode = parsePortMode(p->currToken.literal);
+	
+	nextToken();
+	if(!validDataType()){
+		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
+	}	
+	port.dtype = parseDataType(p->currToken.literal);
+	
+	consumeNext(TOKEN_SCOLON, "Expect ; at end of port declaration");
+		
+	return port;
+}
+
+static void parseEntityInterior(struct EntityDecl *eDecl){
+	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
+	Dba* generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+
+	nextToken();
+	
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		if(thisIsAPort()) {
+			struct PortDecl port = parsePortDecl();	
+			WriteBlockArray(ports, (char*)(&port));
+		} else {
+			struct GenericDecl generic = parseGenericDecl();	
+			WriteBlockArray(generics, (char*)(&generic));
+		}
+
+		nextToken();
+	}
+
+	eDecl->ports = ports;
+	eDecl->generics = generics;
+}
+
 static void parseEntityDecl(struct EntityDecl* eDecl){
 #ifdef DEBUG
 	memcpy(&(eDecl->self.token), &(p->currToken), sizeof(struct Token));
@@ -1058,7 +1097,7 @@ static void parseEntityDecl(struct EntityDecl* eDecl){
 	consumeNext(TOKEN_LBRACE, "Expect { after entity identifier");
 
 	if(!peek(TOKEN_RBRACE)){
-		eDecl->ports = parsePortDecl();	
+		parseEntityInterior(eDecl);
 	} else {
 		nextToken();
 	}

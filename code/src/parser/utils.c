@@ -83,3 +83,14 @@ bool thereAreDeclarations(){
 	return valid;
 }
 
+
+bool thisIsAPort(){
+	bool valid = false;
+
+	valid = 	peek(TOKEN_INPUT) ||
+				peek(TOKEN_OUTPUT) ||
+				peek(TOKEN_INOUT);
+
+	return valid;
+}
+

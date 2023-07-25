@@ -61,12 +61,29 @@ static void emitEntityDeclarationClose(struct AstNode* edecl){
 	fprintf(vhdlFile, "\n\t);\nend %s;\n\n", entIdent);
 }
 
-static void emitPortDeclarationOpen(struct AstNode* eDecl){
-	struct EntityDecl* entDecl = (struct EntityDecl*)eDecl;
+static void emitGenericDeclarationOpen(struct AstNode* gDecl){
+	fprintf(vhdlFile, "%cgeneric(\n", emitIndent());
+}
+
+static void emitGenericDeclarationSpecial(struct AstNode* gDecl){
+	//overwrite that last semicolon
+	fseek(vhdlFile, -2, SEEK_CUR);
+	fprintf(vhdlFile, "\n\t);\n");
+}
+
+static void emitGenericDeclaration(struct AstNode* gdecl){
+	struct GenericDecl* genericDecl = (struct GenericDecl*) gdecl;
+	fprintf(vhdlFile, "\t\t%s: ", genericDecl->name->value);
 	
-	if(entDecl->ports != NULL){
-		fprintf(vhdlFile, "%cport(\n", emitIndent());
-	}	
+	if(genericDecl->defaultValue){
+		eStat.incoming = true;
+		eStat.close = true;
+		memcpy(eStat.assignmentOp, " :=", 4);
+	}
+}
+
+static void emitPortDeclarationOpen(struct AstNode* pDecl){
+	fprintf(vhdlFile, "%cport(\n", emitIndent());
 }
 
 static void emitPortDeclaration(struct AstNode* pdecl){
@@ -476,6 +493,10 @@ static void emitSpecial(struct AstNode* node){
 	
 	switch(node->type){
 	
+		case AST_GENERIC:
+			emitGenericDeclarationSpecial(node);
+			break;
+		
 		case AST_IF:
 			emitElse(node);
 			break;
@@ -535,7 +556,11 @@ static void emitOpen(struct AstNode* node){
 
 	switch(node->type){
 		
-		case AST_ENTITY:
+		case AST_GENERIC:
+			emitGenericDeclarationOpen(node);
+			break;
+		
+		case AST_PORT:
 			emitPortDeclarationOpen(node);
 			break;
 		
@@ -587,6 +612,10 @@ static void emitDefault(struct AstNode* node){
 
       case AST_ARCHITECTURE:
          emitArchitectureDeclaration(node);
+         break;
+
+      case AST_GENERIC:
+         emitGenericDeclaration(node);
          break;
 
       case AST_PORT:

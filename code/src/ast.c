@@ -383,29 +383,66 @@ static void walkArchitecture(struct ArchitectureDecl* archDecl, struct Operation
 	op->doCloseOp(&(archDecl->self));
 }
 
+static void walkGenerics(Dba* generics, struct OperationBlock* op){
+	if(BlockCount(generics) > 0) {
+		op->doOpenOp(&(((struct GenericDecl*)ReadBlockArray(generics ,0))->self));
+	}
+	
+	for(int i=0; i < BlockCount(generics); i++){
+		struct GenericDecl* genericDecl = (struct GenericDecl*) ReadBlockArray(generics, i);
+		op->doDefaultOp(&(genericDecl->self));
+		if(genericDecl->name){
+			op->doDefaultOp(&(genericDecl->name->self.root));
+		}
+		if(genericDecl->dtype){
+			op->doDefaultOp(&(genericDecl->dtype->self));
+		}	
+		if(genericDecl->defaultValue){
+			op->doExpressionOp(genericDecl->defaultValue);
+		}
+		op->doCloseOp(&(genericDecl->self));
+	}
+	
+	if(BlockCount(generics) > 0) {
+		op->doSpecialOp(&(((struct GenericDecl*)ReadBlockArray(generics ,0))->self));
+	}
+	
+	op->doBlockArrayOp(generics);	
+}
+
+static void walkPorts(Dba* ports, struct OperationBlock* op){
+	if(BlockCount(ports) > 0) {
+		op->doOpenOp(&(((struct PortDecl*)ReadBlockArray(ports,0))->self));
+	}
+	
+	for(int i=0; i < BlockCount(ports); i++){
+		struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
+		op->doDefaultOp(&(portDecl->self));
+		if(portDecl->name){
+			op->doDefaultOp(&(portDecl->name->self.root));
+		}
+		if(portDecl->pmode){
+			op->doDefaultOp(&(portDecl->pmode->self));
+		}
+		if(portDecl->dtype){
+			op->doDefaultOp(&(portDecl->dtype->self));
+		}	
+		op->doCloseOp(&(portDecl->self));
+	}
+	op->doBlockArrayOp(ports);	
+}
+
 static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(entDecl->self));
 	if(entDecl->name){
 		op->doDefaultOp(&(entDecl->name->self.root));
 	}
+	op->doOpenOp(&(entDecl->self));
+	if(entDecl->generics){
+		walkGenerics(entDecl->generics, op);
+	}
 	if(entDecl->ports){
-		Dba* ports = entDecl->ports;
-		op->doOpenOp(&(entDecl->self));
-		for(int i=0; i < BlockCount(ports); i++){
-			struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
-			op->doDefaultOp(&(portDecl->self));
-			if(portDecl->name){
-				op->doDefaultOp(&(portDecl->name->self.root));
-			}
-			if(portDecl->pmode){
-				op->doDefaultOp(&(portDecl->pmode->self));
-			}
-			if(portDecl->dtype){
-				op->doDefaultOp(&(portDecl->dtype->self));
-			}	
-			op->doCloseOp(&(portDecl->self));
-		}
-		op->doBlockArrayOp(ports);	
+		walkPorts(entDecl->ports, op);
 	}
 	op->doCloseOp(&(entDecl->self));
 }
