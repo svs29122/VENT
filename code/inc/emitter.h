@@ -1,9 +1,9 @@
-#ifndef INC_TRANSPILE_H
-#define INC_TRANSPILE_H
+#ifndef INC_EMITTER_H
+#define INC_EMITTER_H
 
 #include <ast.h>
 
 void TranspileProgram(struct Program* prog, char* fileName);
 
 
-#endif // INC_TRANSPILE_H
+#endif // INC_EMITTER_H

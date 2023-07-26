@@ -388,12 +388,12 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 		return;
 	}
 
-	//pass in the firstGeneric to do some one time work before looping
-	struct GenericDecl* firstGeneric = (struct GenericDecl*)ReadBlockArray(generics, 0);
-	op->doOpenOp(&(firstGeneric->self));
-	
 	for(int i=0; i < BlockCount(generics); i++){
 		struct GenericDecl* genericDecl = (struct GenericDecl*) ReadBlockArray(generics, i);
+		
+		//pass in the first generic to do some one time work at start of loop
+		if(i == 0) op->doOpenOp(&(genericDecl->self));
+
 		op->doDefaultOp(&(genericDecl->self));
 		if(genericDecl->name){
 			op->doDefaultOp(&(genericDecl->name->self.root));
@@ -405,11 +405,11 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 			op->doExpressionOp(genericDecl->defaultValue);
 		}
 		op->doCloseOp(&(genericDecl->self));
+		
+		//finish up one time work	
+		if(i == (BlockCount(generics) - 1)) op->doSpecialOp(&(genericDecl->self));
 	}
 	
-	//finish up one time work	
-	op->doSpecialOp(&(firstGeneric->self));
-
 	op->doBlockArrayOp(generics);	
 }
 
@@ -418,12 +418,12 @@ static void walkPorts(Dba* ports, struct OperationBlock* op){
 		return;
 	}
 	
-	//pass in the firstPort to do some one time work before looping
-	struct PortDecl* firstPort = (struct PortDecl*)ReadBlockArray(ports, 0);
-	op->doOpenOp(&(firstPort->self));
-	
 	for(int i=0; i < BlockCount(ports); i++){
 		struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
+
+		//pass in the first port to do some one time work at start of loop
+		if(i == 0) op->doOpenOp(&(portDecl->self));
+	
 		op->doDefaultOp(&(portDecl->self));
 		if(portDecl->name){
 			op->doDefaultOp(&(portDecl->name->self.root));
@@ -436,6 +436,7 @@ static void walkPorts(Dba* ports, struct OperationBlock* op){
 		}	
 		op->doCloseOp(&(portDecl->self));
 	}
+
 	op->doBlockArrayOp(ports);	
 }
 
