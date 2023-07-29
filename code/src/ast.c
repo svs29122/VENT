@@ -20,6 +20,8 @@ static void getOperationBlockReady(struct OperationBlock* op){
 
 //forward declarations
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
+static void walkPorts(Dba* ports, struct OperationBlock* op);
+static void walkGenerics(Dba* generics, struct OperationBlock* op);
 
 static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(varDecl->self));
@@ -70,6 +72,21 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 		op->doExpressionOp(sigDecl->expression);
 	}
 	op->doCloseOp(&(sigDecl->self));
+}
+
+static void walkComponentDeclaration(struct ComponentDecl* compDecl, struct OperationBlock* op){
+	op->doDefaultOp(&(compDecl->self));
+	if(compDecl->name){
+		op->doDefaultOp(&(compDecl->name->self.root));
+	}
+	op->doOpenOp(&(compDecl->self));
+	if(compDecl->generics){
+		walkGenerics(compDecl->generics, op);
+	}
+	if(compDecl->ports){
+		walkPorts(compDecl->ports, op);
+	}
+	op->doCloseOp(&(compDecl->self));
 }
 
 static void walkReportStatement(struct ReportStatement* rStmt, struct OperationBlock* op){
@@ -314,6 +331,11 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 		
 			case SIGNAL_DECLARATION: {
 				walkSignalDeclaration(&(decl->as.signalDeclaration), op);
+				break;
+			}		
+
+			case COMPONENT_DECLARATION: {
+				walkComponentDeclaration(&(decl->as.componentDeclaration), op);
 				break;
 			}		
 

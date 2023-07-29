@@ -731,6 +731,7 @@ void TestParse_ArchWithComponent(CuTest *tc){
 		arch behavioral(comptest){\n \
 			\n \
 			comp counter {\n \
+				SIZE int;\n \
       		clk -> stl;\n \
       		rst -> stl;\n \
       		upDown -> stl;\n \

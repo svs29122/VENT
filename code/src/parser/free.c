@@ -5,6 +5,8 @@
 
 #include "parser_internal.h"
 
+static void freeRange(struct AstNode* rng);
+
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
 	pg->useStatements = NULL;
@@ -35,6 +37,7 @@ static void freePortMode(struct AstNode* pmode){
 static void freeDataType(struct AstNode* dtype){
 	struct DataType* dt = (struct DataType*)dtype;
 	if(dt->value) free(dt->value);
+	if(dt->range) freeRange((struct AstNode*)dt->range);
 
 	free(dt);
 }

@@ -417,25 +417,30 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 }
 
 static void parseComponentInterior(struct ComponentDecl *cDecl){
-	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
-	Dba* generics = InitBlockArray(sizeof(struct GenericDecl)); 	
 
 	nextToken();
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
-			WriteBlockArray(ports, (char*)(&port));
+
+			if(cDecl->ports == NULL) {
+				cDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
+			}
+
+			WriteBlockArray(cDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
-			WriteBlockArray(generics, (char*)(&generic));
+
+			if(cDecl->generics == NULL) {
+				cDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+			}
+
+			WriteBlockArray(cDecl->generics, (char*)(&generic));
 		}
 
 		nextToken();
 	}
-
-	cDecl->ports = ports;
-	cDecl->generics = generics;
 }
 
 static void parseComponentDeclaration(struct ComponentDecl* cDecl){
@@ -1121,25 +1126,30 @@ static struct PortDecl parsePortDecl(){
 }
 
 static void parseEntityInterior(struct EntityDecl *eDecl){
-	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
-	Dba* generics = InitBlockArray(sizeof(struct GenericDecl)); 	
 
 	nextToken();
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
-			WriteBlockArray(ports, (char*)(&port));
+
+			if(eDecl->ports == NULL) {
+				eDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
+			}
+
+			WriteBlockArray(eDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
-			WriteBlockArray(generics, (char*)(&generic));
+
+			if(eDecl->generics == NULL) {
+				eDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+			}
+
+			WriteBlockArray(eDecl->generics, (char*)(&generic));
 		}
 
 		nextToken();
 	}
-
-	eDecl->ports = ports;
-	eDecl->generics = generics;
 }
 
 static void parseEntityDecl(struct EntityDecl* eDecl){

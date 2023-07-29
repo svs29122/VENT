@@ -5,6 +5,8 @@
 
 #include <ast.h>
 
+static void printRangeInDataType(struct AstNode* rng);
+
 void PrintUsage(void){
 	printf("Usage:\n"
 			" tvt adder.vent (perform transpilation)\n"
@@ -35,6 +37,11 @@ static void printUseStatement(struct AstNode* stmt){
 
 static void printEntityDecl(struct AstNode* eDecl){
 	printf("\e[1;32m""%cEntityDecl\r\n", shift());
+	indent++;
+}
+
+static void printComponentDecl(struct AstNode* cDecl){
+	printf("\e[1;32m""%cComponentDecl\r\n", shift());
 	indent++;
 }
 
@@ -167,7 +174,14 @@ static void printPortMode(struct AstNode* pMode){
 }
 
 static void printDataType(struct AstNode* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
+	struct DataType* dataType = (struct DataType*)dType;
+
+	printf("\e[0;35m""%cDataType: \'%s", shift(), ((struct DataType*)dType)->value);
+	if(dataType->range == NULL){
+		printf("\'\r\n");
+	} else {
+		printRangeInDataType((struct AstNode*)dataType->range);
+	}
 }
 
 static void printAssignmentOp(struct AstNode* vAssign){
@@ -237,6 +251,23 @@ static void printRange(struct AstNode* rng){
 	printf("\r\n");
 }
 
+static void printRangeInDataType(struct AstNode* rng){
+	printf("(");
+
+	struct Range* range = (struct Range*)rng;
+	printSubExpression(range->left);
+	
+	if(range->right){
+		if(range->descending){
+			printf(" downto ");
+		} else {
+			printf(" to ");
+		}
+
+		printSubExpression(range->right);
+	}
+	printf(")\'\r\n");
+}
 
 // Operation Block ops
 static void printExpression(struct Expression* expr){
@@ -285,6 +316,10 @@ static void printDefault(struct AstNode* node){
 		
 		case AST_ENTITY:
 			printEntityDecl(node);
+			break;
+
+		case AST_COMPONENT:
+			printComponentDecl(node);
 			break;
 
 		case AST_ARCHITECTURE:
