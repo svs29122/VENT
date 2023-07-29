@@ -299,6 +299,15 @@ static struct DataType* parseDataType(char* val){
 	dt->value = calloc(size, sizeof(char));
 	memcpy(dt->value, val, size);
 
+	if(peek(TOKEN_LPAREN)){
+		consumeNext(TOKEN_LPAREN, "Expect '(' before range in data type");
+
+		nextToken();
+		dt->range = parseRange();
+
+		consume(TOKEN_RPAREN, "Expect ')' after range in data type");
+	}
+
 	return dt;
 }
 
@@ -405,6 +414,48 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 	}
 
 	consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
+}
+
+static void parseComponentInterior(struct ComponentDecl *cDecl){
+	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
+	Dba* generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+
+	nextToken();
+	
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		if(thisIsAPort()) {
+			struct PortDecl port = parsePortDecl();	
+			WriteBlockArray(ports, (char*)(&port));
+		} else {
+			struct GenericDecl generic = parseGenericDecl();	
+			WriteBlockArray(generics, (char*)(&generic));
+		}
+
+		nextToken();
+	}
+
+	cDecl->ports = ports;
+	cDecl->generics = generics;
+}
+
+static void parseComponentDeclaration(struct ComponentDecl* cDecl){
+#ifdef DEBUG
+	memcpy(&(cDecl->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	cDecl->self.type = AST_COMPONENT;
+	
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after comp keyword");
+	cDecl->name = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_LBRACE, "Expect { after component identifier");
+
+	if(!peek(TOKEN_RBRACE)){
+		parseComponentInterior(cDecl);
+	} else {
+		nextToken();
+	}
+
+	consume(TOKEN_RBRACE, "Expect } at the end of component declaration");
 }
 
 static void parseVariableAssignment(struct VariableAssign *varAssign){
@@ -972,6 +1023,12 @@ static Dba* parseArchBodyDeclarations(){
 			case TOKEN_SIG: {
 				decl.type = SIGNAL_DECLARATION;
 				parseSignalDeclaration(&(decl.as.signalDeclaration));
+				break;
+			}
+
+			case TOKEN_COMP: {
+				decl.type = COMPONENT_DECLARATION;
+				parseComponentDeclaration(&(decl.as.componentDeclaration));
 				break;
 			}
 

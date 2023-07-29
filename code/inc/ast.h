@@ -29,6 +29,7 @@ enum AstNodeType {
 	AST_PROGRAM = 1,
 	AST_USE,
 	AST_ENTITY,
+	AST_COMPONENT,
 	AST_ARCHITECTURE,
 	AST_PORT,
 	AST_GENERIC,
@@ -139,6 +140,7 @@ struct DataType {
 	struct AstNode self;
 
 	char* value;
+	struct Range* range;
 };
 
 struct Label {
@@ -183,6 +185,14 @@ struct SignalDecl {
 	struct Expression* expression;
 };
 
+struct ComponentDecl {
+	struct AstNode self;
+
+	struct Identifier* name;
+	struct DynamicBlockArray* ports;
+	struct DynamicBlockArray* generics;
+};
+
 struct Declaration {
 	enum {
 		//PROCEDURE_DECLARATION,
@@ -195,12 +205,13 @@ struct Declaration {
 		SIGNAL_DECLARATION,
 		VARIABLE_DECLARATION,
 		//FILE_DECLARATION,
-		//COMPONENT_DECLARATION,
+		COMPONENT_DECLARATION,
 	} type;
 	union {
 		struct TypeDecl typeDeclaration;
 		struct SignalDecl signalDeclaration;
 		struct VariableDecl variableDeclaration;
+		struct ComponentDecl componentDeclaration;
 	} as;
 };
 

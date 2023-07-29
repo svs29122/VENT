@@ -726,6 +726,29 @@ void TestParse_EntityWithGeneric(CuTest *tc){
 	free(input);
 }
 
+void TestParse_ArchWithComponent(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(comptest){\n \
+			\n \
+			comp counter {\n \
+      		clk -> stl;\n \
+      		rst -> stl;\n \
+      		upDown -> stl;\n \
+      		Q <- stlv(3 downto 0);\n \
+   		}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -761,7 +784,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithTypeDefinition);
 	SUITE_ADD_TEST(suite, TestParse_EntityWithGeneric);
-	SUITE_ADD_TEST(suite, TestParse_);
+	SUITE_ADD_TEST(suite, TestParse_ArchWithComponent);
 
 	return suite;
 }
