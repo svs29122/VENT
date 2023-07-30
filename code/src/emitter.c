@@ -23,6 +23,9 @@ static char emitIndent(){
 	return '\t';
 }
 
+//forward declarations
+static void emitRange(struct AstNode* rstmt);
+
 static void emitUseStatement(struct AstNode* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;
 	
@@ -58,22 +61,45 @@ static void emitEntityDeclarationClose(struct AstNode* edecl){
 
 	//overwrite that last semicolon
 	fseek(vhdlFile, -2, SEEK_CUR);
-	fprintf(vhdlFile, "\n\t);\nend %s;\n\n", entIdent);
+
+	indent--;
+	fprintf(vhdlFile, "\n%c);", emitIndent());
+	fprintf(vhdlFile, "\nend %s;\n\n", entIdent);
+}
+
+static void emitComponentDeclaration(struct AstNode* cdecl){
+	struct ComponentDecl* compDecl = (struct ComponentDecl*)cdecl;
+	char* compIdent = compDecl->name->value;
+
+	fprintf(vhdlFile, "%ccomponent %s is\n", emitIndent(), compIdent);
+	indent++;
+}
+
+static void emitComponentDeclarationClose(struct AstNode* cdecl){
+	//overwrite that last semicolon
+	fseek(vhdlFile, -2, SEEK_CUR);
+
+	indent--;
+	fprintf(vhdlFile, "\n\t%c);", emitIndent());
+	fprintf(vhdlFile, "\n%cend component;\n", emitIndent());
 }
 
 static void emitGenericDeclarationOpen(struct AstNode* gDecl){
 	fprintf(vhdlFile, "%cgeneric(\n", emitIndent());
+	indent++;
 }
 
 static void emitGenericDeclarationSpecial(struct AstNode* gDecl){
 	//overwrite that last semicolon
 	fseek(vhdlFile, -2, SEEK_CUR);
-	fprintf(vhdlFile, "\n\t);\n");
+
+	fprintf(vhdlFile, "\n\t%c);\n", emitIndent());
+	indent--;
 }
 
 static void emitGenericDeclaration(struct AstNode* gdecl){
 	struct GenericDecl* genericDecl = (struct GenericDecl*) gdecl;
-	fprintf(vhdlFile, "\t\t%s: ", genericDecl->name->value);
+	fprintf(vhdlFile, "%c%s: ", emitIndent(), genericDecl->name->value);
 	
 	if(genericDecl->defaultValue){
 		eStat.incoming = true;
@@ -84,11 +110,12 @@ static void emitGenericDeclaration(struct AstNode* gdecl){
 
 static void emitPortDeclarationOpen(struct AstNode* pDecl){
 	fprintf(vhdlFile, "%cport(\n", emitIndent());
+	indent++;
 }
 
 static void emitPortDeclaration(struct AstNode* pdecl){
 	struct PortDecl* portDecl = (struct PortDecl*) pdecl;
-	fprintf(vhdlFile, "\t\t%s: ", portDecl->name->value);
+	fprintf(vhdlFile, "%c%s: ", emitIndent(), portDecl->name->value);
 }
 
 static void emitPortMode(struct AstNode* pmode){
@@ -187,7 +214,11 @@ static void emitWhenStatement(struct AstNode* cstmt){
 	struct CaseStatement* caseStmt = (struct CaseStatement*)cstmt;	
 
 	fprintf(vhdlFile, "%cwhen", emitIndent());
-	
+
+	if(caseStmt->choices){
+		struct Choice* choices = caseStmt->choices;
+		if(choices->type == CHOICE_RANGE) fprintf(vhdlFile, " ");
+	}
 	if(caseStmt->defaultCase) fprintf(vhdlFile, " others");
 	
 	indent++;
@@ -220,7 +251,7 @@ static void emitWhileLoop(struct AstNode* wstmt){
 static void emitForLoop(struct AstNode* fstmt){
 	struct ForStatement* forStat = (struct ForStatement*)fstmt;	
 
-	fprintf(vhdlFile, "%cfor %s in", emitIndent(), forStat->parameter->value);
+	fprintf(vhdlFile, "%cfor %s in ", emitIndent(), forStat->parameter->value);
 	indent++;
 }
 
@@ -390,6 +421,11 @@ static void emitDataType(struct AstNode* dtype){
 		fprintf(vhdlFile, "std_logic");
 	} else if(strcmp(typeName, "stlv") == 0){
 		fprintf(vhdlFile, "std_logic_vector");
+	
+		//handle range
+		fprintf(vhdlFile, "(");
+		emitRange((struct AstNode*)dataType->range);
+		fprintf(vhdlFile, ")");
 	} else if(strcmp(typeName, "int") == 0){
 		fprintf(vhdlFile, "integer");
 	}
@@ -458,7 +494,6 @@ static void emitRange(struct AstNode* rstmt){
 	struct Range* range = (struct Range*)rstmt;
 
 	if(range->left) {
-		fprintf(vhdlFile, " ");
 		emitSubExpression(range->left);
 	}
 
@@ -520,6 +555,10 @@ static void emitClose(struct AstNode* node){
 		
 		case AST_ARCHITECTURE:
 			emitArchitectureDeclarationClose(node);
+			break;
+		
+		case AST_COMPONENT:
+			emitComponentDeclarationClose(node);
 			break;
 		
 		case AST_PROCESS:
@@ -612,6 +651,10 @@ static void emitDefault(struct AstNode* node){
 
       case AST_ARCHITECTURE:
          emitArchitectureDeclaration(node);
+         break;
+
+      case AST_COMPONENT:
+         emitComponentDeclaration(node);
          break;
 
       case AST_GENERIC:
