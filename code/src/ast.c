@@ -41,14 +41,14 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 	op->doCloseOp(&(varDecl->self));
 }
 
-static void walkExpressionList(struct ExpressionList* eList, struct OperationBlock* op){
-	struct ExpressionList* currList = eList;
+static void walkExpressionList(struct ExpressionNode* eList, struct OperationBlock* op){
+	struct ExpressionNode* currNode = eList;
 	do {
-		if(currList->expression){
-			op->doExpressionOp(currList->expression);
+		if(currNode->expression){
+			op->doExpressionOp(currNode->expression);
 		}	
-		currList = currList->next;
-	} while(currList);
+		currNode = currNode->next;
+	} while(currNode);
 }
 
 static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock* op){

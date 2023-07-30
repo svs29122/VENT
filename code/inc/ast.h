@@ -157,16 +157,16 @@ struct PortMode {
 	char* value;
 };
 
-struct ExpressionList {
+struct ExpressionNode {
 	struct Expression* expression;
-	struct ExpressionList* next;
+	struct ExpressionNode* next;
 };
 
 struct TypeDecl {
 	struct AstNode self;
 	
 	struct Identifier* typeName;
-	struct ExpressionList *enumList;
+	struct ExpressionNode *enumList;
 }; 
 
 struct VariableDecl {
@@ -401,7 +401,7 @@ struct Instantiation {
 	struct AstNode self;
 	
 	struct Identifier* name;
-	struct ExpressionList* mapping;
+	struct ExpressionNode* mapping;
 };
 
 struct Process {

@@ -368,10 +368,10 @@ static void parseVariableDeclaration(struct VariableDecl* decl){
 	consume(TOKEN_SCOLON, "Expect semicolon at end of variable declaration");
 }
 
-struct ExpressionList* parseEnumerationList(){
+struct ExpressionNode* parseEnumerationList(){
 
-	struct ExpressionList* elist = calloc(1, sizeof(struct ExpressionList));
-	struct ExpressionList *currList = elist;
+	struct ExpressionNode* elist = calloc(1, sizeof(struct ExpressionNode));
+	struct ExpressionNode *currList = elist;
 	
 	while(!match(TOKEN_RBRACE)){
 				
@@ -391,7 +391,7 @@ struct ExpressionList* parseEnumerationList(){
 			consume(TOKEN_COMMA, "Expect comma after expression in expression list");
 			nextToken();
 
-			currList->next = calloc(1, sizeof(struct ExpressionList));
+			currList->next = calloc(1, sizeof(struct ExpressionNode));
 			currList = currList->next; 
 		}
 	}
@@ -974,9 +974,9 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
-static struct ExpressionList* parseInstanceMappings(){
-	struct ExpressionList* mappings = calloc(1, sizeof(struct ExpressionList));
-	struct ExpressionList* currMap = mappings;
+static struct ExpressionNode* parseInstanceMappings(){
+	struct ExpressionNode* mappings = calloc(1, sizeof(struct ExpressionNode));
+	struct ExpressionNode* currMap = mappings;
 	
 	nextToken();
 
@@ -991,7 +991,7 @@ static struct ExpressionList* parseInstanceMappings(){
 
 		currMap->expression = mapping;
 		
-		currMap->next = calloc(1, sizeof(struct ExpressionList));
+		currMap->next = calloc(1, sizeof(struct ExpressionNode));
 		currMap = currMap->next;
 	}
 

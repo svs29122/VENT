@@ -128,7 +128,7 @@ static void freeRange(struct AstNode* rng){
 static void freeExpressionList(struct AstNode* tdecl){
 	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
 
-	struct ExpressionList *curr, *prev;
+	struct ExpressionNode *curr, *prev;
 	curr = typeDecl->enumList;
 
 	while(curr){
