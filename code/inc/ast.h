@@ -31,9 +31,11 @@ enum AstNodeType {
 	AST_ENTITY,
 	AST_COMPONENT,
 	AST_ARCHITECTURE,
+	AST_LABEL,
 	AST_PORT,
 	AST_GENERIC,
 	AST_PROCESS,
+	AST_INSTANCE,
 	AST_FOR,
 	AST_IF,
 	AST_ELSIF,
@@ -356,7 +358,6 @@ struct VariableAssign {
 struct SignalAssign {
 	struct AstNode self;
 
-	struct Label* label;
 	struct Identifier* target;
 	struct Expression* expression;
 };
@@ -396,19 +397,26 @@ struct SequentialStatement {
 	} as;
 };
 
+struct Instantiation {
+	struct AstNode self;
+	
+	struct Identifier* name;
+	struct ExpressionList* mapping;
+};
+
 struct Process {
 	struct AstNode self;
 
-	struct Label label;
 	struct Identifier* sensitivityList;
 	struct DynamicBlockArray* declarations;
 	struct DynamicBlockArray* statements;
 };
 
 struct ConcurrentStatement {
+	struct Label* label;
 	enum {
 		PROCESS,
-		//INSTANTIATION,
+		INSTANTIATION,
 		SIGNAL_ASSIGNMENT,
 		//GENERATE,
 		//ASSERT,
@@ -417,6 +425,7 @@ struct ConcurrentStatement {
 	} type;
 	union {
 		struct Process process;
+		struct Instantiation instantiation;
 		struct SignalAssign signalAssignment;
 	} as;
 };

@@ -13,6 +13,7 @@ enum Precedence{
    MULTIPLY_PREC,    // * / mod rem
    PREFIX_PREC,      // ** abs not
    CALL_PREC,        // function(x)
+   MAP_PREC,      	// a => b
 };
 
 struct ParseRule{
@@ -46,6 +47,7 @@ static struct ParseRule rules[] = {
    [TOKEN_MINUS]        = {NULL                 , parseBinary     , ADD_PREC},
    [TOKEN_STAR]         = {NULL                 , parseBinary     , MULTIPLY_PREC},
    [TOKEN_SLASH]        = {NULL                 , parseBinary     , MULTIPLY_PREC},
+   [TOKEN_MASSIGN]      = {NULL                 , parseBinary     , MAP_PREC},
 };
 
 #endif //INC_EXPRESSION_H

@@ -44,9 +44,9 @@ enum TOKEN_TYPE {
 	TOKEN_INOUT,			//25 
 
 	//assignment
-	TOKEN_SASSIGN, 
-	TOKEN_VASSIGN, 
-	TOKEN_AASSIGN, //aggregate assignment e.g. (others => '0')
+	TOKEN_SASSIGN, //sig assign <=
+	TOKEN_VASSIGN, //var assign :=
+	TOKEN_MASSIGN, //map assign =>
 	
 	//declarations
 	TOKEN_SIG, 

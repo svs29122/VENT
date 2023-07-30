@@ -165,6 +165,7 @@ static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
 			}
 			break;
 		case 'l': return checkKeyword(1, 3, size, lit, "oop", TOKEN_LOOP);
+		case 'm': return checkKeyword(1, 2, size, lit, "ap", TOKEN_MAP);
 		case 'n':
 			if(size >1){ 
 				switch(lit[1]){
@@ -523,7 +524,7 @@ struct Token NextToken() {
 			if(peek() == '=') return newMultiCharToken(TOKEN_GREATER_EQUAL, 2);
 			return newToken(TOKEN_GREATER, ch);
 		case '=' : 
-			if(peek() == '>') return newMultiCharToken(TOKEN_AASSIGN, 2); 			
+			if(peek() == '>') return newMultiCharToken(TOKEN_MASSIGN, 2); 			
 			//return newToken(TOKEN_EQUAL, ch); 			
 			if(peek() == '=') return newMultiCharToken(TOKEN_EQUAL, 2); 			
 		case '\'':
@@ -577,7 +578,7 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_INOUT: 		return "TOKEN_INOUT";
 		case TOKEN_SASSIGN: 		return "TOKEN_SASSIGN";
 		case TOKEN_VASSIGN: 		return "TOKEN_VASSIGN";
-		case TOKEN_AASSIGN: 		return "TOKEN_AASSIGN";
+		case TOKEN_MASSIGN: 		return "TOKEN_MASSIGN";
 		case TOKEN_STL:	 		return "TOKEN_STL";
 		case TOKEN_STLV:	 		return "TOKEN_STLV";
 		case TOKEN_SIG:	 		return "TOKEN_SIG";

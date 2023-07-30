@@ -705,7 +705,7 @@ void TestParseProgram_ProcessWithTypeDefinition(CuTest *tc){
 	free(input);
 }
 
-void TestParse_EntityWithGeneric(CuTest *tc){
+void TestParseProgram_EntityWithGeneric(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
 		ent ander {\n \
@@ -726,7 +726,7 @@ void TestParse_EntityWithGeneric(CuTest *tc){
 	free(input);
 }
 
-void TestParse_ArchWithComponent(CuTest *tc){
+void TestParseProgram_ArchWithComponent(CuTest *tc){
 	char* input = strdup(" \
 		arch behavioral(comptest){\n \
 			\n \
@@ -745,6 +745,42 @@ void TestParse_ArchWithComponent(CuTest *tc){
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
 	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_ArchWithMapping(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(comptest){\n \
+			\n \
+			comp counter {\n \
+				SIZE int;\n \
+      		clk -> stl;\n \
+      		rst -> stl;\n \
+      		Q <- stlv(3 downto 0);\n \
+   		}\n \
+			sig clk32 stl;\n \
+			sig rstn stl;\n \
+			sig nibble stlv(3 downto 0);\n \
+			sig initSize int := 5;\n \
+			\n \
+			C1: counter map(initSize, clk32, rstn, nibble);\n \
+			\n \
+			C2: counter map (\n \
+				SIZE => initSize,\n \
+      		clk => clk32,\n \
+      		reset => rst,\n \
+      		Q => open,\n \
+	   	);\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -784,8 +820,9 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSwitchCase);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithAssert);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithTypeDefinition);
-	SUITE_ADD_TEST(suite, TestParse_EntityWithGeneric);
-	SUITE_ADD_TEST(suite, TestParse_ArchWithComponent);
+	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithGeneric);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithComponent);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithMapping);
 
 	return suite;
 }

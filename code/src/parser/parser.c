@@ -261,6 +261,28 @@ static struct Expression* parseBinary(struct Expression* expr){
 	return &(biexp->self);
 }
 
+static struct Label* parseLabel(){
+	
+	if(match(TOKEN_IDENTIFIER) && peek(TOKEN_COLON)){
+		
+		//we got a label
+		struct Label* label = calloc(1, sizeof(struct Label));
+		label->self.type = AST_LABEL;
+		
+		int size = strlen(p->currToken.literal) + 1;
+		label->value = calloc(size, sizeof(char));
+		memcpy(label->value, p->currToken.literal, size);
+		
+		//step past label name and colon
+		nextToken();
+		nextToken();
+
+		return label;
+	}	
+
+	return NULL;
+}
+
 static struct Range* parseRange(){
 	struct Range* rng = calloc(1, sizeof(struct Range));
 	rng->self.type = AST_RANGE;
@@ -354,8 +376,8 @@ struct ExpressionList* parseEnumerationList(){
 	while(!match(TOKEN_RBRACE)){
 				
 		struct Token prevToken = copyToken(p->currToken);
-		
-		struct Expression* curr = parseExpression(LOWEST_PREC);	
+
+		struct Expression* curr = parseExpression(LOWEST_PREC);
 		if(curr == NULL) return NULL;
 
 		if(curr->type != NAME_EXPR && curr->type != CHAR_EXPR){
@@ -489,15 +511,15 @@ static void parseVariableAssignment(struct VariableAssign *varAssign){
 }
 
 static void parseSignalAssignment(struct SignalAssign *sigAssign){
-#ifdef DEBUG
-	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
-#endif
 	sigAssign->self.type = AST_SASSIGN;
 
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	sigAssign->target = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
+#ifdef DEBUG
+	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
+#endif
 	
 	nextToken();
 	sigAssign->expression = parseExpression(LOWEST_PREC);
@@ -952,6 +974,48 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
+static struct ExpressionList* parseInstanceMappings(){
+	struct ExpressionList* mappings = calloc(1, sizeof(struct ExpressionList));
+	struct ExpressionList* currMap = mappings;
+	
+	nextToken();
+
+	while(!match(TOKEN_RPAREN) && !match(TOKEN_EOP)){
+
+		struct Expression* mapping = parseExpression(LOWEST_PREC);
+		
+		if(!match(TOKEN_RPAREN)){
+			consume(TOKEN_COMMA, "expect comma after identifier in mapping");		
+			nextToken();
+		}
+
+		currMap->expression = mapping;
+		
+		currMap->next = calloc(1, sizeof(struct ExpressionList));
+		currMap = currMap->next;
+	}
+
+	return mappings;
+}
+
+static void parseInstantiation(struct Instantiation* instance){
+	instance->self.type = AST_INSTANCE;
+
+	consume(TOKEN_IDENTIFIER, "expect identifer at start of instance");
+	instance->name = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_MAP, "Expect mapping after identifier in instance");
+#ifdef DEBUG
+	memcpy(&(instance->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	
+	consumeNext(TOKEN_LPAREN, "Expect lparen after map keyword in instance");
+	instance->mapping =	parseInstanceMappings();
+	consume(TOKEN_RPAREN, "Expect rparen after mappings in instance");
+
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of instantiation");
+}
+
 static void parseProcessStatement(struct Process* proc){
 #ifdef DEBUG
 	memcpy(&(proc->self.token), &(p->currToken), sizeof(struct Token));
@@ -984,23 +1048,41 @@ static Dba* parseArchBodyStatements(){
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		
 		struct ConcurrentStatement conStmt = {0};
+		conStmt.label = parseLabel();
 		
 		switch(p->currToken.type){
-			case TOKEN_IDENTIFIER: { 
-				//TODO: this may need some work depending on what we do with labels
-				conStmt.type = SIGNAL_ASSIGNMENT;
-				parseSignalAssignment(&(conStmt.as.signalAssignment));
-				break;
-			}
-	
 			case TOKEN_PROC: {
 				conStmt.type = PROCESS;
 				parseProcessStatement(&(conStmt.as.process));
 				break;
 			}
 	
+			case TOKEN_IDENTIFIER: { 
+				//some concurrent statements begin with identifiers
+				switch(p->peekToken.type){
+					case TOKEN_MAP: {
+						conStmt.type = INSTANTIATION;
+						parseInstantiation(&(conStmt.as.instantiation));
+						break;
+					}
+
+					case TOKEN_SASSIGN: {
+						conStmt.type = SIGNAL_ASSIGNMENT;
+						parseSignalAssignment(&(conStmt.as.signalAssignment));
+						break;
+					}
+					
+					default:
+						error(p->currToken.lineNumber, p->currToken.literal, 
+							"Expect valid concurrent statement in architecture body");
+						break;
+				}
+				break;
+			}
+	
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				error(p->currToken.lineNumber, p->currToken.literal, 
+					"Expect valid concurrent statement in architecture body");
 				break;
 		}
 
