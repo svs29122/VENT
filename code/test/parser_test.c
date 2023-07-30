@@ -765,6 +765,8 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 			sig nibble stlv(3 downto 0);\n \
 			sig initSize int := 5;\n \
 			\n \
+			S1: clk32 <= '1';\n \
+			\n \
 			C1: counter map(initSize, clk32, rstn, nibble);\n \
 			\n \
 			C2: counter map (\n \

@@ -23,6 +23,10 @@ static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
 static void walkPorts(Dba* ports, struct OperationBlock* op);
 static void walkGenerics(Dba* generics, struct OperationBlock* op);
 
+static void walkLabel(struct Label* label, struct OperationBlock* op){
+	op->doDefaultOp(&(label->self));
+}
+
 static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(varDecl->self));
 	if(varDecl->name){
@@ -351,6 +355,19 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 	op->doBlockArrayOp(decls);
 }
 
+static void walkInstantiation(struct Instantiation* inst, struct OperationBlock* op){
+	op->doDefaultOp(&(inst->self));
+	if(inst->name){
+		op->doDefaultOp(&(inst->name->self.root));
+	}
+	if(inst->mapping){
+		//TODO: not sure this can/should go here
+		op->doSpecialOp(&(inst->self));
+		walkExpressionList(inst->mapping, op);
+	}
+	op->doCloseOp(&(inst->self));
+}
+
 static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
 	op->doDefaultOp(&(proc->self));
 	if(proc->sensitivityList){
@@ -369,17 +386,25 @@ static void walkProcessStatement(struct Process* proc, struct OperationBlock* op
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(stmts); i++){
 		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(stmts, i) ;
+		if(cstmt->label){
+			walkLabel(cstmt->label, op);
+		}
 		switch(cstmt->type) {
-			case SIGNAL_ASSIGNMENT: {
-				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
-				break;
-			}
-		
 			case PROCESS: {
 				walkProcessStatement(&(cstmt->as.process), op);
 				break;
 			}
 
+			case INSTANTIATION: {
+				walkInstantiation(&(cstmt->as.instantiation), op);
+				break;
+			}
+
+			case SIGNAL_ASSIGNMENT: {
+				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
+				break;
+			}
+		
 			default:
 				break;
 		}

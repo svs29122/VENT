@@ -50,6 +50,10 @@ static void printArchDecl(struct AstNode* aDecl){
 	indent++;
 }
 
+static void printLabel(struct AstNode* label){
+	printf("\e[0;34m""%cLabel: \'%s\'\r\n", shift(), ((struct Label*)label)->value);
+}
+
 static void printIdentifier(struct AstNode* ident){
 	printf("\e[0;35m""%cIdentifier: \'%s\'\r\n", shift(), ((struct Identifier*)ident)->value);
 }
@@ -160,6 +164,15 @@ static void printVariableAssign(struct AstNode* vAssign){
 
 static void printSignalAssign(struct AstNode* sAssign){
 	printf("\e[0;36m""%cSignalAssign\r\n", shift());
+	indent++;
+}
+
+static void printMapping(struct AstNode* inst){
+	printf("\e[0;34m""%c/*Mapping*/\r\n", shift());
+}
+
+static void printInstantiation(struct AstNode* inst){
+	printf("\e[0;33m""%cInstance\r\n", shift());
 	indent++;
 }
 
@@ -293,6 +306,10 @@ static void printSpecial(struct AstNode* node){
 			printSeverity(node);
 			break;
 
+		case AST_INSTANCE:
+			printMapping(node);
+			break;
+
 		default:
 			break;
 	}
@@ -318,6 +335,10 @@ static void printDefault(struct AstNode* node){
 			printEntityDecl(node);
 			break;
 
+		case AST_LABEL:
+			printLabel(node);
+			break;
+
 		case AST_COMPONENT:
 			printComponentDecl(node);
 			break;
@@ -336,6 +357,10 @@ static void printDefault(struct AstNode* node){
 
 		case AST_PROCESS:
 			printProcessStatement(node);
+			break;
+
+		case AST_INSTANCE:
+			printInstantiation(node);
 			break;
 
 		case AST_FOR:
