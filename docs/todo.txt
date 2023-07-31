@@ -78,3 +78,8 @@ IX) Language features
 	...
 	10) Packages
 
+
+X) Other Reminders
+	1) Hitting an issue with stlvs because accessing them requires using parenthesis, which Identifiers do not support
+		i) Need to implement the majority of identifiers in AST Nodes as named expressions (NameExpr) instead
+	2) Need to figure out how a component instantiation can determine which if it's mappings are ports and which are generics

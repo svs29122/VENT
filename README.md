@@ -59,10 +59,10 @@ end architecture behavioral;
 TVT is the program used to transpile VENT into VHDL. TVT is written in pure C and is composed of a handful of modules. The major stages that TVT goes through to get from VENT to VHDL are shown below. 
 
 ### Stage 1
-![Image](/spec/stage1.png)
+![Image](/docs/stage1.png)
 
 ### Stage 2
-![Image](/spec/stage2.png)
+![Image](/docs/stage2.png)
 
 ### Build & Run
 To build TVT just run `make` in the code directory. Run `make help` for more options e.g. cleaning or running the unit tests. TVT uses GCC and the CuTest unit testing framework. <br/>
