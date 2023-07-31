@@ -58,7 +58,6 @@ static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock
 	}
 	if(typeDecl->enumList){
 		walkExpressionList(typeDecl->enumList, op);
-
 		op->doSpecialOp(&(typeDecl->self));
 	}
 	op->doCloseOp(&(typeDecl->self));
@@ -360,10 +359,10 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 	if(inst->name){
 		op->doDefaultOp(&(inst->name->self.root));
 	}
+	op->doOpenOp(&(inst->self));
 	if(inst->mapping){
-		//TODO: not sure this can/should go here
-		op->doSpecialOp(&(inst->self));
 		walkExpressionList(inst->mapping, op);
+		op->doSpecialOp(&(inst->self));
 	}
 	op->doCloseOp(&(inst->self));
 }

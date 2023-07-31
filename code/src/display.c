@@ -306,6 +306,15 @@ static void printSpecial(struct AstNode* node){
 			printSeverity(node);
 			break;
 
+		default:
+			break;
+	}
+}
+
+static void printOpen(struct AstNode* node){
+
+	switch(node->type){
+
 		case AST_INSTANCE:
 			printMapping(node);
 			break;
@@ -450,6 +459,7 @@ void PrintProgram(struct Program* prog){
 	// setup block
 	struct OperationBlock opBlk = {
 		.doDefaultOp 		= printDefault,
+		.doOpenOp 			= printOpen,
 		.doCloseOp 			= printClose,
 		.doSpecialOp 		= printSpecial,
 		.doExpressionOp 	= printExpression,

@@ -27,6 +27,13 @@ static void freeIdentifier(struct AstNode* ident){
 	free(id);
 }
 
+static void freeLabel(struct AstNode* lbl){
+	struct Label* label = (struct Label*)lbl;
+	if(label->value) free(label->value);
+
+	free(label);
+}
+
 static void freePortMode(struct AstNode* pmode){
 	struct PortMode* pm = (struct PortMode*)pmode;
 	if(pm->value) free(pm->value);
@@ -167,6 +174,10 @@ static void freeSpecial(struct AstNode* node){
 			freeAssignmentOp(node);
 			break;
 
+		case AST_INSTANCE:
+			freeExpressionList(node);
+			break;
+
 		case AST_TDECL:
 			freeExpressionList(node);
 			break;
@@ -186,6 +197,10 @@ static void freeDefault(struct AstNode* node){
 
 		case AST_IDENTIFIER:
 			freeIdentifier(node);
+			break;
+
+		case AST_LABEL:
+			freeLabel(node);
 			break;
 
 		case AST_PMODE:
