@@ -17,7 +17,7 @@ struct DynamicHashTable {
 };
 
 struct DynamicHashTable* InitHashTable(){
-	struct DynamicHashTable* hst = malloc(sizeof(struct DynamicHashTable));
+	struct DynamicHashTable* hst = calloc(1, sizeof(struct DynamicHashTable));
 	if(hst == NULL){
 		printf("Error: Unable to allocate Hash Table\r\n");
 		exit(-1);
@@ -77,19 +77,22 @@ static struct Entry* findEntry(struct Entry* entries, int capacity, char* key){
 
 static void adjustTableCapacity(struct DynamicHashTable* hst, int capacity){
 	struct Entry* entries = calloc(capacity , sizeof(struct Entry));
-	
-	hst->count = 0;
-	for(int i=0; i<hst->capacity; i++){
-		struct Entry* entry = &hst->entries[i];
-		if(entry->key == NULL) continue;
 
-		struct Entry* dest = findEntry(entries, capacity, entry->key);
-		dest->key = entry->key;
-		dest->value = entry->value;
-		hst->count++;
+	if(hst->entries != NULL){	
+
+		hst->count = 0;
+		for(int i=0; i<hst->capacity; i++){
+			struct Entry* entry = &hst->entries[i];
+			if(entry->key == NULL) continue;
+	
+			struct Entry* dest = findEntry(entries, capacity, entry->key);
+			dest->key = entry->key;
+			dest->value = entry->value;
+			hst->count++;
+		}
+		free(hst->entries);
 	}
 
-	free(hst->entries);
 	hst->entries = entries;
 	hst->capacity = capacity; 
 }
@@ -102,7 +105,7 @@ bool SetEntryInHashTable(struct DynamicHashTable* hst, char* key, int val){
 	
 	if((hst->capacity >> 2 ) < hst->count + 1){
 		int oldCapacity = hst->capacity;
-		hst->capacity = oldCapacity < 2 ? 2 : (oldCapacity * 2);
+		hst->capacity = oldCapacity < 8 ? 8 : (oldCapacity * 2);
 		adjustTableCapacity(hst, hst->capacity);
 	}
 

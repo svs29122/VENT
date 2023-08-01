@@ -8,11 +8,11 @@ void TestDht_SimpleHashTable(CuTest* tc){
 	struct DynamicHashTable* myHt = InitHashTable();
 
 	SetEntryInHashTable(myHt, "String1", 10);
-	/*
 	SetEntryInHashTable(myHt, "String2", 20);
 	SetEntryInHashTable(myHt, "String3", 30);
 	SetEntryInHashTable(myHt, "String4", 40);
 	SetEntryInHashTable(myHt, "String5", 50);
+
 	int entryVal = 0;	
 	GetEntryInHashTable(myHt, "String1", &entryVal);	
 	CuAssertIntEquals(tc, 10, entryVal);	
@@ -32,7 +32,7 @@ void TestDht_SimpleHashTable(CuTest* tc){
 	ClearEntryInHashTable(myHt, "String3");
 	bool gotEntry = GetEntryInHashTable(myHt, "String3", &entryVal);	
 	CuAssertTrue(tc, gotEntry == false);	
-	*/
+
 	FreeHashTable(myHt);	
 }
 

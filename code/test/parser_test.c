@@ -782,7 +782,7 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
