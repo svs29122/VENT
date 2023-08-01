@@ -5,11 +5,13 @@
 
 // convenience macros
 #define TEST_DBA
+#define TEST_DHT
 #define TEST_LEXER
 #define TEST_PARSER
 #define TEST_TRANSPILE
 
 CuSuite* DbaTestGetSuite();
+CuSuite* DhtTestGetSuite();
 CuSuite* LexerTestGetSuite();
 CuSuite* ParserTestGetSuite();
 CuSuite* TranspileTestGetSuite();
@@ -23,6 +25,10 @@ void RunAllTests(void){
 #ifdef TEST_DBA
 	CuSuite* dbaTestSuite = DbaTestGetSuite();
 	CuSuiteAddSuite(masterSuite, dbaTestSuite);
+#endif
+#ifdef TEST_DHT
+	CuSuite* dhtTestSuite = DhtTestGetSuite();
+	CuSuiteAddSuite(masterSuite, dhtTestSuite);
 #endif
 #ifdef TEST_LEXER
 	CuSuite* lexerTestSuite = LexerTestGetSuite();
@@ -57,6 +63,9 @@ void RunAllTests(void){
 #endif
 #ifdef TEST_DBA
 	CuSuiteDelete(dbaTestSuite);
+#endif
+#ifdef TEST_DHT
+	CuSuiteDelete(dhtTestSuite);
 #endif
 	free(masterSuite);
 }
