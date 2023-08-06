@@ -40,7 +40,7 @@ void TestDht_MediumSizeTable(CuTest* tc){
 	struct DynamicHashTable* pokedex = InitHashTable();
 
 	char* firstGeneration[] = {
-		"bulbasaur", "ivysaur", "venusaur", "charamander", "charmeleon",
+		"bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon",
 		"charizard", "squirtle", "wartortle", "blastoise", "caterpie",
 		"metapod", "butterfree", "weedle", "kakuna", "beedrill",
 		"pidgey", "pidgeotto", "pidgeot", "rattata", "raticate",
@@ -79,27 +79,34 @@ void TestDht_MediumSizeTable(CuTest* tc){
 	}
 
 	// iterate through the list manually
-	int number = 0;
-	for(int i=0; i<numInFirstGen; i++){
+	const int numInTable = EntryCount(pokedex);
+
+	for(int i=0; i<numInTable; i++){
 		
+		int number = 0;
 		bool gotMonster = GetInHashTable(pokedex, firstGeneration[i], &number);
 		if(gotMonster){
 			CuAssertIntEquals(tc, i+1, number);	
-			//printf("%03d: %s\r\n", number, firstGeneration[i]);
+#ifdef PRINT_FIRST_GENERATION
+			printf("%03d: %s\r\n", number, firstGeneration[i]);
+#endif
 		}
 	}
+
+	FreeHashTable(pokedex);
 }
 
 void TestDht_HashTableWithIterator(CuTest* tc){
 
-	/*
-	struct HashTableIterator* iter = CreateHashTableIterator(pokedex);
-	struct Entry* entry = NULL;
-	while(entry = GetNextEntry(iter)) {
-		printf("%03d: %s\r\n", entry->value, entry->key);
+	struct DynamicHashTable* aHashTable = InitHashTable();
+
+	struct HashTableIterator* iter = CreateHashTableIterator(aHashTable);
+	while(HasNextEntry(iter)) {
+		printf("%03d: %s\r\n", GetValue(iter), GetKey(iter));
 	}
 	DestroyHashTableIterator(iter);	
-	*/
+
+	FreeHashTable(aHashTable);	
 }
 
 CuSuite* DhtTestGetSuite(){

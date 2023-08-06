@@ -11,20 +11,19 @@
 
 */
 
-struct Entry {
-	char* key;
-	int value;
-};
-
 struct DynamicHashTable* InitHashTable();
 void FreeHashTable(struct DynamicHashTable* hst);
 
 bool GetInHashTable(struct DynamicHashTable* hst, char*  key, int* val);
 bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val);
 bool ClearInHashTable(struct DynamicHashTable* hst, char* key);
+int EntryCount(struct DynamicHashTable* hst);
 
 struct HashTableIterator* CreateHashTableIterator(struct DynamicHashTable* ht);
 void DestroyHashTableIterator(struct HashTableIterator *iter);
-struct Entry* GetNextEntry(struct HashTableIterator* iter);
+
+bool HasNextEntry(struct HashTableIterator* iter);
+char* GetKey(struct HashTableIterator* iter);
+int GetValue(struct HashTableIterator* iter);
 
 #endif // INC_DHT_H

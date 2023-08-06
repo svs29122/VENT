@@ -5,6 +5,11 @@
 
 #include <dht.h>
 
+struct Entry {
+	char* key;
+	int value;
+};
+
 struct DynamicHashTable {
 	int count;
 	int capacity;
@@ -56,7 +61,9 @@ static void adjustTableCapacity(struct DynamicHashTable* hst, int capacity){
 		hst->count = 0;
 		for(int i=0; i<hst->capacity; i++){
 			struct Entry* entry = &hst->entries[i];
-			if(entry->key == NULL) continue;
+			if(entry->key == NULL){
+				continue;
+			}
 	
 			struct Entry* dest = findEntry(entries, capacity, entry->key);
 			dest->key = entry->key;
@@ -69,6 +76,8 @@ static void adjustTableCapacity(struct DynamicHashTable* hst, int capacity){
 	hst->entries = entries;
 	hst->capacity = capacity; 
 }
+
+// public interface 
 
 struct DynamicHashTable* InitHashTable(){
 	struct DynamicHashTable* hst = calloc(1, sizeof(struct DynamicHashTable));
@@ -83,6 +92,10 @@ struct DynamicHashTable* InitHashTable(){
 }
 
 void FreeHashTable(struct DynamicHashTable* hst){
+	for(int i=0; i<hst->capacity; i++){
+		if(hst->entries[i].key != NULL) free(hst->entries[i].key);		
+	}
+
 	hst->count = 0;
 	hst->capacity = 0;
 
@@ -98,18 +111,22 @@ bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val){
 		return false;
 	}
 	
-	if((hst->capacity >> 2 ) < hst->count + 1){
+	if((hst->capacity >> 1 ) < hst->count + 1){
 		int oldCapacity = hst->capacity;
-		hst->capacity = oldCapacity < 8 ? 8 : (oldCapacity * 2);
-		adjustTableCapacity(hst, hst->capacity);
+		int newCapacity = oldCapacity < 8 ? 8 : (oldCapacity * 2);
+		adjustTableCapacity(hst, newCapacity);
 	}
 
 	struct Entry* entry = findEntry(hst->entries, hst->capacity, key);
 	bool isNewKey = entry->key == NULL;
 	if(isNewKey && entry->value == 0) hst->count++;
 
-	entry->key = key;
+	size_t size = strlen(key) + 1;
+	entry->key = calloc(size, sizeof(char));
+	strncpy(entry->key, key, size);
+
 	entry->value = val;
+
 	return isNewKey;
 }
 
@@ -140,13 +157,27 @@ bool ClearInHashTable(struct DynamicHashTable* hst, char* key){
 	if(entry->key == NULL) return false;
 
 	//place a tombstone in the entry
+	free(entry->key);
 	entry->key = NULL;
 	entry->value = 0xc0de;
 
 	return true;
 }
 
+int EntryCount(struct DynamicHashTable* hst){
+	if(hst == NULL){
+		printf("Error Hash Table Ptr null\r\n");
+		return 0;
+	}
+
+	return hst->count;
+}
+
+// public iterator interface
+
 struct HashTableIterator {
+	char* key;
+	int value;
 	unsigned int indexOfPreviousEntry;
 	struct DynamicHashTable* hashTable;
 };
@@ -164,7 +195,7 @@ void DestroyHashTableIterator(struct HashTableIterator *iter){
 	free(iter);
 }
 
-struct Entry* GetNextEntry(struct HashTableIterator* iter){
+bool HasNextEntry(struct HashTableIterator* iter){
 	
 	int start = iter->indexOfPreviousEntry;
 	int end = iter->hashTable->capacity;
@@ -176,9 +207,19 @@ struct Entry* GetNextEntry(struct HashTableIterator* iter){
 	
 		//we found a valid entry so bump the cursor
 		iter->indexOfPreviousEntry = i + 1;
-		return entry;
+		iter->key = entry->key;
+		iter->value = entry->value;
+
+		return true;
 	}
 	
-	return NULL;
+	return false;
 }
 
+char* GetKey(struct HashTableIterator* iter){
+	return iter->key;
+}
+
+int GetValue(struct HashTableIterator* iter){
+	return iter->value;
+}
