@@ -7,39 +7,106 @@
 void TestDht_SimpleHashTable(CuTest* tc){
 	struct DynamicHashTable* myHt = InitHashTable();
 
-	SetEntryInHashTable(myHt, "String1", 10);
-	SetEntryInHashTable(myHt, "String2", 20);
-	SetEntryInHashTable(myHt, "String3", 30);
-	SetEntryInHashTable(myHt, "String4", 40);
-	SetEntryInHashTable(myHt, "String5", 50);
+	SetInHashTable(myHt, "String1", 10);
+	SetInHashTable(myHt, "String2", 20);
+	SetInHashTable(myHt, "String3", 30);
+	SetInHashTable(myHt, "String4", 40);
+	SetInHashTable(myHt, "String5", 50);
 
 	int entryVal = 0;	
-	GetEntryInHashTable(myHt, "String1", &entryVal);	
+	GetInHashTable(myHt, "String1", &entryVal);	
 	CuAssertIntEquals(tc, 10, entryVal);	
 
-	GetEntryInHashTable(myHt, "String2", &entryVal);	
+	GetInHashTable(myHt, "String2", &entryVal);	
 	CuAssertIntEquals(tc, 20, entryVal);	
 
-	GetEntryInHashTable(myHt, "String3", &entryVal);	
+	GetInHashTable(myHt, "String3", &entryVal);	
 	CuAssertIntEquals(tc, 30, entryVal);	
 
-	GetEntryInHashTable(myHt, "String4", &entryVal);	
+	GetInHashTable(myHt, "String4", &entryVal);	
 	CuAssertIntEquals(tc, 40, entryVal);	
 
-	GetEntryInHashTable(myHt, "String5", &entryVal);	
+	GetInHashTable(myHt, "String5", &entryVal);	
 	CuAssertIntEquals(tc, 50, entryVal);	
 
-	ClearEntryInHashTable(myHt, "String3");
-	bool gotEntry = GetEntryInHashTable(myHt, "String3", &entryVal);	
+	ClearInHashTable(myHt, "String3");
+	bool gotEntry = GetInHashTable(myHt, "String3", &entryVal);	
 	CuAssertTrue(tc, gotEntry == false);	
 
 	FreeHashTable(myHt);	
+}
+
+void TestDht_MediumSizeTable(CuTest* tc){
+	struct DynamicHashTable* pokedex = InitHashTable();
+
+	char* firstGeneration[] = {
+		"bulbasaur", "ivysaur", "venusaur", "charamander", "charmeleon",
+		"charizard", "squirtle", "wartortle", "blastoise", "caterpie",
+		"metapod", "butterfree", "weedle", "kakuna", "beedrill",
+		"pidgey", "pidgeotto", "pidgeot", "rattata", "raticate",
+		"spearow", "fearow", "ekans", "arbok", "pikachu",
+		"raichu", "sandshrew", "sandslash", "nidoran\u2641", "nidorina", 
+		"nidoqueen", "nidoran\u2642", "nidorino", "nidoking", "clefairy", 
+		"clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff",
+		"zubat", "golbat", "oddish", "gloom", "vileplume", 
+		"paras", "parasect", "venonat", "venomoth","diglett", 
+		"dugtrio", "meowth", "persian", "psyduck", "golduck", 
+		"mankey", "primeape", "growlithe", "arcanine", "poliwag", 
+		"poliwhirl","polywrath", "abra", "kadabra", "alakazam", 
+		"machop","machoke", "machamp", "bellsprout", "weepinbell", 
+		"victreebell", "tentacool", "tentacruel", "geodude", "graveler", 
+		"golem", "ponyta", "rapidash", "slowpoke", "slowbro", 
+		"magnemite", "magneton", "farfetch'd", "doduo", "dodrio", 
+		"seel", "dewgong", "grimer", "muk", "shelder", 
+		"cloyster", "gastly", "haunter", "gengar", "onix", 
+		"drowzee", "hypno", "krabby", "kingler", "voltorb", 
+		"electrode", "exeggcute", "exeggutor", "cubone", "marowak", 
+		"hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", 
+		"rhyhorn", "rhydon", "chansey", "tangela","kangaskhan", 
+		"horsea", "seadra", "goldeen", "seaking", "staryu", 
+		"starmie", "mr. mime", "scyther", "jynx", "electrabuzz", 
+		"magmar", "pinsir", "tauros", "magikarp", "gyarados", 
+		"lapris", "ditto", "eevee", "vaporeon", "jolteon", 
+		"flareon", "porygon", "omanyte", "omastar", "kabuto", 
+		"kabutops", "aerodactyl", "snorlax", "articuno", "zapdos", 
+		"moltres", "dratini", "dragonair", "dragonite", "mewtwo", 
+		"mew"	
+	};
+	const int numInFirstGen = sizeof(firstGeneration) / sizeof(char*);
+
+	for(int i=0; i<numInFirstGen; i++){
+		SetInHashTable(pokedex, firstGeneration[i], i+1);
+	}
+
+	// iterate through the list manually
+	int number = 0;
+	for(int i=0; i<numInFirstGen; i++){
+		
+		bool gotMonster = GetInHashTable(pokedex, firstGeneration[i], &number);
+		if(gotMonster){
+			CuAssertIntEquals(tc, i+1, number);	
+			//printf("%03d: %s\r\n", number, firstGeneration[i]);
+		}
+	}
+}
+
+void TestDht_HashTableWithIterator(CuTest* tc){
+
+	/*
+	struct HashTableIterator* iter = CreateHashTableIterator(pokedex);
+	struct Entry* entry = NULL;
+	while(entry = GetNextEntry(iter)) {
+		printf("%03d: %s\r\n", entry->value, entry->key);
+	}
+	DestroyHashTableIterator(iter);	
+	*/
 }
 
 CuSuite* DhtTestGetSuite(){
 	CuSuite* suite = CuSuiteNew();
 
 	SUITE_ADD_TEST(suite, TestDht_SimpleHashTable);
+	SUITE_ADD_TEST(suite, TestDht_MediumSizeTable);
 
 	return suite;
 }

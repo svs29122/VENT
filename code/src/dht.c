@@ -5,38 +5,11 @@
 
 #include <dht.h>
 
-struct Entry {
-	char* key;
-	int value;
-};
-
 struct DynamicHashTable {
 	int count;
 	int capacity;
 	struct Entry* entries;
 };
-
-struct DynamicHashTable* InitHashTable(){
-	struct DynamicHashTable* hst = calloc(1, sizeof(struct DynamicHashTable));
-	if(hst == NULL){
-		printf("Error: Unable to allocate Hash Table\r\n");
-		exit(-1);
-	}
-
-	hst->count = 0;
-	hst->capacity = 0;
-	hst->entries = NULL;
-}
-
-void FreeHashTable(struct DynamicHashTable* hst){
-	hst->count = 0;
-	hst->capacity = 0;
-
-	free(hst->entries);
-	hst->entries = NULL;
-
-	free(hst);
-}
 
 #define FNV_OFFSET_BASIS 2166136261u;
 #define FNV_PRIME 16777619;
@@ -97,7 +70,29 @@ static void adjustTableCapacity(struct DynamicHashTable* hst, int capacity){
 	hst->capacity = capacity; 
 }
 
-bool SetEntryInHashTable(struct DynamicHashTable* hst, char* key, int val){
+struct DynamicHashTable* InitHashTable(){
+	struct DynamicHashTable* hst = calloc(1, sizeof(struct DynamicHashTable));
+	if(hst == NULL){
+		printf("Error: Unable to allocate Hash Table\r\n");
+		exit(-1);
+	}
+
+	hst->count = 0;
+	hst->capacity = 0;
+	hst->entries = NULL;
+}
+
+void FreeHashTable(struct DynamicHashTable* hst){
+	hst->count = 0;
+	hst->capacity = 0;
+
+	free(hst->entries);
+	hst->entries = NULL;
+
+	free(hst);
+}
+
+bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val){
 	if(hst == NULL){
 		printf("Erorr: Hast Table Ptr NULL\r\n");
 		return false;
@@ -118,7 +113,7 @@ bool SetEntryInHashTable(struct DynamicHashTable* hst, char* key, int val){
 	return isNewKey;
 }
 
-bool GetEntryInHashTable(struct DynamicHashTable* hst, char*  key, int* val){
+bool GetInHashTable(struct DynamicHashTable* hst, char*  key, int* val){
 	if(hst == NULL){
 		printf("Error Hash Table Ptr null\r\n");
 		return false;
@@ -133,7 +128,7 @@ bool GetEntryInHashTable(struct DynamicHashTable* hst, char*  key, int* val){
 	return true;
 }
 
-bool ClearEntryInHashTable(struct DynamicHashTable* hst, char* key){
+bool ClearInHashTable(struct DynamicHashTable* hst, char* key){
 	if(hst == NULL){
 		printf("Error Hash Table Ptr null\r\n");
 		return false;
@@ -149,5 +144,39 @@ bool ClearEntryInHashTable(struct DynamicHashTable* hst, char* key){
 	entry->value = 0xc0de;
 
 	return true;
+}
+
+struct HashTableIterator {
+	unsigned int numberOfEntries;
+	unsigned int indexOfPreviousEntry;
+	struct DynamicHashTable* hashTable;
+};
+
+struct HashTableIterator* CreateHashTableIterator(struct DynamicHashTable* ht) {
+	struct HashTableIterator* newIter = calloc(1, sizeof(struct HashTableIterator));
+
+	newIter->hashTable = ht;
+	newIter->numberOfEntries = ht->count;
+	newIter->indexOfPreviousEntry = 0;
+
+	return newIter;
+}
+
+void DestroyHashTableIterator(struct HashTableIterator *iter){
+	free(iter);
+}
+
+struct Entry* GetNextEntry(struct HashTableIterator* iter){
+
+	for(int i=iter->indexOfPreviousEntry; i<iter->hashTable->capacity; i++){
+		struct Entry* entry = &iter->hashTable->entries[i];
+		if(entry->key == NULL) continue;
+	
+		//we found a valid entry
+		iter->indexOfPreviousEntry = i + 1;
+		return entry;
+	}
+	
+	return NULL;
 }
 
