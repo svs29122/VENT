@@ -147,7 +147,6 @@ bool ClearInHashTable(struct DynamicHashTable* hst, char* key){
 }
 
 struct HashTableIterator {
-	unsigned int numberOfEntries;
 	unsigned int indexOfPreviousEntry;
 	struct DynamicHashTable* hashTable;
 };
@@ -156,7 +155,6 @@ struct HashTableIterator* CreateHashTableIterator(struct DynamicHashTable* ht) {
 	struct HashTableIterator* newIter = calloc(1, sizeof(struct HashTableIterator));
 
 	newIter->hashTable = ht;
-	newIter->numberOfEntries = ht->count;
 	newIter->indexOfPreviousEntry = 0;
 
 	return newIter;
@@ -167,12 +165,16 @@ void DestroyHashTableIterator(struct HashTableIterator *iter){
 }
 
 struct Entry* GetNextEntry(struct HashTableIterator* iter){
+	
+	int start = iter->indexOfPreviousEntry;
+	int end = iter->hashTable->capacity;
+	
+	for(int i=start; i<end; i++){
 
-	for(int i=iter->indexOfPreviousEntry; i<iter->hashTable->capacity; i++){
 		struct Entry* entry = &iter->hashTable->entries[i];
 		if(entry->key == NULL) continue;
 	
-		//we found a valid entry
+		//we found a valid entry so bump the cursor
 		iter->indexOfPreviousEntry = i + 1;
 		return entry;
 	}
