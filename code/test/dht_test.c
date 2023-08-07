@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
+#include "valgrind.h"
 #include "cutest.h"
 #include "dht.h"
 
-void TestDht_SimpleHashTable(CuTest* tc){
+void TestDht_SmallHashTable(CuTest* tc){
 	struct DynamicHashTable* myHt = InitHashTable();
 
 	SetInHashTable(myHt, "String1", 10);
@@ -36,7 +38,7 @@ void TestDht_SimpleHashTable(CuTest* tc){
 	FreeHashTable(myHt);	
 }
 
-void TestDht_MediumSizeTable(CuTest* tc){
+void TestDht_MediumHashTable(CuTest* tc){
 	struct DynamicHashTable* pokedex = InitHashTable();
 
 	char* firstGeneration[] = {
@@ -96,24 +98,70 @@ void TestDht_MediumSizeTable(CuTest* tc){
 	FreeHashTable(pokedex);
 }
 
-void TestDht_HashTableWithIterator(CuTest* tc){
-
-	struct DynamicHashTable* aHashTable = InitHashTable();
-
+static void iterateOverTable(CuTest* tc, struct DynamicHashTable* aHashTable){
 	struct HashTableIterator* iter = CreateHashTableIterator(aHashTable);
 	while(HasNextEntry(iter)) {
-		printf("%03d: %s\r\n", GetValue(iter), GetKey(iter));
+		int storedVal = GetValue(iter);
+		int lookUpVal = 0;
+		bool gotEntry = GetInHashTable(aHashTable, GetKey(iter), &lookUpVal);
+
+		//printf("%03d: %s\r\n", GetValue(iter), GetKey(iter));
+		CuAssertTrue(tc, gotEntry);
+		CuAssertIntEquals(tc, storedVal, lookUpVal); 
 	}
 	DestroyHashTableIterator(iter);	
+}
 
+void TestDht_LargeHashTableWithIterator(CuTest* tc){
+
+	int LARGE_NUMBER = 1000000;
+	struct DynamicHashTable* aHashTable = InitHashTable();
+	
+	// to keep valgrind fast we'll reduce this when it's running
+	if(RUNNING_ON_VALGRIND) LARGE_NUMBER /= 10;
+
+	for(int i=1; i < LARGE_NUMBER; i++){
+		char stringBuf[32] = "String";
+		char numBuf[16];
+		
+		sprintf(numBuf, "%d", i*3+7);
+		strcat(stringBuf, numBuf);
+		SetInHashTable(aHashTable, stringBuf, i);
+	}
+	iterateOverTable(tc, aHashTable);
+
+	//update some entries
+	for(int i=1; i < LARGE_NUMBER; i++){
+		char stringBuf[32] = "String";
+		char numBuf[16];
+		
+		sprintf(numBuf, "%d", i*3+7);
+		strcat(stringBuf, numBuf);
+		SetInHashTable(aHashTable, stringBuf, i*2-1);
+	}
+	iterateOverTable(tc, aHashTable);
+
+	//clear some entries
+	for(int i=LARGE_NUMBER >> 1; i < LARGE_NUMBER; i++){
+		char stringBuf[32] = "String";
+		char numBuf[16];
+		
+		sprintf(numBuf, "%d", i*3+7);
+		strcat(stringBuf, numBuf);
+		ClearInHashTable(aHashTable, stringBuf);
+	}
+	iterateOverTable(tc, aHashTable);
+
+	CuAssertTrue(tc, EntryCount(aHashTable) == LARGE_NUMBER-1);
 	FreeHashTable(aHashTable);	
 }
 
 CuSuite* DhtTestGetSuite(){
 	CuSuite* suite = CuSuiteNew();
 
-	SUITE_ADD_TEST(suite, TestDht_SimpleHashTable);
-	SUITE_ADD_TEST(suite, TestDht_MediumSizeTable);
+	SUITE_ADD_TEST(suite, TestDht_SmallHashTable);
+	SUITE_ADD_TEST(suite, TestDht_MediumHashTable);
+	SUITE_ADD_TEST(suite, TestDht_LargeHashTableWithIterator);
 
 	return suite;
 }

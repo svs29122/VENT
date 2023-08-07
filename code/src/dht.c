@@ -119,12 +119,13 @@ bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val){
 
 	struct Entry* entry = findEntry(hst->entries, hst->capacity, key);
 	bool isNewKey = entry->key == NULL;
-	if(isNewKey && entry->value == 0) hst->count++;
+	if(isNewKey && entry->value == 0) {
+		 hst->count++;
 
-	size_t size = strlen(key) + 1;
-	entry->key = calloc(size, sizeof(char));
-	strncpy(entry->key, key, size);
-
+		size_t size = strlen(key) + 1;
+		entry->key = calloc(size, sizeof(char));
+		strncpy(entry->key, key, size);
+	}
 	entry->value = val;
 
 	return isNewKey;
