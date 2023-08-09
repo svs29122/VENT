@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <dht.h>
 
 struct Entry {
 	char* key;
-	int value;
+	uint64_t value;
 };
 
 struct DynamicHashTable {
@@ -105,7 +104,7 @@ void FreeHashTable(struct DynamicHashTable* hst){
 	free(hst);
 }
 
-bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val){
+bool SetInHashTable(struct DynamicHashTable* hst, char* key, uint64_t val){
 	if(hst == NULL){
 		printf("Erorr: Hast Table Ptr NULL\r\n");
 		return false;
@@ -131,7 +130,7 @@ bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val){
 	return isNewKey;
 }
 
-bool GetInHashTable(struct DynamicHashTable* hst, char*  key, int* val){
+bool GetInHashTable(struct DynamicHashTable* hst, char*  key, uint64_t* val){
 	if(hst == NULL){
 		printf("Error Hash Table Ptr null\r\n");
 		return false;
@@ -178,7 +177,7 @@ int EntryCount(struct DynamicHashTable* hst){
 
 struct HashTableIterator {
 	char* key;
-	int value;
+	uint64_t value;
 	unsigned int indexOfPreviousEntry;
 	struct DynamicHashTable* hashTable;
 };
@@ -221,6 +220,6 @@ char* GetKey(struct HashTableIterator* iter){
 	return iter->key;
 }
 
-int GetValue(struct HashTableIterator* iter){
+uint64_t GetValue(struct HashTableIterator* iter){
 	return iter->value;
 }

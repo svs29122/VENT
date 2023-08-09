@@ -2,6 +2,7 @@
 #define INC_DHT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*
 	Dynamic hash table
@@ -14,8 +15,8 @@
 struct DynamicHashTable* InitHashTable();
 void FreeHashTable(struct DynamicHashTable* hst);
 
-bool GetInHashTable(struct DynamicHashTable* hst, char*  key, int* val);
-bool SetInHashTable(struct DynamicHashTable* hst, char* key, int val);
+bool GetInHashTable(struct DynamicHashTable* hst, char*  key, uint64_t* val);
+bool SetInHashTable(struct DynamicHashTable* hst, char* key, uint64_t val);
 bool ClearInHashTable(struct DynamicHashTable* hst, char* key);
 int EntryCount(struct DynamicHashTable* hst);
 
@@ -24,6 +25,6 @@ void DestroyHashTableIterator(struct HashTableIterator *iter);
 
 bool HasNextEntry(struct HashTableIterator* iter);
 char* GetKey(struct HashTableIterator* iter);
-int GetValue(struct HashTableIterator* iter);
+uint64_t GetValue(struct HashTableIterator* iter);
 
 #endif // INC_DHT_H

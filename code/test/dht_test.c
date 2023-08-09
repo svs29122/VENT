@@ -15,7 +15,7 @@ void TestDht_SmallHashTable(CuTest* tc){
 	SetInHashTable(myHt, "String4", 40);
 	SetInHashTable(myHt, "String5", 50);
 
-	int entryVal = 0;	
+	uint64_t entryVal = 0;	
 	GetInHashTable(myHt, "String1", &entryVal);	
 	CuAssertIntEquals(tc, 10, entryVal);	
 
@@ -76,7 +76,7 @@ void TestDht_MediumHashTable(CuTest* tc){
 	};
 	const int numInFirstGen = sizeof(firstGeneration) / sizeof(char*);
 
-	for(int i=0; i<numInFirstGen; i++){
+	for(uint64_t i=0; i<numInFirstGen; i++){
 		SetInHashTable(pokedex, firstGeneration[i], i+1);
 	}
 
@@ -85,7 +85,7 @@ void TestDht_MediumHashTable(CuTest* tc){
 
 	for(int i=0; i<numInTable; i++){
 		
-		int number = 0;
+		uint64_t number = 0;
 		bool gotMonster = GetInHashTable(pokedex, firstGeneration[i], &number);
 		if(gotMonster){
 			CuAssertIntEquals(tc, i+1, number);	
@@ -101,8 +101,8 @@ void TestDht_MediumHashTable(CuTest* tc){
 static void iterateOverTable(CuTest* tc, struct DynamicHashTable* aHashTable){
 	struct HashTableIterator* iter = CreateHashTableIterator(aHashTable);
 	while(HasNextEntry(iter)) {
-		int storedVal = GetValue(iter);
-		int lookUpVal = 0;
+		uint64_t storedVal = GetValue(iter);
+		uint64_t lookUpVal = 0;
 		bool gotEntry = GetInHashTable(aHashTable, GetKey(iter), &lookUpVal);
 
 		//printf("%03d: %s\r\n", GetValue(iter), GetKey(iter));
@@ -120,33 +120,33 @@ void TestDht_LargeHashTableWithIterator(CuTest* tc){
 	// to keep valgrind fast we'll reduce this when it's running
 	if(RUNNING_ON_VALGRIND) LARGE_NUMBER /= 10;
 
-	for(int i=1; i < LARGE_NUMBER; i++){
+	for(uint64_t i=1; i < LARGE_NUMBER; i++){
 		char stringBuf[32] = "String";
 		char numBuf[16];
 		
-		sprintf(numBuf, "%d", i*3+7);
+		sprintf(numBuf, "%ld", i*3+7);
 		strcat(stringBuf, numBuf);
 		SetInHashTable(aHashTable, stringBuf, i);
 	}
 	iterateOverTable(tc, aHashTable);
 
 	//update some entries
-	for(int i=1; i < LARGE_NUMBER; i++){
+	for(uint64_t i=1; i < LARGE_NUMBER; i++){
 		char stringBuf[32] = "String";
 		char numBuf[16];
 		
-		sprintf(numBuf, "%d", i*3+7);
+		sprintf(numBuf, "%ld", i*3+7);
 		strcat(stringBuf, numBuf);
 		SetInHashTable(aHashTable, stringBuf, i*2-1);
 	}
 	iterateOverTable(tc, aHashTable);
 
 	//clear some entries
-	for(int i=LARGE_NUMBER >> 1; i < LARGE_NUMBER; i++){
+	for(uint64_t i=LARGE_NUMBER >> 1; i < LARGE_NUMBER; i++){
 		char stringBuf[32] = "String";
 		char numBuf[16];
 		
-		sprintf(numBuf, "%d", i*3+7);
+		sprintf(numBuf, "%ld", i*3+7);
 		strcat(stringBuf, numBuf);
 		ClearInHashTable(aHashTable, stringBuf);
 	}
