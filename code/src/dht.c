@@ -15,11 +15,11 @@ struct DynamicHashTable {
 	struct Entry* entries;
 };
 
-#define FNV_OFFSET_BASIS 2166136261u;
-#define FNV_PRIME 16777619;
+static const uint64_t FNV_OFFSET_BASIS = 14695981039346656037u; 
+static const uint64_t FNV_PRIME = 1099511628211u;
 
-static uint32_t hashKey(const char* key, int len){
-	uint32_t hash = FNV_OFFSET_BASIS;
+static uint64_t hashKey(const char* key, int len){
+	uint64_t hash = FNV_OFFSET_BASIS;
 
 	for(int i=0; i<len; i++){
 		hash ^= key[i];
@@ -30,7 +30,7 @@ static uint32_t hashKey(const char* key, int len){
 }
 
 static struct Entry* findEntry(struct Entry* entries, int capacity, char* key){
-	uint32_t index = hashKey(key, strlen(key)) % capacity;
+	uint64_t index = hashKey(key, strlen(key)) % capacity;
 	struct Entry* tombstone = NULL;
 
 	for(;;){
