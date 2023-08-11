@@ -769,14 +769,12 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 			\n \
 			C1: counter map(initSize, clk32, rstn, nibble);\n \
 			\n \
-			/* \
 			C2: counter map (\n \
 				SIZE => initSize,\n \
       		clk => clk32,\n \
       		reset => rst,\n \
       		Q => open,\n \
 	   	);\n \
-			*/ \
 		}\n \
 		\
 	");
@@ -784,7 +782,7 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

@@ -982,11 +982,11 @@ static Dba* parseProcessBodyDeclarations(){
 }
 
 static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
-	struct ExpressionNode *portHead = NULL;
-	struct ExpressionNode *genericHead = NULL;
+	struct ExpressionNode *portMap = calloc(1, sizeof(struct ExpressionNode));
+	struct ExpressionNode *genericMap = calloc(1, sizeof(struct ExpressionNode));
 
-	struct ExpressionNode *portMap = NULL;
-	struct ExpressionNode *genericMap = NULL;
+	struct ExpressionNode *portHead = portMap;
+	struct ExpressionNode *genericHead = genericMap;
 
 	uint16_t posInMap = 1;
 	nextToken();
@@ -1002,17 +1002,15 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 
 		if(thisIsAGenericMap(posInMap, mapping, instance->name)) {
 
-			genericMap = calloc(1, sizeof(struct ExpressionNode));
-			if(genericHead == NULL)	genericHead = genericMap;
-			
 			genericMap->expression = mapping;
+			
+			genericMap->next = calloc(1, sizeof(struct ExpressionNode));
 			genericMap = genericMap->next;
 		} else { //this is a port map
-
-			portMap = calloc(1, sizeof(struct ExpressionNode));
-			if(portHead == NULL)	portHead = portMap;
 			
 			portMap->expression = mapping;
+	
+			portMap->next = calloc(1, sizeof(struct ExpressionNode));
 			portMap = portMap->next;
 		}
 		posInMap++;

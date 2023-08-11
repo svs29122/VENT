@@ -132,6 +132,7 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
+//TODO: this is wrong! It can just be for type decls
 static void freeExpressionList(struct AstNode* tdecl){
 	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
 
@@ -175,7 +176,7 @@ static void freeSpecial(struct AstNode* node){
 			break;
 
 		case AST_INSTANCE:
-			freeExpressionList(node);
+			//freeExpressionList(node);
 			break;
 
 		case AST_TDECL:
