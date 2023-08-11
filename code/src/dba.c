@@ -12,7 +12,7 @@ struct DynamicBlockArray {
 };
 
 struct DynamicBlockArray* InitBlockArray(size_t bsize){	
-	struct DynamicBlockArray* arr = malloc(sizeof(struct DynamicBlockArray));	
+	struct DynamicBlockArray* arr = calloc(1, sizeof(struct DynamicBlockArray));	
 	if(arr == NULL){
 		printf("Error: Unable to allocate Block Array\r\n");
 		exit(-1);
@@ -65,7 +65,7 @@ void* ReadBlockArray(struct DynamicBlockArray* arr, int index){
 		return NULL;
 	}
 	
-	return (arr->block + (index * arr->blockSize)); 
+	return (void*)(arr->block + (index * arr->blockSize)); 
 }
 
 int BlockCount(struct DynamicBlockArray* arr){

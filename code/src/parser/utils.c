@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include <token.h>
+#include <ast.h>
 
 #include "utils.h"
 #include "error.h"
@@ -94,3 +95,35 @@ bool thisIsAPort(){
 	return valid;
 }
 
+bool thisIsAGenericMap(uint16_t pos, struct Expression* map, struct Identifier* name){
+   uint64_t componentLocation = 0; 
+   GetInHashTable(componentStore, name->value, &componentLocation);  
+
+   struct ComponentDecl* component = NULL;
+   if(componentLocation != 0) component = (struct ComponentDecl*)componentLocation;
+   
+   for(int i=0; i<BlockCount(component->generics); i++){
+      struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(component->generics,i);
+      if(positionalMapping(map)){
+         if(generic->position == pos){
+				return true;
+			}
+      } else if (associativeMapping(map)) {
+         struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+         struct Identifier* left = (struct Identifier*)bexp->left;
+         if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
+				return true;
+			}
+      }    
+   }
+   
+   return false;
+}
+
+bool positionalMapping(struct Expression* expr){
+	return expr->type == NAME_EXPR;
+}
+
+bool associativeMapping(struct Expression* expr){
+	return expr->type == BINARY_EXPR;
+}

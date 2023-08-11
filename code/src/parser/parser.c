@@ -118,6 +118,8 @@
 static struct parser parser;
 struct parser *p = &parser;
 
+struct DynamicHashTable* componentStore;
+
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
 }
@@ -131,7 +133,9 @@ static void initParser(){
 
 	p->printTokenFlag = keepPrinting;
 	p->currToken = NextToken();
-	p->peekToken = NextToken();	
+	p->peekToken = NextToken();
+
+	componentStore = InitHashTable();
 }
 
 void freeParserTokens(){
@@ -441,10 +445,12 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 static void parseComponentInterior(struct ComponentDecl *cDecl){
 
 	nextToken();
+	uint16_t posInComponent = 1;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.position = posInComponent++;
 
 			if(cDecl->ports == NULL) {
 				cDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
@@ -453,6 +459,7 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 			WriteBlockArray(cDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.position = posInComponent++;
 
 			if(cDecl->generics == NULL) {
 				cDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
@@ -974,10 +981,14 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
-static struct ExpressionNode* parseInstanceMappings(){
-	struct ExpressionNode* mappings = calloc(1, sizeof(struct ExpressionNode));
-	struct ExpressionNode* currMap = mappings;
-	
+static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
+	struct ExpressionNode *portHead = NULL;
+	struct ExpressionNode *genericHead = NULL;
+
+	struct ExpressionNode *portMap = NULL;
+	struct ExpressionNode *genericMap = NULL;
+
+	uint16_t posInMap = 1;
 	nextToken();
 
 	while(!match(TOKEN_RPAREN) && !match(TOKEN_EOP)){
@@ -989,13 +1000,26 @@ static struct ExpressionNode* parseInstanceMappings(){
 			nextToken();
 		}
 
-		currMap->expression = mapping;
-		
-		currMap->next = calloc(1, sizeof(struct ExpressionNode));
-		currMap = currMap->next;
+		if(thisIsAGenericMap(posInMap, mapping, instance->name)) {
+
+			genericMap = calloc(1, sizeof(struct ExpressionNode));
+			if(genericHead == NULL)	genericHead = genericMap;
+			
+			genericMap->expression = mapping;
+			genericMap = genericMap->next;
+		} else { //this is a port map
+
+			portMap = calloc(1, sizeof(struct ExpressionNode));
+			if(portHead == NULL)	portHead = portMap;
+			
+			portMap->expression = mapping;
+			portMap = portMap->next;
+		}
+		posInMap++;
 	}
 
-	return mappings;
+	instance->portMap = portHead;
+	instance->genericMap = genericHead;
 }
 
 static void parseInstantiation(struct Instantiation* instance){
@@ -1010,7 +1034,7 @@ static void parseInstantiation(struct Instantiation* instance){
 #endif
 	
 	consumeNext(TOKEN_LPAREN, "Expect lparen after map keyword in instance");
-	instance->mapping =	parseInstanceMappings();
+	parseInstanceMappings(instance);
 	consume(TOKEN_RPAREN, "Expect rparen after mappings in instance");
 
 	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of instantiation");
@@ -1126,7 +1150,18 @@ static Dba* parseArchBodyDeclarations(){
 
 		WriteBlockArray(decls, (char*)(&decl));
 		nextToken();	
-	}
+
+		// store components for instantiation later
+		if(decl.type == COMPONENT_DECLARATION){
+			struct Declaration* declaration = (struct Declaration*)ReadBlockArray(decls, BlockCount(decls)-1);
+			if(declaration) {
+				struct ComponentDecl* cDecl = &(declaration->as.componentDeclaration);
+				if(cDecl) {
+					SetInHashTable(componentStore, cDecl->name->value, (uint64_t)cDecl);
+				}
+			}
+		}
+	} // end while
 
 	return decls;
 }
@@ -1210,10 +1245,12 @@ static struct PortDecl parsePortDecl(){
 static void parseEntityInterior(struct EntityDecl *eDecl){
 
 	nextToken();
+	uint16_t posInEntity = 1;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.position = posInEntity++;
 
 			if(eDecl->ports == NULL) {
 				eDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
@@ -1222,6 +1259,7 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 			WriteBlockArray(eDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.position = posInEntity++;
 
 			if(eDecl->generics == NULL) {
 				eDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	

@@ -360,8 +360,12 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 		op->doDefaultOp(&(inst->name->self.root));
 	}
 	op->doOpenOp(&(inst->self));
-	if(inst->mapping){
-		walkExpressionList(inst->mapping, op);
+	if(inst->genericMap){
+		walkExpressionList(inst->genericMap, op);
+		op->doSpecialOp(&(inst->self));
+	}
+	if(inst->portMap){
+		walkExpressionList(inst->portMap, op);
 		op->doSpecialOp(&(inst->self));
 	}
 	op->doCloseOp(&(inst->self));

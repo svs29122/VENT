@@ -2,6 +2,7 @@
 #define INC_AST_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "token.h"
 #include "dba.h"
@@ -401,7 +402,8 @@ struct Instantiation {
 	struct AstNode self;
 	
 	struct Identifier* name;
-	struct ExpressionNode* mapping;
+	struct ExpressionNode* portMap;
+	struct ExpressionNode* genericMap;
 };
 
 struct Process {
@@ -443,6 +445,7 @@ struct GenericDecl {
 	struct AstNode self;
 
 	//need to add support for , separated identifier list
+	uint16_t position;
 	struct Identifier* name;
 	struct DataType* dtype; 
 	struct Expression* defaultValue;
@@ -452,6 +455,7 @@ struct PortDecl {
 	struct AstNode self;
 
 	//need to add support for , separated identifier list
+	uint16_t position;
 	struct Identifier* name;
 	struct PortMode* pmode;
 	struct DataType* dtype; 

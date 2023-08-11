@@ -1,6 +1,8 @@
 #ifndef INC_PARSER_INTERNAL_H
 #define INC_PARSER_INTERNAL_H
 
+#include <dht.h>
+
 struct parser {
    bool printTokenFlag;
    struct Token currToken;
@@ -8,6 +10,7 @@ struct parser {
 };
 
 extern struct parser* p;
+extern struct DynamicHashTable* componentStore;
 
 void nextToken();
 void freeParserTokens();
