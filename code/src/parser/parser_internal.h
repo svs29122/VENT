@@ -13,7 +13,6 @@ extern struct parser* p;
 extern struct DynamicHashTable* componentStore;
 
 void nextToken();
-void freeParserTokens();
 
 //forward declarations needed for parser
 static struct PortDecl parsePortDecl();

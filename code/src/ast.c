@@ -43,12 +43,12 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 
 static void walkExpressionList(struct ExpressionNode* eList, struct OperationBlock* op){
 	struct ExpressionNode* currNode = eList;
-	do {
+	while(currNode){
 		if(currNode->expression){
 			op->doExpressionOp(currNode->expression);
 		}	
 		currNode = currNode->next;
-	} while(currNode);
+	}
 }
 
 static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock* op){
@@ -359,14 +359,13 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 	if(inst->name){
 		op->doDefaultOp(&(inst->name->self.root));
 	}
-	op->doOpenOp(&(inst->self));
 	if(inst->genericMap){
-		walkExpressionList(inst->genericMap, op);
 		op->doSpecialOp(&(inst->self));
+		walkExpressionList(inst->genericMap, op);
 	}
 	if(inst->portMap){
+		op->doOpenOp(&(inst->self));
 		walkExpressionList(inst->portMap, op);
-		op->doSpecialOp(&(inst->self));
 	}
 	op->doCloseOp(&(inst->self));
 }

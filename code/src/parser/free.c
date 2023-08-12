@@ -132,12 +132,10 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
-//TODO: this is wrong! It can just be for type decls
-static void freeExpressionList(struct AstNode* tdecl){
-	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
+static void freeExpressionList(struct ExpressionNode* head){
 
 	struct ExpressionNode *curr, *prev;
-	curr = typeDecl->enumList;
+	curr = head;
 
 	while(curr){
 		prev = curr;
@@ -159,6 +157,28 @@ static void freeOpen(struct AstNode* node){
 	}
 }
 
+static void freeClose(struct AstNode* node){
+
+	switch(node->type){
+
+		case AST_INSTANCE: {
+			struct Instantiation* instance = (struct Instantiation*)node;
+			freeExpressionList(instance->portMap);
+			freeExpressionList(instance->genericMap);
+			break;
+		}
+
+		case AST_TDECL: {
+			struct TypeDecl* typeDecl = (struct TypeDecl*)node;
+			freeExpressionList(typeDecl->enumList);
+			break;
+		}
+
+		default:
+			break;
+	}
+}
+
 static void freeSpecial(struct AstNode* node){
 
 	switch(node->type){
@@ -173,14 +193,6 @@ static void freeSpecial(struct AstNode* node){
 
 		case AST_VASSIGN:
 			freeAssignmentOp(node);
-			break;
-
-		case AST_INSTANCE:
-			//freeExpressionList(node);
-			break;
-
-		case AST_TDECL:
-			freeExpressionList(node);
 			break;
 
 		default:
@@ -221,12 +233,33 @@ static void freeDefault(struct AstNode* node){
 	}
 }
 
+static void freeParserTokens(){
+   if(p->currToken.literal) free(p->currToken.literal);
+   if(p->peekToken.literal) free(p->peekToken.literal);
+}
+
+static void freeComponentStore(){
+   struct HashTableIterator* it = CreateHashTableIterator(componentStore);
+   while(HasNextEntry(it)){
+      struct DynamicBlockArray* generics = NULL;
+      uint64_t genericsLocation = GetValue(it);
+     
+      if(genericsLocation) { 
+         generics = (struct DynamicBlockArray*)genericsLocation;
+         FreeBlockArray(generics);
+      }    
+   }
+   DestroyHashTableIterator(it);
+   FreeHashTable(componentStore);
+}
+
 void FreeProgram(struct Program* prog){
 	
 	// setup block
 	struct OperationBlock opBlk = {
 		.doDefaultOp 		= freeDefault,
 		.doOpenOp 			= freeOpen,
+		.doCloseOp 			= freeClose,
 		.doSpecialOp		= freeSpecial,
 		.doExpressionOp	= freeExpression,
 		.doBlockArrayOp	= freeBlockArray,
@@ -235,4 +268,5 @@ void FreeProgram(struct Program* prog){
 	WalkTree(prog, &opBlk);
 
 	freeParserTokens();
+	freeComponentStore();
 }

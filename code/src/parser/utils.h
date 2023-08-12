@@ -19,7 +19,7 @@ bool validAssignment();
 
 bool thereAreDeclarations();
 bool thisIsAPort();
-bool thisIsAGenericMap(uint16_t pos, struct Expression* map, struct Identifier* name);
+bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos);
 
 bool positionalMapping(struct Expression* expr);
 bool associativeMapping(struct Expression* expr);

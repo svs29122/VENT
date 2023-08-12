@@ -138,11 +138,6 @@ static void initParser(){
 	componentStore = InitHashTable();
 }
 
-void freeParserTokens(){
-	if(p->currToken.literal) free(p->currToken.literal);
-	if(p->peekToken.literal) free(p->peekToken.literal);
-}
-
 void nextToken(){	
 	
 	if(p->printTokenFlag) PrintToken(p->currToken);
@@ -446,6 +441,9 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 
 	nextToken();
 	uint16_t posInComponent = 1;
+
+	//track generics for use in instantiation later
+	struct DynamicBlockArray* storedGenerics = NULL;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
@@ -457,18 +455,23 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 			}
 
 			WriteBlockArray(cDecl->ports, (char*)(&port));
-		} else {
+		} else { //this is a generic
 			struct GenericDecl generic = parseGenericDecl();	
 			generic.position = posInComponent++;
 
 			if(cDecl->generics == NULL) {
 				cDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+				storedGenerics = InitBlockArray(sizeof(struct GenericDecl));
 			}
 
 			WriteBlockArray(cDecl->generics, (char*)(&generic));
+			WriteBlockArray(storedGenerics, (char*)(&generic));
 		}
-
 		nextToken();
+	}
+
+	if(storedGenerics){
+		SetInHashTable(componentStore, cDecl->name->value, (uint64_t)storedGenerics); 
 	}
 }
 
@@ -982,11 +985,8 @@ static Dba* parseProcessBodyDeclarations(){
 }
 
 static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
-	struct ExpressionNode *portMap = calloc(1, sizeof(struct ExpressionNode));
-	struct ExpressionNode *genericMap = calloc(1, sizeof(struct ExpressionNode));
-
-	struct ExpressionNode *portHead = portMap;
-	struct ExpressionNode *genericHead = genericMap;
+	struct ExpressionNode *portMap = NULL, *genericMap = NULL;
+	struct ExpressionNode *portHead = NULL, *genericHead = NULL;
 
 	uint16_t posInMap = 1;
 	nextToken();
@@ -1000,18 +1000,24 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 			nextToken();
 		}
 
-		if(thisIsAGenericMap(posInMap, mapping, instance->name)) {
-
+		if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
+			if(genericMap == NULL){
+				genericMap = calloc(1, sizeof(struct ExpressionNode));
+				genericHead = genericMap;
+			} else {
+				genericMap->next = calloc(1, sizeof(struct ExpressionNode));
+				genericMap = genericMap->next;
+			}
 			genericMap->expression = mapping;
-			
-			genericMap->next = calloc(1, sizeof(struct ExpressionNode));
-			genericMap = genericMap->next;
 		} else { //this is a port map
-			
+			if(portMap == NULL){
+				portMap = calloc(1, sizeof(struct ExpressionNode));
+				portHead = portMap;
+			} else {
+				portMap->next = calloc(1, sizeof(struct ExpressionNode));
+				portMap = portMap->next;
+			}
 			portMap->expression = mapping;
-	
-			portMap->next = calloc(1, sizeof(struct ExpressionNode));
-			portMap = portMap->next;
 		}
 		posInMap++;
 	}
@@ -1142,23 +1148,14 @@ static Dba* parseArchBodyDeclarations(){
 			}
 
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid declaration statement in architecture declarations");
+				error(p->currToken.lineNumber, p->currToken.literal, 
+					"Expect valid declaration statement in architecture declarations");
 				break;
 		}
 
 		WriteBlockArray(decls, (char*)(&decl));
 		nextToken();	
 
-		// store components for instantiation later
-		if(decl.type == COMPONENT_DECLARATION){
-			struct Declaration* declaration = (struct Declaration*)ReadBlockArray(decls, BlockCount(decls)-1);
-			if(declaration) {
-				struct ComponentDecl* cDecl = &(declaration->as.componentDeclaration);
-				if(cDecl) {
-					SetInHashTable(componentStore, cDecl->name->value, (uint64_t)cDecl);
-				}
-			}
-		}
 	} // end while
 
 	return decls;

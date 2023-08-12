@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <token.h>
 #include <ast.h>
@@ -95,29 +96,32 @@ bool thisIsAPort(){
 	return valid;
 }
 
-bool thisIsAGenericMap(uint16_t pos, struct Expression* map, struct Identifier* name){
-   uint64_t componentLocation = 0; 
-   GetInHashTable(componentStore, name->value, &componentLocation);  
+bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	uint64_t genericsLocation = 0;
+	struct DynamicBlockArray* generics = NULL;
 
-   struct ComponentDecl* component = NULL;
-   if(componentLocation != 0) component = (struct ComponentDecl*)componentLocation;
-   
-   for(int i=0; i<BlockCount(component->generics); i++){
-      struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(component->generics,i);
-      if(positionalMapping(map)){
-         if(generic->position == pos){
-				return true;
-			}
-      } else if (associativeMapping(map)) {
-         struct BinaryExpr* bexp = (struct BinaryExpr*)map;
-         struct Identifier* left = (struct Identifier*)bexp->left;
-         if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
-				return true;
-			}
-      }    
-   }
-   
-   return false;
+	if(GetInHashTable(componentStore, name->value, &genericsLocation)){
+		generics = (struct DynamicBlockArray*)genericsLocation;
+	}
+
+	if(generics){
+		for(int i=0; i<BlockCount(generics); i++){
+   			struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i);
+			if(positionalMapping(map)){
+      		if(generic->position == pos){
+					return true;
+				}
+			} else if (associativeMapping(map)) {
+      		struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+      		struct Identifier* left = (struct Identifier*)bexp->left;
+				if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
+					return true;
+				}
+			}    
+		}
+	}
+
+	return false;
 }
 
 bool positionalMapping(struct Expression* expr){

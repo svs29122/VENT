@@ -167,8 +167,12 @@ static void printSignalAssign(struct AstNode* sAssign){
 	indent++;
 }
 
-static void printMapping(struct AstNode* inst){
-	printf("\e[0;34m""%c/*Mapping*/\r\n", shift());
+static void printGenericMapping(struct AstNode* inst){
+	printf("\e[0;34m""%c/*Generic Map*/\r\n", shift());
+}
+
+static void printPortMapping(struct AstNode* inst){
+	printf("\e[0;34m""%c/*Port Map*/\r\n", shift());
 }
 
 static void printInstantiation(struct AstNode* inst){
@@ -298,6 +302,10 @@ static void printSpecial(struct AstNode* node){
 			printAssignmentOp(node);
 			break;
 
+		case AST_INSTANCE:
+			printGenericMapping(node);
+			break;
+
 		case AST_IF:
 			printElseClause(node);
 			break;
@@ -316,7 +324,7 @@ static void printOpen(struct AstNode* node){
 	switch(node->type){
 
 		case AST_INSTANCE:
-			printMapping(node);
+			printPortMapping(node);
 			break;
 
 		default:
