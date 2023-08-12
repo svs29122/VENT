@@ -239,18 +239,7 @@ static void freeParserTokens(){
 }
 
 static void freeComponentStore(){
-   struct HashTableIterator* it = CreateHashTableIterator(componentStore);
-   while(HasNextEntry(it)){
-      struct DynamicBlockArray* generics = NULL;
-      uint64_t genericsLocation = GetValue(it);
-     
-      if(genericsLocation) { 
-         generics = (struct DynamicBlockArray*)genericsLocation;
-         FreeBlockArray(generics);
-      }    
-   }
-   DestroyHashTableIterator(it);
-   FreeHashTable(componentStore);
+	FreeBlockArray(componentStore);
 }
 
 void FreeProgram(struct Program* prog){

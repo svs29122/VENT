@@ -97,16 +97,22 @@ bool thisIsAPort(){
 }
 
 bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
-	uint64_t genericsLocation = 0;
 	struct DynamicBlockArray* generics = NULL;
-
-	if(GetInHashTable(componentStore, name->value, &genericsLocation)){
-		generics = (struct DynamicBlockArray*)genericsLocation;
+	
+	//find the component corresponding to the instance
+	for(int i=0; i<BlockCount(componentStore); i++){
+		struct Declaration* decl = (struct Declaration*)ReadBlockArray(componentStore, i);
+		if(decl) {
+			struct ComponentDecl* comp = &(decl->as.componentDeclaration);
+			if(strncmp(comp->name->value, name->value, sizeof(name->value)) == 0){
+				generics = comp->generics;
+			}
+		}
 	}
 
 	if(generics){
 		for(int i=0; i<BlockCount(generics); i++){
-   			struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i);
+   		struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i);
 			if(positionalMapping(map)){
       		if(generic->position == pos){
 					return true;

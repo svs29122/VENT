@@ -10,7 +10,7 @@ struct parser {
 };
 
 extern struct parser* p;
-extern struct DynamicHashTable* componentStore;
+extern struct DynamicBlockArray* componentStore;
 
 void nextToken();
 

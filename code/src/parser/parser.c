@@ -118,7 +118,7 @@
 static struct parser parser;
 struct parser *p = &parser;
 
-struct DynamicHashTable* componentStore;
+struct DynamicBlockArray* componentStore;
 
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
@@ -135,7 +135,7 @@ static void initParser(){
 	p->currToken = NextToken();
 	p->peekToken = NextToken();
 
-	componentStore = InitHashTable();
+	componentStore = InitBlockArray(sizeof(struct Declaration));
 }
 
 void nextToken(){	
@@ -442,9 +442,6 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 	nextToken();
 	uint16_t posInComponent = 1;
 
-	//track generics for use in instantiation later
-	struct DynamicBlockArray* storedGenerics = NULL;
-	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
@@ -461,17 +458,11 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 
 			if(cDecl->generics == NULL) {
 				cDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
-				storedGenerics = InitBlockArray(sizeof(struct GenericDecl));
 			}
 
 			WriteBlockArray(cDecl->generics, (char*)(&generic));
-			WriteBlockArray(storedGenerics, (char*)(&generic));
 		}
 		nextToken();
-	}
-
-	if(storedGenerics){
-		SetInHashTable(componentStore, cDecl->name->value, (uint64_t)storedGenerics); 
 	}
 }
 
@@ -1144,6 +1135,7 @@ static Dba* parseArchBodyDeclarations(){
 			case TOKEN_COMP: {
 				decl.type = COMPONENT_DECLARATION;
 				parseComponentDeclaration(&(decl.as.componentDeclaration));
+				WriteBlockArray(componentStore, (char*)(&decl));
 				break;
 			}
 

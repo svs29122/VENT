@@ -73,7 +73,7 @@ again:
 runtest: 
 	@$(MAKE) cleanall --silent
 	@$(MAKE) -C ./test --silent
-	@./test/UnitTests
+	@clear && ./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
 checkleaks:
