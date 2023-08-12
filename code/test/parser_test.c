@@ -775,6 +775,8 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
       		reset => rst,\n \
       		Q => open,\n \
 	   	);\n \
+			\n \
+			C3: counter map (*);\n \
 		}\n \
 		\
 	");

@@ -45,7 +45,7 @@ static struct ParseRule rules[] = {
    [TOKEN_LESS_EQUAL]   = {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_PLUS]         = {NULL                 , parseBinary     , ADD_PREC},
    [TOKEN_MINUS]        = {NULL                 , parseBinary     , ADD_PREC},
-   [TOKEN_STAR]         = {NULL                 , parseBinary     , MULTIPLY_PREC},
+   [TOKEN_STAR]         = {parseCharLiteral     , parseBinary     , MULTIPLY_PREC},
    [TOKEN_SLASH]        = {NULL                 , parseBinary     , MULTIPLY_PREC},
    [TOKEN_MASSIGN]      = {NULL                 , parseBinary     , MAP_PREC},
 };

@@ -37,6 +37,20 @@ void consumeNext(enum TOKEN_TYPE type, const char* msg){
 	consume(type, msg);
 }
 
+struct Identifier* copyIdentifier(struct Identifier* orig){
+	if(orig == NULL) return NULL;
+
+	struct Identifier* ident = calloc(1, sizeof(struct Identifier));  
+	ident->self.root.type = AST_IDENTIFIER;
+	ident->self.type = NAME_EXPR;
+
+	int size = strlen(orig->value) + 1; 
+	ident->value = calloc(size, sizeof(char));
+	memcpy(ident->value, orig->value, size);
+
+	return ident;
+}
+
 struct Token copyToken(struct Token oldToken){
 	struct Token newToken = oldToken;
 
@@ -94,6 +108,21 @@ bool thisIsAPort(){
 				peek(TOKEN_INOUT);
 
 	return valid;
+}
+
+bool thisIsAWildCard(struct Expression* map){
+	if(map->type == CHAR_EXPR){
+		struct CharExpr* charLit = (struct CharExpr*)map;
+		if(*(charLit->literal) == '*') {		
+
+			//trash the '*' char as we don't need it anymore
+			free(charLit->literal);
+			free(charLit);
+
+			return true;	
+		}
+	}
+	return false;
 }
 
 bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){

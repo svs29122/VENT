@@ -975,6 +975,52 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
+static void parseWildCardMapping(struct ExpressionNode **genericHead, struct ExpressionNode **portHead, struct Identifier* name){
+   struct ComponentDecl* comp = NULL; 
+	struct ExpressionNode *portMap = NULL, *genericMap = NULL;
+	struct ExpressionNode *pHead = NULL, *gHead = NULL;
+
+	//find the component corresponding to the instance
+   for(int i=0; i<BlockCount(componentStore); i++){
+      struct Declaration* decl = (struct Declaration*)ReadBlockArray(componentStore, i); 
+      if(decl) {
+         struct ComponentDecl* thisComp = &(decl->as.componentDeclaration);
+         if(strncmp(thisComp->name->value, name->value, sizeof(name->value)) == 0){ 
+            comp = thisComp;
+         }
+      }   
+   }  
+
+	//build the instance mappings from the component
+	if(comp){
+		for(int i=0; i<BlockCount(comp->generics); i++){
+			struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(comp->generics, i);
+			if(genericMap == NULL){
+            genericMap = calloc(1, sizeof(struct ExpressionNode));
+            gHead = genericMap;
+         } else {
+            genericMap->next = calloc(1, sizeof(struct ExpressionNode));
+            genericMap = genericMap->next;
+         }
+         genericMap->expression = (struct Expression*)copyIdentifier(generic->name);
+		}
+		for(int i=0; i<BlockCount(comp->ports); i++){
+			struct PortDecl* port = (struct PortDecl*)ReadBlockArray(comp->ports, i);
+			if(portMap == NULL){
+            portMap = calloc(1, sizeof(struct ExpressionNode));
+            pHead = portMap;
+         } else {
+            portMap->next = calloc(1, sizeof(struct ExpressionNode));
+            portMap = portMap->next;
+         }
+         portMap->expression = (struct Expression*)copyIdentifier(port->name);
+		}
+	}
+
+	*genericHead = gHead;
+	*portHead = pHead;
+}
+
 static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
 	struct ExpressionNode *portMap = NULL, *genericMap = NULL;
 	struct ExpressionNode *portHead = NULL, *genericHead = NULL;
@@ -991,7 +1037,9 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 			nextToken();
 		}
 
-		if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
+		if(thisIsAWildCard(mapping)){
+			parseWildCardMapping(&genericHead, &portHead, instance->name);
+		} else if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
 			if(genericMap == NULL){
 				genericMap = calloc(1, sizeof(struct ExpressionNode));
 				genericHead = genericMap;
@@ -1013,8 +1061,8 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 		posInMap++;
 	}
 
-	instance->portMap = portHead;
 	instance->genericMap = genericHead;
+	instance->portMap = portHead;
 }
 
 static void parseInstantiation(struct Instantiation* instance){
