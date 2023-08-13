@@ -503,17 +503,17 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
 	");
 
 	struct Program* prog = ParseProgram(input);
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	TranspileProgram(prog, NULL);
 
-#ifndef CHECK_VHDL_SYNTAX
+#ifdef CHECK_VHDL_SYNTAX
 	checkForSyntaxErrors(tc);
 #endif
 
 	FreeProgram(prog);
 	free(input);
-	//	remove("./a.vhdl");
+	remove("./a.vhdl");
 }
 
 void TestTranspileProgram_(CuTest *tc){
