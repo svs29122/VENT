@@ -355,8 +355,8 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 }
 
 static void walkInstantiation(struct Instantiation* inst, struct OperationBlock* op){
-	op->doDefaultOp(&(inst->self));
 	if(inst->name){
+		op->doOpenOp(&(inst->self));
 		op->doDefaultOp(&(inst->name->self.root));
 	}
 	if(inst->genericMap){
@@ -364,7 +364,7 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 		walkExpressionList(inst->genericMap, op);
 	}
 	if(inst->portMap){
-		op->doOpenOp(&(inst->self));
+		op->doDefaultOp(&(inst->self));
 		walkExpressionList(inst->portMap, op);
 	}
 	op->doCloseOp(&(inst->self));

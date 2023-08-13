@@ -324,7 +324,7 @@ static void printOpen(struct AstNode* node){
 	switch(node->type){
 
 		case AST_INSTANCE:
-			printPortMapping(node);
+			printInstantiation(node);
 			break;
 
 		default:
@@ -377,7 +377,7 @@ static void printDefault(struct AstNode* node){
 			break;
 
 		case AST_INSTANCE:
-			printInstantiation(node);
+			printPortMapping(node);
 			break;
 
 		case AST_FOR:

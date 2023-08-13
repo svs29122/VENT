@@ -993,17 +993,6 @@ static void parseWildCardMapping(struct ExpressionNode **genericHead, struct Exp
 
 	//build the instance mappings from the component
 	if(comp){
-		for(int i=0; i<BlockCount(comp->generics); i++){
-			struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(comp->generics, i);
-			if(genericMap == NULL){
-            genericMap = calloc(1, sizeof(struct ExpressionNode));
-            gHead = genericMap;
-         } else {
-            genericMap->next = calloc(1, sizeof(struct ExpressionNode));
-            genericMap = genericMap->next;
-         }
-         genericMap->expression = (struct Expression*)copyIdentifier(generic->name);
-		}
 		for(int i=0; i<BlockCount(comp->ports); i++){
 			struct PortDecl* port = (struct PortDecl*)ReadBlockArray(comp->ports, i);
 			if(portMap == NULL){

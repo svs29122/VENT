@@ -12,11 +12,13 @@ struct expressionStatus {
 	bool close;
 	bool ignore;
 	bool list;
+	bool line;
 	char assignmentOp[4];
-} static eStat = {false, false, false, false, 0};
+} static eStat = {false, false, false, false, false, 0};
 
-static int indent = 1;
+static unsigned int indent = 0;
 static char emitIndent(){
+	//emitIndent always emits 'indent' tabs and returns a tab
 	for(int i=1; i<indent; i++){
 		fprintf(vhdlFile, "\t");
 	}
@@ -36,7 +38,7 @@ static void emitUseStatement(struct AstNode* stmt){
 		currChar = useStmt->value[libCnt];
 	}
 
-	//TODO: Need to figure out what to do when multiple use statements for same library	
+	//TODO: Need to fure out what to do when multiple use statements for same library	
 	// consider storing the library in the UseStatment AST node! 
 	char* library = malloc(sizeof(char) * libCnt + 1);
 	memcpy(library, useStmt->value, libCnt);
@@ -51,20 +53,31 @@ static void emitUseStatement(struct AstNode* stmt){
 static void emitEntityDeclaration(struct AstNode* edecl){
 	struct EntityDecl* entDecl = (struct EntityDecl*)edecl;
 	char* entIdent = entDecl->name->value;
+	indent = 0;
 
 	fprintf(vhdlFile, "\nentity %s is\n", entIdent);
+	indent++;
 }
 
 static void emitEntityDeclarationClose(struct AstNode* edecl){
 	struct EntityDecl* entDecl = (struct EntityDecl*)edecl;
 	char* entIdent = entDecl->name->value;
 
-	//overwrite that last semicolon
-	fseek(vhdlFile, -2, SEEK_CUR);
+	if(entDecl->ports || entDecl->generics){
+		//overwrite that last semicolon
+		fseek(vhdlFile, -2, SEEK_CUR);
+		indent--;
+		fprintf(vhdlFile, "\n%c);\n", emitIndent());
+	} else {
+		indent--;
+	} 
 
-	indent--;
-	fprintf(vhdlFile, "\n%c);", emitIndent());
-	fprintf(vhdlFile, "\nend %s;\n\n", entIdent);
+	fprintf(vhdlFile, "end %s;\n\n", entIdent);
+}
+
+static void emitLabel(struct AstNode* lbl){
+	struct Label* label = (struct Label*) lbl;
+	fprintf(vhdlFile, "%c%s: ", emitIndent(), label->value); 
 }
 
 static void emitComponentDeclaration(struct AstNode* cdecl){
@@ -79,9 +92,10 @@ static void emitComponentDeclarationClose(struct AstNode* cdecl){
 	//overwrite that last semicolon
 	fseek(vhdlFile, -2, SEEK_CUR);
 
-	indent--;
 	fprintf(vhdlFile, "\n\t%c);", emitIndent());
+	indent--;
 	fprintf(vhdlFile, "\n%cend component;\n", emitIndent());
+	indent--;
 }
 
 static void emitGenericDeclarationOpen(struct AstNode* gDecl){
@@ -138,8 +152,10 @@ static void emitArchitectureDeclaration(struct AstNode* aDecl){
 	
 	char* archName = archDecl->archName->value;
 	char* entName = archDecl->entName->value;
+	indent = 0;
 	
 	fprintf(vhdlFile, "architecture %s of %s is\n", archName, entName);
+	indent++;
 }
 
 static void emitArchitectureDeclarationOpen(struct AstNode* aDecl){
@@ -151,7 +167,53 @@ static void emitArchitectureDeclarationClose(struct AstNode* aDecl){
 
 	char* archName = archDecl->archName->value;
 	
+	indent--;
 	fprintf(vhdlFile, "\nend architecture %s;\n\n", archName);
+}
+
+static void emitInstantiation(struct AstNode* inst){
+	struct Instantiation* instance = (struct Instantiation*)inst;
+	fprintf(vhdlFile, "%s\n", instance->name->value);
+	indent++;
+}
+
+static void emitGenericMap(struct AstNode* inst){
+	struct Instantiation* instance = (struct Instantiation*)inst;
+	fprintf(vhdlFile, "%cgeneric map (", emitIndent());
+	
+	eStat.list = true;
+}
+
+static void emitPortMap(struct AstNode* inst){
+	struct Instantiation* instance = (struct Instantiation*)inst;
+	if(instance->genericMap) {
+
+		if(instance->genericMap->expression){
+			//overwrite that last comma
+			fseek(vhdlFile, -1, SEEK_CUR);
+		}
+
+		//close the generic map
+		fprintf(vhdlFile, " )\n");
+	}
+
+	fprintf(vhdlFile, "%cport map (", emitIndent());
+	
+	eStat.list = true;
+}
+
+static void emitInstantiationClose(struct AstNode* inst){
+	struct Instantiation* instance = (struct Instantiation*)inst;
+	if(instance->portMap) {
+		//overwrite that last comma
+		fseek(vhdlFile, -1, SEEK_CUR);
+
+		//close the port map
+		fprintf(vhdlFile, " )");
+	}
+
+	fprintf(vhdlFile, ";\n");
+	indent--;
 }
 
 static void emitProcess(struct AstNode* proc){
@@ -516,6 +578,8 @@ static void emitExpression(struct Expression* expr){
 		if(eStat.list){
 			fprintf(vhdlFile, ",");
 		}
+		if(eStat.line){
+		}
 	}
 
 	eStat.incoming = 0;
@@ -532,6 +596,10 @@ static void emitSpecial(struct AstNode* node){
 			emitGenericDeclarationSpecial(node);
 			break;
 		
+		case AST_INSTANCE:
+			emitGenericMap(node);
+			break;
+
 		case AST_IF:
 			emitElse(node);
 			break;
@@ -559,6 +627,10 @@ static void emitClose(struct AstNode* node){
 		
 		case AST_COMPONENT:
 			emitComponentDeclarationClose(node);
+			break;
+		
+		case AST_INSTANCE:
+			emitInstantiationClose(node);
 			break;
 		
 		case AST_PROCESS:
@@ -606,6 +678,10 @@ static void emitOpen(struct AstNode* node){
 		case AST_ARCHITECTURE:
 			emitArchitectureDeclarationOpen(node);
 			break;
+
+		case AST_INSTANCE:
+			emitInstantiation(node);
+			break;
 		
 		case AST_PROCESS:
 			emitProcessOpen(node);
@@ -649,6 +725,10 @@ static void emitDefault(struct AstNode* node){
          emitEntityDeclaration(node);
          break;
 
+		case AST_LABEL:
+			emitLabel(node);
+			break;
+
       case AST_ARCHITECTURE:
          emitArchitectureDeclaration(node);
          break;
@@ -664,6 +744,10 @@ static void emitDefault(struct AstNode* node){
       case AST_PORT:
          emitPortDeclaration(node);
          break;
+
+		case AST_INSTANCE:
+			emitPortMap(node);
+			break;
 
       case AST_PROCESS:
 			emitProcess(node);
@@ -719,6 +803,10 @@ static void emitDefault(struct AstNode* node){
          break;
 
       case AST_IDENTIFIER:
+			/* keeping this from being marked unhandled
+				as identifiers need to be controlled 
+				at each individual node and not handled
+				separately */
          break;
 
       case AST_PMODE:

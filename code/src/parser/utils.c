@@ -152,6 +152,9 @@ bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t
 				if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
 					return true;
 				}
+			} else {
+				printf("Error determining mapping!\r\n");
+				printf("map type == %d\r\n", map->type);
 			}    
 		}
 	}
@@ -160,7 +163,14 @@ bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t
 }
 
 bool positionalMapping(struct Expression* expr){
-	return expr->type == NAME_EXPR;
+	if(expr->type == NAME_EXPR 	||
+		expr->type == NUM_EXPR 		||
+		expr->type == PHYLIT_EXPR 	||
+		expr->type == CHAR_EXPR		|| 
+		expr->type == STRING_EXPR) 
+			return true;
+
+	return false;
 }
 
 bool associativeMapping(struct Expression* expr){

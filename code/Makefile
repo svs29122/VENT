@@ -104,6 +104,9 @@ cleanall: clean cleand cleanp cleant cleanv
 linecount:
 	wc -l inc/*.* src/*.* src/parser/*.* main.c
 
+linecountAll:
+	wc -l inc/*.* src/*.* src/parser/*.* test/*_test*.c main.c
+
 todo:
 	@clear && grep -v '###' ../docs/todo.txt | grep -v -e ^[[:space:]]*\$
 
