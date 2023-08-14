@@ -106,14 +106,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <ast.h>
-#include <lexer.h>
-
 //private includes
-#include "parser_internal.h"
+#include "internal_parser.h"
+#include "rules.h"
 #include "error.h"
-#include "expression.h"
 #include "utils.h"
+#include "expression.h"
 
 static struct parser parser;
 struct parser *p = &parser;
@@ -148,8 +146,8 @@ void nextToken(){
 	p->peekToken = NextToken();
 }
 
-struct ParseRule* getRule(enum TOKEN_TYPE type){
-   return &rules[type];
+static struct ParseRule* getRule(enum TOKEN_TYPE type){
+	return &rules[type];
 }
 
 static struct Expression* parseExpression(enum Precedence precedence){
@@ -975,21 +973,9 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
-static void parseWildCardMapping(struct ExpressionNode **genericHead, struct ExpressionNode **portHead, struct Identifier* name){
-   struct ComponentDecl* comp = NULL; 
-	struct ExpressionNode *portMap = NULL, *genericMap = NULL;
-	struct ExpressionNode *pHead = NULL, *gHead = NULL;
-
-	//find the component corresponding to the instance
-   for(int i=0; i<BlockCount(componentStore); i++){
-      struct Declaration* decl = (struct Declaration*)ReadBlockArray(componentStore, i); 
-      if(decl) {
-         struct ComponentDecl* thisComp = &(decl->as.componentDeclaration);
-         if(strncmp(thisComp->name->value, name->value, sizeof(name->value)) == 0){ 
-            comp = thisComp;
-         }
-      }   
-   }  
+static void parseWildCardMapping(struct ExpressionNode **portHead, struct Identifier* name){
+	struct ExpressionNode *portMap = NULL, *pHead = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
 
 	//build the instance mappings from the component
 	if(comp){
@@ -1006,7 +992,6 @@ static void parseWildCardMapping(struct ExpressionNode **genericHead, struct Exp
 		}
 	}
 
-	*genericHead = gHead;
 	*portHead = pHead;
 }
 
@@ -1026,8 +1011,8 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 			nextToken();
 		}
 
-		if(thisIsAWildCard(mapping)){
-			parseWildCardMapping(&genericHead, &portHead, instance->name);
+	   if(thisIsAWildCard(mapping)){
+			parseWildCardMapping(&portHead, instance->name);
 		} else if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
 			if(genericMap == NULL){
 				genericMap = calloc(1, sizeof(struct ExpressionNode));

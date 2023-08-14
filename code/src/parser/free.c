@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include <ast.h>
-
-#include "parser_internal.h"
+#include "internal_parser.h"
 
 static void freeRange(struct AstNode* rng);
 

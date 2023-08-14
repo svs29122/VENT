@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "parser_internal.h"
+#include "internal_parser.h"
 
 bool match(enum TOKEN_TYPE type);
 bool peek(enum TOKEN_TYPE type);
@@ -11,12 +11,13 @@ bool peek(enum TOKEN_TYPE type);
 void consume(enum TOKEN_TYPE type, const char* msg);
 void consumeNext(enum TOKEN_TYPE type, const char* msg);
 
-struct Identifier* copyIdentifier(struct Identifier* orig);
 struct Token copyToken(struct Token oldToken);
 void destroyToken(struct Token thisToken);
 
 bool validDataType();
 bool validAssignment();
+
+struct ComponentDecl* GetComponentFromStore(char* cname);
 
 bool thereAreDeclarations();
 bool thisIsAPort();

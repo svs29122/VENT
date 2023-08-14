@@ -2,12 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <token.h>
-#include <ast.h>
-
-#include "utils.h"
 #include "error.h"
-#include "parser_internal.h"
+#include "utils.h"
 
 bool match(enum TOKEN_TYPE type){
 	return p->currToken.type == type;
@@ -35,20 +31,6 @@ void consume(enum TOKEN_TYPE type, const char* msg){
 void consumeNext(enum TOKEN_TYPE type, const char* msg){
 	nextToken();
 	consume(type, msg);
-}
-
-struct Identifier* copyIdentifier(struct Identifier* orig){
-	if(orig == NULL) return NULL;
-
-	struct Identifier* ident = calloc(1, sizeof(struct Identifier));  
-	ident->self.root.type = AST_IDENTIFIER;
-	ident->self.type = NAME_EXPR;
-
-	int size = strlen(orig->value) + 1; 
-	ident->value = calloc(size, sizeof(char));
-	memcpy(ident->value, orig->value, size);
-
-	return ident;
 }
 
 struct Token copyToken(struct Token oldToken){
@@ -125,19 +107,29 @@ bool thisIsAWildCard(struct Expression* map){
 	return false;
 }
 
-bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
-	struct DynamicBlockArray* generics = NULL;
-	
+struct ComponentDecl* GetComponentFromStore(char* cname){
+	struct ComponentDecl* thisComp = NULL;
+		
 	//find the component corresponding to the instance
 	for(int i=0; i<BlockCount(componentStore); i++){
 		struct Declaration* decl = (struct Declaration*)ReadBlockArray(componentStore, i);
 		if(decl) {
 			struct ComponentDecl* comp = &(decl->as.componentDeclaration);
-			if(strncmp(comp->name->value, name->value, sizeof(name->value)) == 0){
-				generics = comp->generics;
+			if(strncmp(comp->name->value, cname, sizeof(cname)) == 0){
+				thisComp = comp;
 			}
 		}
 	}
+
+	return thisComp;
+}
+
+bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* generics = NULL;
+	struct ComponentDecl* comp = NULL;
+
+	comp = GetComponentFromStore(name->value);
+	if(comp) generics = comp->generics;
 
 	if(generics){
 		for(int i=0; i<BlockCount(generics); i++){

@@ -19,7 +19,7 @@ DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 _DEP = parser.h ast.h dba.h lexer.h token.h error.h util.h expression.h 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = parser.o free.o error.o utils.o
+_OBJ = parser.o free.o error.o utils.o expression.o
 OBJ ?= $(patsubst %,$(LODIR)/%,$(_OBJ))
 
 OBJ_FINAL = $(ODIR)/parser_mod.o

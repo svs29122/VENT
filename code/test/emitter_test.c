@@ -499,6 +499,8 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
          	);\n \
          	\n \
 			C3: counter map (*);\n \
+			\n \
+			C4: counter map (128, *);\n \
 		}\n \
 	");
 

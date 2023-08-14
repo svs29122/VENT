@@ -1,7 +1,9 @@
-#ifndef INC_PARSER_INTERNAL_H
-#define INC_PARSER_INTERNAL_H
+#ifndef INC_INTERNAL_PARSER_H
+#define INC_INTERNAL_PARSER_H
 
-#include <dht.h>
+#include <ast.h>
+#include <lexer.h>
+#include <token.h>
 
 struct parser {
    bool printTokenFlag;
@@ -19,4 +21,4 @@ static struct PortDecl parsePortDecl();
 static struct GenericDecl parseGenericDecl();
 
 
-#endif // INC_PARSER_INTERNAL_H
+#endif // INC_INTERNAL_PARSER_H
