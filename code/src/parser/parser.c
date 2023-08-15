@@ -973,7 +973,7 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
-static void parseWildCardMapping(struct ExpressionNode **portHead, struct Identifier* name){
+static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier* name){
 	struct ExpressionNode *portMap = NULL, *pHead = NULL;
 	struct ComponentDecl* comp = GetComponentFromStore(name->value);
 
@@ -988,11 +988,67 @@ static void parseWildCardMapping(struct ExpressionNode **portHead, struct Identi
             portMap->next = calloc(1, sizeof(struct ExpressionNode));
             portMap = portMap->next;
          }
-         portMap->expression = (struct Expression*)copyIdentifier(port->name);
+         portMap->expression = createBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
 		}
 	}
 
 	*portHead = pHead;
+}
+
+static struct Expression* parseGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* generics = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+
+	if(comp) generics = comp->generics;
+
+   if(generics){
+      for(int i=0; i<BlockCount(generics); i++){
+         struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i); 
+         if(positionalMapping(map)){
+            if(generic->position == pos){
+               return createBinaryExpression((struct Expression*) generic->name, "=>", map);
+            }
+         } else if (associativeMapping(map)) {
+            struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+            struct Identifier* left = (struct Identifier*)bexp->left;
+            if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
+					return map;
+            }
+         } else {
+            printf("Error determining mapping! Map type == %d\r\n", map->type);
+         }    
+      }   
+   }   
+
+	return NULL;
+}
+
+static struct Expression* parsePortMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* ports = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+
+	if(comp) ports = comp->ports;
+
+   if(ports){
+      for(int i=0; i<BlockCount(ports); i++){
+         struct PortDecl* port = (struct PortDecl*)ReadBlockArray(ports, i); 
+         if(positionalMapping(map)){
+            if(port->position == pos){
+               return createBinaryExpression((struct Expression*) port->name, "=>", map);
+            }
+         } else if (associativeMapping(map)) {
+            struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+            struct Identifier* left = (struct Identifier*)bexp->left;
+            if(strncmp(port->name->value, left->value, sizeof(left->value)) == 0) {
+					return map;
+            }
+         } else {
+            printf("Error determining mapping! Map type == %d\r\n", map->type);
+         }    
+      }   
+   }   
+
+	return NULL;
 }
 
 static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
@@ -1012,7 +1068,7 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 		}
 
 	   if(thisIsAWildCard(mapping)){
-			parseWildCardMapping(&portHead, instance->name);
+			parseWildCardMap(&portHead, instance->name);
 		} else if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
 			if(genericMap == NULL){
 				genericMap = calloc(1, sizeof(struct ExpressionNode));
@@ -1021,7 +1077,7 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 				genericMap->next = calloc(1, sizeof(struct ExpressionNode));
 				genericMap = genericMap->next;
 			}
-			genericMap->expression = mapping;
+			genericMap->expression = parseGenericMap(mapping, instance->name, posInMap);
 		} else { //this is a port map
 			if(portMap == NULL){
 				portMap = calloc(1, sizeof(struct ExpressionNode));
@@ -1030,7 +1086,7 @@ static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instan
 				portMap->next = calloc(1, sizeof(struct ExpressionNode));
 				portMap = portMap->next;
 			}
-			portMap->expression = mapping;
+			portMap->expression = parsePortMap(mapping, instance->name, posInMap);
 		}
 		posInMap++;
 	}

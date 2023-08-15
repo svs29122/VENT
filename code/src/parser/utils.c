@@ -145,8 +145,7 @@ bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t
 					return true;
 				}
 			} else {
-				printf("Error determining mapping!\r\n");
-				printf("map type == %d\r\n", map->type);
+				printf("Error determining mapping! Map type == %d\r\n", map->type);
 			}    
 		}
 	}
