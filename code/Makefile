@@ -39,7 +39,7 @@ $(POBJ):
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall linecount todo print
+.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall linecount todo print updateVimSyntax
 
 help:
 	@echo "  build tvt: 'make tvt' or just 'make'"
@@ -106,6 +106,9 @@ linecount:
 
 linecountAll:
 	wc -l inc/*.* src/*.* src/parser/*.* test/*_test*.c main.c
+
+updateVimSyntax:
+	cp ../docs/vent.vim /usr/share/vim/vim81/syntax/
 
 todo:
 	@clear && grep -v '###' ../docs/todo.txt | grep -v -e ^[[:space:]]*\$

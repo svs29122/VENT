@@ -1,6 +1,6 @@
---
--- vent component instantiation example
---
+/*
+	VENT component instantiation example
+*/
 
 use ieee.std_logic_1164.all;
 
@@ -13,7 +13,7 @@ arch behavioral(counter){
 	comp counter {
 		SIZE int := 64;
    	clk -> stl;
-		rst -> stl;
+		rst <- stl;
 		Q <- stlv(3 downto 0);
 	}
 
