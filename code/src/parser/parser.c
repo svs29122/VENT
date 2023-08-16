@@ -979,6 +979,8 @@ static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier
 
 	//build the instance mappings from the component
 	if(comp){
+		//TODO: perhaps we should check the generic mappings to make sure either
+		//a default value has been set up or an instance value has been passed in
 		for(int i=0; i<BlockCount(comp->ports); i++){
 			struct PortDecl* port = (struct PortDecl*)ReadBlockArray(comp->ports, i);
 			if(portMap == NULL){
@@ -988,7 +990,7 @@ static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier
             portMap->next = calloc(1, sizeof(struct ExpressionNode));
             portMap = portMap->next;
          }
-         portMap->expression = createBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
+         portMap->expression = CreateBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
 		}
 	}
 
@@ -1006,7 +1008,7 @@ static struct Expression* parseGenericMap(struct Expression* map, struct Identif
          struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i); 
          if(positionalMapping(map)){
             if(generic->position == pos){
-               return createBinaryExpression((struct Expression*) generic->name, "=>", map);
+               return CreateBinaryExpression((struct Expression*) generic->name, "=>", map);
             }
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;
@@ -1034,7 +1036,7 @@ static struct Expression* parsePortMap(struct Expression* map, struct Identifier
          struct PortDecl* port = (struct PortDecl*)ReadBlockArray(ports, i); 
          if(positionalMapping(map)){
             if(port->position == pos){
-               return createBinaryExpression((struct Expression*) port->name, "=>", map);
+               return CreateBinaryExpression((struct Expression*) port->name, "=>", map);
             }
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;

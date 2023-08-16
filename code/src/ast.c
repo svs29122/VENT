@@ -547,3 +547,14 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 		op->doSpecialOp(&(prog->self));
 	}
 }
+
+uint16_t ExpressionCount(struct ExpressionNode* eNode){
+   uint16_t count = 0;
+
+   while(eNode){
+      count++;
+      eNode = eNode->next;
+   }   
+   
+   return count;
+}

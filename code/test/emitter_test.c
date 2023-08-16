@@ -477,30 +477,31 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
 			//declare the counter\n \
 			comp counter {\n \
 				SIZE int := 64;\n \
+				ADDR int := 64;\n \
 				clk -> stl;\n \
 				rst -> stl;\n \
 				Q <- stlv(3 downto 0);\
 			}\n \
 			\n \
 			//declare the signals\n \
-			sig SIZE int;\n \
 			sig clk stl;\n \
 			sig rst stl;\n \
 			sig Q stlv(3 downto 0);\n \
 			\n \
 			//instanitate 3 counters\n \
-			C1: counter map(8, clk, rst, Q);\n \
+			C1: counter map(8, 16, clk, rst, Q);\n \
       	\n \
       	C2: counter map (\n \
 				SIZE => 32,\n \
+				ADDR => 32,\n \
          	clk => clk,\n \
          	rst => rst,\n \
          	Q => open,\n \
          	);\n \
          	\n \
 			C3: counter map (*);\n \
-			\n \
-			C4: counter map (128, *);\n \
+			C4: counter map (128, 123456789, *);\n \
+			C5: counter map (128, *);\n \
 		}\n \
 	");
 

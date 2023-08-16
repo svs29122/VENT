@@ -24,6 +24,8 @@ III) Parser ToDo
 ### DONE ###   2) Implement error strategy e.g. the wrong token follows an ent decl
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
+	5) allow declarations and statements to be mixed in source i.e. some declarations can come after statements
+		- there should be rules here e.g. any declaration must come before it is used in a statement
 	
 
 IV) Transpiler ToDo
@@ -64,9 +66,10 @@ VIII) Components
 	### DONE ###	0) Labels
 	### DONE ###	1) Declaration
 	### DONE ###	2) Instantiation/Mapping
-	2.5) Force all instantiations to be done as associative mappings
+	### DONE ###	2.5) Force all instantiations to be done as associative mappings
 	### DONE ###	3) Generic mapping
-	4) Direct entity instantation
+	### DONE ### 	4) emit instance mappings with each port on new line
+	5) Direct entity instantation
 
 
 IX) Language features

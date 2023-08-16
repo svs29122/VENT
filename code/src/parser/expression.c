@@ -5,6 +5,8 @@
 #include "internal_parser.h"
 #include "expression.h"
 	
+static struct Expression* copyExpression(struct Expression* oldExpr);
+
 static struct Expression* copyCharExpr(struct CharExpr* orig){
    if(orig == NULL) return NULL;
 
@@ -65,7 +67,7 @@ static struct Expression* copyBinaryExpr(struct BinaryExpr* orig){
    return &(biexp->self); 
 }
 
-struct Identifier* copyIdentifier(struct Identifier* orig){
+static struct Identifier* copyIdentifier(struct Identifier* orig){
    if(orig == NULL) return NULL;
 
    struct Identifier* ident = calloc(1, sizeof(struct Identifier));  
@@ -79,7 +81,7 @@ struct Identifier* copyIdentifier(struct Identifier* orig){
    return ident;
 }
 
-struct Expression* copyExpression(struct Expression* oldExpr){
+static struct Expression* copyExpression(struct Expression* oldExpr){
 	struct Expression* newExpr = NULL;
 
 	switch(oldExpr->type){
@@ -124,7 +126,7 @@ struct Expression* copyExpression(struct Expression* oldExpr){
 	return newExpr;
 }
 
-struct Expression* createBinaryExpression(struct Expression* l, char* op, struct Expression* r){ 
+struct Expression* CreateBinaryExpression(struct Expression* l, char* op, struct Expression* r){ 
    struct BinaryExpr* biexp = calloc(1, sizeof(struct BinaryExpr));
    biexp->self.root.type = AST_EXPRESSION;
    biexp->self.type = BINARY_EXPR;

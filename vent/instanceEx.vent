@@ -1,0 +1,39 @@
+--
+-- vent component instantiation example
+--
+
+use ieee.std_logic_1164.all;
+
+ent counter {
+}
+
+arch behavioral(counter){
+	
+	//declare the counter
+	comp counter {
+		SIZE int := 64;
+   	clk -> stl;
+		rst -> stl;
+		Q <- stlv(3 downto 0);
+	}
+
+	//declare the signals
+	sig clk stl;
+	sig rst stl;
+	sig Q stlv(3 downto 0);
+
+	//instanitate 3 counters
+	C1: counter map(8, clk, rst, Q);
+
+	C2: counter map (
+		SIZE => 32,
+		clk => clk,
+		rst => rst,
+		Q => open,
+	);
+	
+	C3: counter map (*);
+	
+	C4: counter map (128, *);
+}
+

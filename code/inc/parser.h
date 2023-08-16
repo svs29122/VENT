@@ -10,5 +10,4 @@ void SetPrintTokenFlag();
 struct Program* ParseProgram(char* ventProgram);
 void FreeProgram(struct Program *prog);
 
-
 #endif // INC_PARSER_H

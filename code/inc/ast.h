@@ -10,6 +10,7 @@
 struct Program;
 struct AstNode;
 struct Expression;
+struct ExpressionNode;
 
 typedef void (*astNodeOpPtr) (struct AstNode*);
 typedef void (*expOpPtr) (struct Expression*);
@@ -25,6 +26,7 @@ struct OperationBlock {
 };
 
 void WalkTree(struct Program* prog, struct OperationBlock* op);
+uint16_t ExpressionCount(struct ExpressionNode* eNode);
 
 enum AstNodeType {
 	AST_PROGRAM = 1,

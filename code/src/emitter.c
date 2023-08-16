@@ -180,40 +180,61 @@ static void emitInstantiation(struct AstNode* inst){
 static void emitGenericMap(struct AstNode* inst){
 	struct Instantiation* instance = (struct Instantiation*)inst;
 	fprintf(vhdlFile, "%cgeneric map (", emitIndent());
-	
-	eStat.list = true;
+
+	indent++;	
+
+	if(ExpressionCount(instance->genericMap) > 1) {
+		eStat.list = true;
+		eStat.line = true;
+	}
 }
 
 static void emitPortMap(struct AstNode* inst){
 	struct Instantiation* instance = (struct Instantiation*)inst;
 	if(instance->genericMap) {
 
-		if(instance->genericMap->expression){
+		if(ExpressionCount(instance->genericMap) > 1){
 			//overwrite that last comma
-			fseek(vhdlFile, -1, SEEK_CUR);
+			int toTravel = -1 - (indent + 1);
+			fseek(vhdlFile, toTravel, SEEK_CUR);
 		}
 
+		indent--;
+
 		//close the generic map
-		fprintf(vhdlFile, " )\n");
-	}
+		fprintf(vhdlFile, "\n");
+		fprintf(vhdlFile, "%c)\n", emitIndent());
+	} 
 
 	fprintf(vhdlFile, "%cport map (", emitIndent());
 	
-	eStat.list = true;
+	indent++;	
+
+	if(ExpressionCount(instance->portMap) > 1) {
+		eStat.list = true;
+		eStat.line = true;
+	}
 }
 
 static void emitInstantiationClose(struct AstNode* inst){
 	struct Instantiation* instance = (struct Instantiation*)inst;
 	if(instance->portMap) {
 		//overwrite that last comma
-		fseek(vhdlFile, -1, SEEK_CUR);
+		int toTravel = -1 - (indent + 1);
+		fseek(vhdlFile, toTravel, SEEK_CUR);
+
+		indent--;
 
 		//close the port map
-		fprintf(vhdlFile, " )");
+		fprintf(vhdlFile, "\n");
+		fprintf(vhdlFile, "%c)", emitIndent());
 	}
 
 	fprintf(vhdlFile, ";\n");
 	indent--;
+
+	eStat.list = false;
+	eStat.line = false;
 }
 
 static void emitProcess(struct AstNode* proc){
@@ -579,6 +600,8 @@ static void emitExpression(struct Expression* expr){
 			fprintf(vhdlFile, ",");
 		}
 		if(eStat.line){
+			fprintf(vhdlFile, "\n");
+			fprintf(vhdlFile, "%c", emitIndent());
 		}
 	}
 
