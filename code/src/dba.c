@@ -12,7 +12,7 @@ struct DynamicBlockArray {
 };
 
 struct DynamicBlockArray* InitBlockArray(size_t bsize){	
-	Dba* arr = malloc(sizeof(Dba));	
+	struct DynamicBlockArray* arr = calloc(1, sizeof(struct DynamicBlockArray));	
 	if(arr == NULL){
 		printf("Error: Unable to allocate Block Array\r\n");
 		exit(-1);
@@ -46,7 +46,7 @@ void WriteBlockArray(struct DynamicBlockArray* arr, char* block){
 	if(arr->capacity < arr->count + 1){
 		int oldCapacity = arr->capacity;
 		arr->capacity = oldCapacity < 2 ? 2 : (oldCapacity * 2);
-		arr->block = (char*) realloc(arr->block, (arr->blockSize * arr->capacity)); 
+		arr->block = realloc(arr->block, (arr->blockSize * arr->capacity)); 
 	}
 
 	char* blockPtr = &arr->block[arr->count * arr->blockSize];
@@ -65,7 +65,7 @@ void* ReadBlockArray(struct DynamicBlockArray* arr, int index){
 		return NULL;
 	}
 	
-	return (arr->block + (index * arr->blockSize)); 
+	return (void*)(arr->block + (index * arr->blockSize)); 
 }
 
 int BlockCount(struct DynamicBlockArray* arr){

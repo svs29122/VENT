@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include <ast.h>
+#include "internal_parser.h"
 
-#include "parser_internal.h"
+static void freeRange(struct AstNode* rng);
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
@@ -25,6 +25,13 @@ static void freeIdentifier(struct AstNode* ident){
 	free(id);
 }
 
+static void freeLabel(struct AstNode* lbl){
+	struct Label* label = (struct Label*)lbl;
+	if(label->value) free(label->value);
+
+	free(label);
+}
+
 static void freePortMode(struct AstNode* pmode){
 	struct PortMode* pm = (struct PortMode*)pmode;
 	if(pm->value) free(pm->value);
@@ -35,6 +42,7 @@ static void freePortMode(struct AstNode* pmode){
 static void freeDataType(struct AstNode* dtype){
 	struct DataType* dt = (struct DataType*)dtype;
 	if(dt->value) free(dt->value);
+	if(dt->range) freeRange((struct AstNode*)dt->range);
 
 	free(dt);
 }
@@ -122,11 +130,10 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
-static void freeExpressionList(struct AstNode* tdecl){
-	struct TypeDecl* typeDecl = (struct TypeDecl*)tdecl;
+static void freeExpressionList(struct ExpressionNode* head){
 
-	struct ExpressionList *curr, *prev;
-	curr = typeDecl->enumList;
+	struct ExpressionNode *curr, *prev;
+	curr = head;
 
 	while(curr){
 		prev = curr;
@@ -142,6 +149,28 @@ static void freeOpen(struct AstNode* node){
 		case AST_CASE:
 			freeCaseChoices(node);
 			break;
+
+		default:
+			break;
+	}
+}
+
+static void freeClose(struct AstNode* node){
+
+	switch(node->type){
+
+		case AST_INSTANCE: {
+			struct Instantiation* instance = (struct Instantiation*)node;
+			freeExpressionList(instance->portMap);
+			freeExpressionList(instance->genericMap);
+			break;
+		}
+
+		case AST_TDECL: {
+			struct TypeDecl* typeDecl = (struct TypeDecl*)node;
+			freeExpressionList(typeDecl->enumList);
+			break;
+		}
 
 		default:
 			break;
@@ -164,10 +193,6 @@ static void freeSpecial(struct AstNode* node){
 			freeAssignmentOp(node);
 			break;
 
-		case AST_TDECL:
-			freeExpressionList(node);
-			break;
-
 		default:
 			break;
 	}
@@ -183,6 +208,10 @@ static void freeDefault(struct AstNode* node){
 
 		case AST_IDENTIFIER:
 			freeIdentifier(node);
+			break;
+
+		case AST_LABEL:
+			freeLabel(node);
 			break;
 
 		case AST_PMODE:
@@ -202,12 +231,22 @@ static void freeDefault(struct AstNode* node){
 	}
 }
 
+static void freeParserTokens(){
+   if(p->currToken.literal) free(p->currToken.literal);
+   if(p->peekToken.literal) free(p->peekToken.literal);
+}
+
+static void freeComponentStore(){
+	FreeBlockArray(componentStore);
+}
+
 void FreeProgram(struct Program* prog){
 	
 	// setup block
 	struct OperationBlock opBlk = {
 		.doDefaultOp 		= freeDefault,
 		.doOpenOp 			= freeOpen,
+		.doCloseOp 			= freeClose,
 		.doSpecialOp		= freeSpecial,
 		.doExpressionOp	= freeExpression,
 		.doBlockArrayOp	= freeBlockArray,
@@ -216,4 +255,5 @@ void FreeProgram(struct Program* prog){
 	WalkTree(prog, &opBlk);
 
 	freeParserTokens();
+	freeComponentStore();
 }

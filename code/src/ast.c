@@ -20,6 +20,12 @@ static void getOperationBlockReady(struct OperationBlock* op){
 
 //forward declarations
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
+static void walkPorts(Dba* ports, struct OperationBlock* op);
+static void walkGenerics(Dba* generics, struct OperationBlock* op);
+
+static void walkLabel(struct Label* label, struct OperationBlock* op){
+	op->doDefaultOp(&(label->self));
+}
 
 static void walkVariableDeclaration(struct VariableDecl* varDecl, struct OperationBlock* op){
 	op->doDefaultOp(&(varDecl->self));
@@ -35,14 +41,14 @@ static void walkVariableDeclaration(struct VariableDecl* varDecl, struct Operati
 	op->doCloseOp(&(varDecl->self));
 }
 
-static void walkExpressionList(struct ExpressionList* eList, struct OperationBlock* op){
-	struct ExpressionList* currList = eList;
-	do {
-		if(currList->expression){
-			op->doExpressionOp(currList->expression);
+static void walkExpressionList(struct ExpressionNode* eList, struct OperationBlock* op){
+	struct ExpressionNode* currNode = eList;
+	while(currNode){
+		if(currNode->expression){
+			op->doExpressionOp(currNode->expression);
 		}	
-		currList = currList->next;
-	} while(currList);
+		currNode = currNode->next;
+	}
 }
 
 static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock* op){
@@ -52,7 +58,6 @@ static void walkTypeDeclaration(struct TypeDecl* typeDecl, struct OperationBlock
 	}
 	if(typeDecl->enumList){
 		walkExpressionList(typeDecl->enumList, op);
-
 		op->doSpecialOp(&(typeDecl->self));
 	}
 	op->doCloseOp(&(typeDecl->self));
@@ -70,6 +75,21 @@ static void walkSignalDeclaration(struct SignalDecl* sigDecl, struct OperationBl
 		op->doExpressionOp(sigDecl->expression);
 	}
 	op->doCloseOp(&(sigDecl->self));
+}
+
+static void walkComponentDeclaration(struct ComponentDecl* compDecl, struct OperationBlock* op){
+	op->doDefaultOp(&(compDecl->self));
+	if(compDecl->name){
+		op->doDefaultOp(&(compDecl->name->self.root));
+	}
+	op->doOpenOp(&(compDecl->self));
+	if(compDecl->generics){
+		walkGenerics(compDecl->generics, op);
+	}
+	if(compDecl->ports){
+		walkPorts(compDecl->ports, op);
+	}
+	op->doCloseOp(&(compDecl->self));
 }
 
 static void walkReportStatement(struct ReportStatement* rStmt, struct OperationBlock* op){
@@ -317,6 +337,11 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 				break;
 			}		
 
+			case COMPONENT_DECLARATION: {
+				walkComponentDeclaration(&(decl->as.componentDeclaration), op);
+				break;
+			}		
+
 			case VARIABLE_DECLARATION: {
 				walkVariableDeclaration(&(decl->as.variableDeclaration), op);
 				break;
@@ -327,6 +352,22 @@ static void walkDeclarations(Dba* decls, struct OperationBlock* op){
 		}
 	}
 	op->doBlockArrayOp(decls);
+}
+
+static void walkInstantiation(struct Instantiation* inst, struct OperationBlock* op){
+	if(inst->name){
+		op->doOpenOp(&(inst->self));
+		op->doDefaultOp(&(inst->name->self.root));
+	}
+	if(inst->genericMap){
+		op->doSpecialOp(&(inst->self));
+		walkExpressionList(inst->genericMap, op);
+	}
+	if(inst->portMap){
+		op->doDefaultOp(&(inst->self));
+		walkExpressionList(inst->portMap, op);
+	}
+	op->doCloseOp(&(inst->self));
 }
 
 static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
@@ -347,17 +388,25 @@ static void walkProcessStatement(struct Process* proc, struct OperationBlock* op
 static void walkConcurrentStatements(Dba* stmts, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(stmts); i++){
 		struct ConcurrentStatement* cstmt = (struct ConcurrentStatement*) ReadBlockArray(stmts, i) ;
+		if(cstmt->label){
+			walkLabel(cstmt->label, op);
+		}
 		switch(cstmt->type) {
-			case SIGNAL_ASSIGNMENT: {
-				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
-				break;
-			}
-		
 			case PROCESS: {
 				walkProcessStatement(&(cstmt->as.process), op);
 				break;
 			}
 
+			case INSTANTIATION: {
+				walkInstantiation(&(cstmt->as.instantiation), op);
+				break;
+			}
+
+			case SIGNAL_ASSIGNMENT: {
+				walkSignalAssignment(&(cstmt->as.signalAssignment), op);
+				break;
+			}
+		
 			default:
 				break;
 		}
@@ -384,12 +433,16 @@ static void walkArchitecture(struct ArchitectureDecl* archDecl, struct Operation
 }
 
 static void walkGenerics(Dba* generics, struct OperationBlock* op){
-	if(BlockCount(generics) > 0) {
-		op->doOpenOp(&(((struct GenericDecl*)ReadBlockArray(generics ,0))->self));
+	if(BlockCount(generics) == 0) {
+		return;
 	}
-	
+
 	for(int i=0; i < BlockCount(generics); i++){
 		struct GenericDecl* genericDecl = (struct GenericDecl*) ReadBlockArray(generics, i);
+		
+		//pass in the first generic to do some one time work at start of loop
+		if(i == 0) op->doOpenOp(&(genericDecl->self));
+
 		op->doDefaultOp(&(genericDecl->self));
 		if(genericDecl->name){
 			op->doDefaultOp(&(genericDecl->name->self.root));
@@ -401,22 +454,25 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 			op->doExpressionOp(genericDecl->defaultValue);
 		}
 		op->doCloseOp(&(genericDecl->self));
-	}
-	
-	if(BlockCount(generics) > 0) {
-		op->doSpecialOp(&(((struct GenericDecl*)ReadBlockArray(generics ,0))->self));
+		
+		//finish up one time work	
+		if(i == (BlockCount(generics) - 1)) op->doSpecialOp(&(genericDecl->self));
 	}
 	
 	op->doBlockArrayOp(generics);	
 }
 
 static void walkPorts(Dba* ports, struct OperationBlock* op){
-	if(BlockCount(ports) > 0) {
-		op->doOpenOp(&(((struct PortDecl*)ReadBlockArray(ports,0))->self));
+	if(BlockCount(ports) == 0) {
+		return;
 	}
 	
 	for(int i=0; i < BlockCount(ports); i++){
 		struct PortDecl* portDecl = (struct PortDecl*) ReadBlockArray(ports, i);
+
+		//pass in the first port to do some one time work at start of loop
+		if(i == 0) op->doOpenOp(&(portDecl->self));
+	
 		op->doDefaultOp(&(portDecl->self));
 		if(portDecl->name){
 			op->doDefaultOp(&(portDecl->name->self.root));
@@ -429,6 +485,7 @@ static void walkPorts(Dba* ports, struct OperationBlock* op){
 		}	
 		op->doCloseOp(&(portDecl->self));
 	}
+
 	op->doBlockArrayOp(ports);	
 }
 
@@ -489,4 +546,15 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 		}
 		op->doSpecialOp(&(prog->self));
 	}
+}
+
+uint16_t ExpressionCount(struct ExpressionNode* eNode){
+   uint16_t count = 0;
+
+   while(eNode){
+      count++;
+      eNode = eNode->next;
+   }   
+   
+   return count;
 }

@@ -9,10 +9,10 @@ CC=gcc
 CFLAGS?=-I$(IDIR)
 DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 
-_DEPS = display.h token.h dba.h ast.h parser.h emitter.h
+_DEPS = display.h token.h dba.h dht.h ast.h parser.h emitter.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = display.o lexer.o dba.o ast.o emitter.o
+_OBJ = display.o lexer.o dba.o dht.o ast.o emitter.o
 OBJ ?= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _POBJ = parser_mod.o
@@ -73,7 +73,7 @@ again:
 runtest: 
 	@$(MAKE) cleanall --silent
 	@$(MAKE) -C ./test --silent
-	@./test/UnitTests
+	@clear && ./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
 checkleaks:
@@ -103,6 +103,9 @@ cleanall: clean cleand cleanp cleant cleanv
 
 linecount:
 	wc -l inc/*.* src/*.* src/parser/*.* main.c
+
+linecountAll:
+	wc -l inc/*.* src/*.* src/parser/*.* test/*_test*.c main.c
 
 todo:
 	@clear && grep -v '###' ../docs/todo.txt | grep -v -e ^[[:space:]]*\$

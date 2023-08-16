@@ -11,6 +11,8 @@
 
 #include "cutest.h"
 
+//#define CHECK_VHDL_SYNTAX 
+
 struct MessageBuffer {
 	char* buffer;
 	int msgCount;
@@ -60,6 +62,21 @@ struct MessageBuffer checkSyntaxErrorsInGeneratedVHDL(){
 void checkForSyntaxErrors(CuTest* tc){
 	struct MessageBuffer errorMessages = checkSyntaxErrorsInGeneratedVHDL();
 	bool syntaxErrorFree = errorMessages.msgCount == 0;
+
+	if(!syntaxErrorFree){
+		const int maxNameSize = 512;
+		char copyCommand[maxNameSize];
+		bool success = (-1) != (snprintf(copyCommand, maxNameSize,
+			"cp ./a.vhdl ./FAILED_%s.vhdl", tc->name));
+		
+		if(success) {
+			system(copyCommand);
+			remove("./a.vhdl");
+		}
+		printf("*%s completed but had syntax errors.\r\n", tc->name);
+	} else {
+		printf("%s completed without syntax errors.\r\n", tc->name);
+	}
 
 	CuAssert(tc, errorMessages.buffer, syntaxErrorFree);
 	free(errorMessages.buffer);
@@ -414,6 +431,94 @@ void TestTranspileProgram_WithGenerics(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_WithComponent(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		\n\
+		ent ander {\n \
+			a -> stl;\n \
+			b -> stl;\n \
+			y <- stl;\n \
+		}\n \
+		\n\
+		arch behavioral(ander){\n \
+		\n \
+      	comp counter {\n \
+            SIZE int := 256;\n \
+            LENGTH int;\n \
+            clk -> stl;\n \
+            rst -> stl;\n \
+            upDown -> stl;\n \
+            Q <- stlv(3 downto 0);\n \
+         }\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_WithInstantiation(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent counter {\n \
+		}\n \
+		arch behavioral(counter){\n \
+			\n \
+			//declare the counter\n \
+			comp counter {\n \
+				SIZE int := 64;\n \
+				ADDR int := 64;\n \
+				clk -> stl;\n \
+				rst -> stl;\n \
+				Q <- stlv(3 downto 0);\
+			}\n \
+			\n \
+			//declare the signals\n \
+			sig clk stl;\n \
+			sig rst stl;\n \
+			sig Q stlv(3 downto 0);\n \
+			\n \
+			//instanitate 3 counters\n \
+			C1: counter map(8, 16, clk, rst, Q);\n \
+      	\n \
+      	C2: counter map (\n \
+				SIZE => 32,\n \
+				ADDR => 32,\n \
+         	clk => clk,\n \
+         	rst => rst,\n \
+         	Q => open,\n \
+         	);\n \
+         	\n \
+			C3: counter map (*);\n \
+			C4: counter map (128, 123456789, *);\n \
+			C5: counter map (128, *);\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	//PrintProgram(prog);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -428,7 +533,6 @@ void TestTranspileProgram_(CuTest *tc){
 	TranspileProgram(prog, NULL);
 
 #ifdef CHECK_VHDL_SYNTAX
-	system("cp ./a.vhdl ./tmp.vhdl");
 	checkForSyntaxErrors(tc);
 #endif
 
@@ -449,6 +553,8 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithNestedIfs);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSwitchCase);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithGenerics);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithComponent);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
 
 	return suite;
 }

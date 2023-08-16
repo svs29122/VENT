@@ -106,17 +106,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <ast.h>
-#include <lexer.h>
-
 //private includes
-#include "parser_internal.h"
+#include "internal_parser.h"
+#include "rules.h"
 #include "error.h"
-#include "expression.h"
 #include "utils.h"
+#include "expression.h"
 
 static struct parser parser;
 struct parser *p = &parser;
+
+struct DynamicBlockArray* componentStore;
 
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
@@ -131,12 +131,9 @@ static void initParser(){
 
 	p->printTokenFlag = keepPrinting;
 	p->currToken = NextToken();
-	p->peekToken = NextToken();	
-}
+	p->peekToken = NextToken();
 
-void freeParserTokens(){
-	if(p->currToken.literal) free(p->currToken.literal);
-	if(p->peekToken.literal) free(p->peekToken.literal);
+	componentStore = InitBlockArray(sizeof(struct Declaration));
 }
 
 void nextToken(){	
@@ -149,8 +146,8 @@ void nextToken(){
 	p->peekToken = NextToken();
 }
 
-struct ParseRule* getRule(enum TOKEN_TYPE type){
-   return &rules[type];
+static struct ParseRule* getRule(enum TOKEN_TYPE type){
+	return &rules[type];
 }
 
 static struct Expression* parseExpression(enum Precedence precedence){
@@ -261,6 +258,28 @@ static struct Expression* parseBinary(struct Expression* expr){
 	return &(biexp->self);
 }
 
+static struct Label* parseLabel(){
+	
+	if(match(TOKEN_IDENTIFIER) && peek(TOKEN_COLON)){
+		
+		//we got a label
+		struct Label* label = calloc(1, sizeof(struct Label));
+		label->self.type = AST_LABEL;
+		
+		int size = strlen(p->currToken.literal) + 1;
+		label->value = calloc(size, sizeof(char));
+		memcpy(label->value, p->currToken.literal, size);
+		
+		//step past label name and colon
+		nextToken();
+		nextToken();
+
+		return label;
+	}	
+
+	return NULL;
+}
+
 static struct Range* parseRange(){
 	struct Range* rng = calloc(1, sizeof(struct Range));
 	rng->self.type = AST_RANGE;
@@ -298,6 +317,15 @@ static struct DataType* parseDataType(char* val){
 	int size = strlen(val) + 1;
 	dt->value = calloc(size, sizeof(char));
 	memcpy(dt->value, val, size);
+
+	if(peek(TOKEN_LPAREN)){
+		consumeNext(TOKEN_LPAREN, "Expect '(' before range in data type");
+
+		nextToken();
+		dt->range = parseRange();
+
+		consume(TOKEN_RPAREN, "Expect ')' after range in data type");
+	}
 
 	return dt;
 }
@@ -337,16 +365,16 @@ static void parseVariableDeclaration(struct VariableDecl* decl){
 	consume(TOKEN_SCOLON, "Expect semicolon at end of variable declaration");
 }
 
-struct ExpressionList* parseEnumerationList(){
+struct ExpressionNode* parseEnumerationList(){
 
-	struct ExpressionList* elist = calloc(1, sizeof(struct ExpressionList));
-	struct ExpressionList *currList = elist;
+	struct ExpressionNode* elist = calloc(1, sizeof(struct ExpressionNode));
+	struct ExpressionNode *currList = elist;
 	
 	while(!match(TOKEN_RBRACE)){
 				
 		struct Token prevToken = copyToken(p->currToken);
-		
-		struct Expression* curr = parseExpression(LOWEST_PREC);	
+
+		struct Expression* curr = parseExpression(LOWEST_PREC);
 		if(curr == NULL) return NULL;
 
 		if(curr->type != NAME_EXPR && curr->type != CHAR_EXPR){
@@ -360,7 +388,7 @@ struct ExpressionList* parseEnumerationList(){
 			consume(TOKEN_COMMA, "Expect comma after expression in expression list");
 			nextToken();
 
-			currList->next = calloc(1, sizeof(struct ExpressionList));
+			currList->next = calloc(1, sizeof(struct ExpressionNode));
 			currList = currList->next; 
 		}
 	}
@@ -407,6 +435,55 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 	consume(TOKEN_SCOLON, "Expect semicolon at end of signal declaration");
 }
 
+static void parseComponentInterior(struct ComponentDecl *cDecl){
+
+	nextToken();
+	uint16_t posInComponent = 1;
+
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		if(thisIsAPort()) {
+			struct PortDecl port = parsePortDecl();	
+			port.position = posInComponent++;
+
+			if(cDecl->ports == NULL) {
+				cDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
+			}
+
+			WriteBlockArray(cDecl->ports, (char*)(&port));
+		} else { //this is a generic
+			struct GenericDecl generic = parseGenericDecl();	
+			generic.position = posInComponent++;
+
+			if(cDecl->generics == NULL) {
+				cDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+			}
+
+			WriteBlockArray(cDecl->generics, (char*)(&generic));
+		}
+		nextToken();
+	}
+}
+
+static void parseComponentDeclaration(struct ComponentDecl* cDecl){
+#ifdef DEBUG
+	memcpy(&(cDecl->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	cDecl->self.type = AST_COMPONENT;
+	
+	consumeNext(TOKEN_IDENTIFIER, "Expect identifier after comp keyword");
+	cDecl->name = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_LBRACE, "Expect { after component identifier");
+
+	if(!peek(TOKEN_RBRACE)){
+		parseComponentInterior(cDecl);
+	} else {
+		nextToken();
+	}
+
+	consume(TOKEN_RBRACE, "Expect } at the end of component declaration");
+}
+
 static void parseVariableAssignment(struct VariableAssign *varAssign){
 #ifdef DEBUG
 	memcpy(&(varAssign->self.token), &(p->currToken), sizeof(struct Token));
@@ -433,15 +510,15 @@ static void parseVariableAssignment(struct VariableAssign *varAssign){
 }
 
 static void parseSignalAssignment(struct SignalAssign *sigAssign){
-#ifdef DEBUG
-	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
-#endif
 	sigAssign->self.type = AST_SASSIGN;
 
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	sigAssign->target = (struct Identifier*)parseIdentifier();
 	
 	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
+#ifdef DEBUG
+	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
+#endif
 	
 	nextToken();
 	sigAssign->expression = parseExpression(LOWEST_PREC);
@@ -896,6 +973,148 @@ static Dba* parseProcessBodyDeclarations(){
 	return decls;
 }
 
+static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier* name){
+	struct ExpressionNode *portMap = NULL, *pHead = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+
+	//build the instance mappings from the component
+	if(comp){
+		//TODO: perhaps we should check the generic mappings to make sure either
+		//a default value has been set up or an instance value has been passed in
+		for(int i=0; i<BlockCount(comp->ports); i++){
+			struct PortDecl* port = (struct PortDecl*)ReadBlockArray(comp->ports, i);
+			if(portMap == NULL){
+            portMap = calloc(1, sizeof(struct ExpressionNode));
+            pHead = portMap;
+         } else {
+            portMap->next = calloc(1, sizeof(struct ExpressionNode));
+            portMap = portMap->next;
+         }
+         portMap->expression = CreateBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
+		}
+	}
+
+	*portHead = pHead;
+}
+
+static struct Expression* parseGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* generics = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+
+	if(comp) generics = comp->generics;
+
+   if(generics){
+      for(int i=0; i<BlockCount(generics); i++){
+         struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i); 
+         if(positionalMapping(map)){
+            if(generic->position == pos){
+               return CreateBinaryExpression((struct Expression*) generic->name, "=>", map);
+            }
+         } else if (associativeMapping(map)) {
+            struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+            struct Identifier* left = (struct Identifier*)bexp->left;
+            if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
+					return map;
+            }
+         } else {
+            printf("Error determining mapping! Map type == %d\r\n", map->type);
+         }    
+      }   
+   }   
+
+	return NULL;
+}
+
+static struct Expression* parsePortMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* ports = NULL;
+	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+
+	if(comp) ports = comp->ports;
+
+   if(ports){
+      for(int i=0; i<BlockCount(ports); i++){
+         struct PortDecl* port = (struct PortDecl*)ReadBlockArray(ports, i); 
+         if(positionalMapping(map)){
+            if(port->position == pos){
+               return CreateBinaryExpression((struct Expression*) port->name, "=>", map);
+            }
+         } else if (associativeMapping(map)) {
+            struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+            struct Identifier* left = (struct Identifier*)bexp->left;
+            if(strncmp(port->name->value, left->value, sizeof(left->value)) == 0) {
+					return map;
+            }
+         } else {
+            printf("Error determining mapping! Map type == %d\r\n", map->type);
+         }    
+      }   
+   }   
+
+	return NULL;
+}
+
+static struct ExpressionNode* parseInstanceMappings(struct Instantiation* instance){
+	struct ExpressionNode *portMap = NULL, *genericMap = NULL;
+	struct ExpressionNode *portHead = NULL, *genericHead = NULL;
+
+	uint16_t posInMap = 1;
+	nextToken();
+
+	while(!match(TOKEN_RPAREN) && !match(TOKEN_EOP)){
+
+		struct Expression* mapping = parseExpression(LOWEST_PREC);
+		
+		if(!match(TOKEN_RPAREN)){
+			consume(TOKEN_COMMA, "expect comma after identifier in mapping");		
+			nextToken();
+		}
+
+	   if(thisIsAWildCard(mapping)){
+			parseWildCardMap(&portHead, instance->name);
+		} else if(thisIsAGenericMap(mapping, instance->name, posInMap)) {
+			if(genericMap == NULL){
+				genericMap = calloc(1, sizeof(struct ExpressionNode));
+				genericHead = genericMap;
+			} else {
+				genericMap->next = calloc(1, sizeof(struct ExpressionNode));
+				genericMap = genericMap->next;
+			}
+			genericMap->expression = parseGenericMap(mapping, instance->name, posInMap);
+		} else { //this is a port map
+			if(portMap == NULL){
+				portMap = calloc(1, sizeof(struct ExpressionNode));
+				portHead = portMap;
+			} else {
+				portMap->next = calloc(1, sizeof(struct ExpressionNode));
+				portMap = portMap->next;
+			}
+			portMap->expression = parsePortMap(mapping, instance->name, posInMap);
+		}
+		posInMap++;
+	}
+
+	instance->genericMap = genericHead;
+	instance->portMap = portHead;
+}
+
+static void parseInstantiation(struct Instantiation* instance){
+	instance->self.type = AST_INSTANCE;
+
+	consume(TOKEN_IDENTIFIER, "expect identifer at start of instance");
+	instance->name = (struct Identifier*)parseIdentifier();
+	
+	consumeNext(TOKEN_MAP, "Expect mapping after identifier in instance");
+#ifdef DEBUG
+	memcpy(&(instance->self.token), &(p->currToken), sizeof(struct Token));
+#endif
+	
+	consumeNext(TOKEN_LPAREN, "Expect lparen after map keyword in instance");
+	parseInstanceMappings(instance);
+	consume(TOKEN_RPAREN, "Expect rparen after mappings in instance");
+
+	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of instantiation");
+}
+
 static void parseProcessStatement(struct Process* proc){
 #ifdef DEBUG
 	memcpy(&(proc->self.token), &(p->currToken), sizeof(struct Token));
@@ -928,23 +1147,41 @@ static Dba* parseArchBodyStatements(){
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		
 		struct ConcurrentStatement conStmt = {0};
+		conStmt.label = parseLabel();
 		
 		switch(p->currToken.type){
-			case TOKEN_IDENTIFIER: { 
-				//TODO: this may need some work depending on what we do with labels
-				conStmt.type = SIGNAL_ASSIGNMENT;
-				parseSignalAssignment(&(conStmt.as.signalAssignment));
-				break;
-			}
-	
 			case TOKEN_PROC: {
 				conStmt.type = PROCESS;
 				parseProcessStatement(&(conStmt.as.process));
 				break;
 			}
 	
+			case TOKEN_IDENTIFIER: { 
+				//some concurrent statements begin with identifiers
+				switch(p->peekToken.type){
+					case TOKEN_MAP: {
+						conStmt.type = INSTANTIATION;
+						parseInstantiation(&(conStmt.as.instantiation));
+						break;
+					}
+
+					case TOKEN_SASSIGN: {
+						conStmt.type = SIGNAL_ASSIGNMENT;
+						parseSignalAssignment(&(conStmt.as.signalAssignment));
+						break;
+					}
+					
+					default:
+						error(p->currToken.lineNumber, p->currToken.literal, 
+							"Expect valid concurrent statement in architecture body");
+						break;
+				}
+				break;
+			}
+	
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid concurrent statement in architecture body");
+				error(p->currToken.lineNumber, p->currToken.literal, 
+					"Expect valid concurrent statement in architecture body");
 				break;
 		}
 
@@ -975,14 +1212,23 @@ static Dba* parseArchBodyDeclarations(){
 				break;
 			}
 
+			case TOKEN_COMP: {
+				decl.type = COMPONENT_DECLARATION;
+				parseComponentDeclaration(&(decl.as.componentDeclaration));
+				WriteBlockArray(componentStore, (char*)(&decl));
+				break;
+			}
+
 			default:
-				error(p->currToken.lineNumber, p->currToken.literal, "Expect valid declaration statement in architecture declarations");
+				error(p->currToken.lineNumber, p->currToken.literal, 
+					"Expect valid declaration statement in architecture declarations");
 				break;
 		}
 
 		WriteBlockArray(decls, (char*)(&decl));
 		nextToken();	
-	}
+
+	} // end while
 
 	return decls;
 }
@@ -1064,25 +1310,33 @@ static struct PortDecl parsePortDecl(){
 }
 
 static void parseEntityInterior(struct EntityDecl *eDecl){
-	Dba* ports = InitBlockArray(sizeof(struct PortDecl)); 	
-	Dba* generics = InitBlockArray(sizeof(struct GenericDecl)); 	
 
 	nextToken();
+	uint16_t posInEntity = 1;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
-			WriteBlockArray(ports, (char*)(&port));
+			port.position = posInEntity++;
+
+			if(eDecl->ports == NULL) {
+				eDecl->ports = InitBlockArray(sizeof(struct PortDecl)); 	
+			}
+
+			WriteBlockArray(eDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
-			WriteBlockArray(generics, (char*)(&generic));
+			generic.position = posInEntity++;
+
+			if(eDecl->generics == NULL) {
+				eDecl->generics = InitBlockArray(sizeof(struct GenericDecl)); 	
+			}
+
+			WriteBlockArray(eDecl->generics, (char*)(&generic));
 		}
 
 		nextToken();
 	}
-
-	eDecl->ports = ports;
-	eDecl->generics = generics;
 }
 
 static void parseEntityDecl(struct EntityDecl* eDecl){

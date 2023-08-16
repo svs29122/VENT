@@ -13,16 +13,14 @@ code/test/internal/obj
 code/test/internal/ParserInternalTests
 
 code/sandbox
-
 code/*.vhdl
 
-docs/*.png
 docs/*.pdf
-
-spec/notes
+docs/notes
+docs/profiling
+docs/mountain.png
 
 vhdl/*
 
 vgcore*
 
-profiling

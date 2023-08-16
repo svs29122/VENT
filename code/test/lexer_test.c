@@ -374,8 +374,51 @@ void TestNextToken_Type (CuTest *tc){
 	free(input);
 }
 
+void TestNextToken_Component (CuTest *tc){
+	char* input = strdup("\
+	comp counter {\
+		clk -> stl; \
+		rst -> stl; \
+		upDown -> stl;\
+		Q <- stlv(3 downto 0);\
+	}\
+	");
+
+	InitLexer(input);
+
+	testNextToken(tc, TOKEN_COMP, "comp");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "counter");
+	testNextToken(tc, TOKEN_LBRACE, "{");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "clk");
+	testNextToken(tc, TOKEN_INPUT, "->");
+	testNextToken(tc, TOKEN_STL, "stl");
+	testNextToken(tc, TOKEN_SCOLON, ";");
+	testNextToken(tc, TOKEN_IDENTIFIER, "rst");
+	testNextToken(tc, TOKEN_INPUT, "->");
+	testNextToken(tc, TOKEN_STL, "stl");
+	testNextToken(tc, TOKEN_SCOLON, ";");
+	testNextToken(tc, TOKEN_IDENTIFIER, "upDown");
+	testNextToken(tc, TOKEN_INPUT, "->");
+	testNextToken(tc, TOKEN_STL, "stl");
+	testNextToken(tc, TOKEN_SCOLON, ";");
+	testNextToken(tc, TOKEN_IDENTIFIER, "Q");
+	testNextToken(tc, TOKEN_OUTPUT, "<-");
+	testNextToken(tc, TOKEN_STLV, "stlv");
+	testNextToken(tc, TOKEN_LPAREN, "(");
+	testNextToken(tc, TOKEN_NUMBERLIT, "3");
+	testNextToken(tc, TOKEN_DOWNTO, "downto");
+	testNextToken(tc, TOKEN_NUMBERLIT, "0");
+	testNextToken(tc, TOKEN_RPAREN, ")");
+	testNextToken(tc, TOKEN_SCOLON, ";");
+	testNextToken(tc, TOKEN_RBRACE, "}");	
+	
+	free(input);
+}
+
 void TestNextToken_ (CuTest *tc){
 	char* input = strdup("");
+
+
 	InitLexer(input);
 
 	//test case here
@@ -402,6 +445,7 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_PortDirections);
 	SUITE_ADD_TEST(suite, TestNextToken_ProcessDeclaration);
 	SUITE_ADD_TEST(suite, TestNextToken_Type);
+	SUITE_ADD_TEST(suite, TestNextToken_Component);
 
 	return suite;
 }

@@ -24,11 +24,13 @@ III) Parser ToDo
 ### DONE ###   2) Implement error strategy e.g. the wrong token follows an ent decl
 ### DONE ###   3) Begin implementing Architecture parsing functionality	
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
+	5) allow declarations and statements to be mixed in source i.e. some declarations can come after statements
+		- there should be rules here e.g. any declaration must come before it is used in a statement
 	
 
 IV) Transpiler ToDo
-	1) Need to add validation to transpile_test.c
-		i) we currently only produce a file with 0 asserting or checking
+	### DONE ###	1) Need to add validation to transpile_test.c
+		### DONE ###	i) we currently only produce a file with 0 asserting or checking
 	
 
 V) Refactor ToDo
@@ -46,6 +48,7 @@ VI) Overall ToDo
 		i) this will require tracking the state of the design unit and elements within it		
 		ii) the effort here will be large but definitely necessary
 		iii) this could be added to the parser as we are building the tree or added as a separate module 
+		iv) Thinking a symbol table will be necessary to evalulate errors in instantiation or assignment
 
 
 VII) Proc ToDo
@@ -60,11 +63,13 @@ VII) Proc ToDo
 
 
 VIII) Components
-	0) Labels
-	1) Declaration
-	2) Instantiation/Mapping
-	3) Generic mapping
-	4) Direct entity instantation
+	### DONE ###	0) Labels
+	### DONE ###	1) Declaration
+	### DONE ###	2) Instantiation/Mapping
+	### DONE ###	2.5) Force all instantiations to be done as associative mappings
+	### DONE ###	3) Generic mapping
+	### DONE ### 	4) emit instance mappings with each port on new line
+	5) Direct entity instantation
 
 
 IX) Language features
@@ -78,3 +83,8 @@ IX) Language features
 	...
 	10) Packages
 
+
+X) Other Reminders
+	1) Hitting an issue with stlvs because accessing them requires using parenthesis, which Identifiers do not support
+		i) Need to implement the majority of identifiers in AST Nodes as named expressions (NameExpr) instead
+	### DONE ###	2) Need to figure out how a component instantiation can determine which if it's mappings are ports and which are generics

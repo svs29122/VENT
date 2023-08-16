@@ -1,11 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-#include <token.h>
-
-#include "utils.h"
 #include "error.h"
-#include "parser_internal.h"
+#include "utils.h"
 
 bool match(enum TOKEN_TYPE type){
 	return p->currToken.type == type;
@@ -94,3 +92,78 @@ bool thisIsAPort(){
 	return valid;
 }
 
+bool thisIsAWildCard(struct Expression* map){
+	if(map->type == CHAR_EXPR){
+		struct CharExpr* charLit = (struct CharExpr*)map;
+		if(*(charLit->literal) == '*') {		
+
+			//trash the '*' char as we don't need it anymore
+			free(charLit->literal);
+			free(charLit);
+
+			return true;	
+		}
+	}
+	return false;
+}
+
+struct ComponentDecl* GetComponentFromStore(char* cname){
+	struct ComponentDecl* thisComp = NULL;
+		
+	//find the component corresponding to the instance
+	for(int i=0; i<BlockCount(componentStore); i++){
+		struct Declaration* decl = (struct Declaration*)ReadBlockArray(componentStore, i);
+		if(decl) {
+			struct ComponentDecl* comp = &(decl->as.componentDeclaration);
+			if(strncmp(comp->name->value, cname, sizeof(cname)) == 0){
+				thisComp = comp;
+			}
+		}
+	}
+
+	return thisComp;
+}
+
+bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
+	struct DynamicBlockArray* generics = NULL;
+	struct ComponentDecl* comp = NULL;
+
+	comp = GetComponentFromStore(name->value);
+	if(comp) generics = comp->generics;
+
+	if(generics){
+		for(int i=0; i<BlockCount(generics); i++){
+   		struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i);
+			if(positionalMapping(map)){
+      		if(generic->position == pos){
+					return true;
+				}
+			} else if (associativeMapping(map)) {
+      		struct BinaryExpr* bexp = (struct BinaryExpr*)map;
+      		struct Identifier* left = (struct Identifier*)bexp->left;
+				if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
+					return true;
+				}
+			} else {
+				printf("Error determining mapping! Map type == %d\r\n", map->type);
+			}    
+		}
+	}
+
+	return false;
+}
+
+bool positionalMapping(struct Expression* expr){
+	if(expr->type == NAME_EXPR 	||
+		expr->type == NUM_EXPR 		||
+		expr->type == PHYLIT_EXPR 	||
+		expr->type == CHAR_EXPR		|| 
+		expr->type == STRING_EXPR) 
+			return true;
+
+	return false;
+}
+
+bool associativeMapping(struct Expression* expr){
+	return expr->type == BINARY_EXPR;
+}

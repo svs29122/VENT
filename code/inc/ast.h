@@ -2,6 +2,7 @@
 #define INC_AST_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "token.h"
 #include "dba.h"
@@ -9,6 +10,7 @@
 struct Program;
 struct AstNode;
 struct Expression;
+struct ExpressionNode;
 
 typedef void (*astNodeOpPtr) (struct AstNode*);
 typedef void (*expOpPtr) (struct Expression*);
@@ -24,15 +26,19 @@ struct OperationBlock {
 };
 
 void WalkTree(struct Program* prog, struct OperationBlock* op);
+uint16_t ExpressionCount(struct ExpressionNode* eNode);
 
 enum AstNodeType {
 	AST_PROGRAM = 1,
 	AST_USE,
 	AST_ENTITY,
+	AST_COMPONENT,
 	AST_ARCHITECTURE,
+	AST_LABEL,
 	AST_PORT,
 	AST_GENERIC,
 	AST_PROCESS,
+	AST_INSTANCE,
 	AST_FOR,
 	AST_IF,
 	AST_ELSIF,
@@ -139,6 +145,7 @@ struct DataType {
 	struct AstNode self;
 
 	char* value;
+	struct Range* range;
 };
 
 struct Label {
@@ -153,16 +160,16 @@ struct PortMode {
 	char* value;
 };
 
-struct ExpressionList {
+struct ExpressionNode {
 	struct Expression* expression;
-	struct ExpressionList* next;
+	struct ExpressionNode* next;
 };
 
 struct TypeDecl {
 	struct AstNode self;
 	
 	struct Identifier* typeName;
-	struct ExpressionList *enumList;
+	struct ExpressionNode *enumList;
 }; 
 
 struct VariableDecl {
@@ -183,6 +190,14 @@ struct SignalDecl {
 	struct Expression* expression;
 };
 
+struct ComponentDecl {
+	struct AstNode self;
+
+	struct Identifier* name;
+	struct DynamicBlockArray* ports;
+	struct DynamicBlockArray* generics;
+};
+
 struct Declaration {
 	enum {
 		//PROCEDURE_DECLARATION,
@@ -195,12 +210,13 @@ struct Declaration {
 		SIGNAL_DECLARATION,
 		VARIABLE_DECLARATION,
 		//FILE_DECLARATION,
-		//COMPONENT_DECLARATION,
+		COMPONENT_DECLARATION,
 	} type;
 	union {
 		struct TypeDecl typeDeclaration;
 		struct SignalDecl signalDeclaration;
 		struct VariableDecl variableDeclaration;
+		struct ComponentDecl componentDeclaration;
 	} as;
 };
 
@@ -345,7 +361,6 @@ struct VariableAssign {
 struct SignalAssign {
 	struct AstNode self;
 
-	struct Label* label;
 	struct Identifier* target;
 	struct Expression* expression;
 };
@@ -385,19 +400,27 @@ struct SequentialStatement {
 	} as;
 };
 
+struct Instantiation {
+	struct AstNode self;
+	
+	struct Identifier* name;
+	struct ExpressionNode* portMap;
+	struct ExpressionNode* genericMap;
+};
+
 struct Process {
 	struct AstNode self;
 
-	struct Label label;
 	struct Identifier* sensitivityList;
 	struct DynamicBlockArray* declarations;
 	struct DynamicBlockArray* statements;
 };
 
 struct ConcurrentStatement {
+	struct Label* label;
 	enum {
 		PROCESS,
-		//INSTANTIATION,
+		INSTANTIATION,
 		SIGNAL_ASSIGNMENT,
 		//GENERATE,
 		//ASSERT,
@@ -406,6 +429,7 @@ struct ConcurrentStatement {
 	} type;
 	union {
 		struct Process process;
+		struct Instantiation instantiation;
 		struct SignalAssign signalAssignment;
 	} as;
 };
@@ -423,6 +447,7 @@ struct GenericDecl {
 	struct AstNode self;
 
 	//need to add support for , separated identifier list
+	uint16_t position;
 	struct Identifier* name;
 	struct DataType* dtype; 
 	struct Expression* defaultValue;
@@ -432,6 +457,7 @@ struct PortDecl {
 	struct AstNode self;
 
 	//need to add support for , separated identifier list
+	uint16_t position;
 	struct Identifier* name;
 	struct PortMode* pmode;
 	struct DataType* dtype; 

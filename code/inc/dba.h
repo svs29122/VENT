@@ -28,13 +28,13 @@ typedef struct DynamicBlockArray Dba;
 	Outputs:
 
 	Returns:
-		pointer to the new heap allocated array or NULL of allocation failed 
+		pointer to the new heap allocated array or NULL if allocation failed 
 
 */
 Dba* InitBlockArray(size_t bsize);
 
 /************************
-	FreeBlockArray() - frees the dynamic array allocated earlier and sets handle to NULL  
+	FreeBlockArray() - frees the dynamic array allocated earlier and sets pointer to NULL  
 
 	Inputs: 
 		arr - pointer to a dynamic block array

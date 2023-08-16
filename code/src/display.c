@@ -5,6 +5,8 @@
 
 #include <ast.h>
 
+static void printRangeInDataType(struct AstNode* rng);
+
 void PrintUsage(void){
 	printf("Usage:\n"
 			" tvt adder.vent (perform transpilation)\n"
@@ -38,9 +40,18 @@ static void printEntityDecl(struct AstNode* eDecl){
 	indent++;
 }
 
+static void printComponentDecl(struct AstNode* cDecl){
+	printf("\e[1;32m""%cComponentDecl\r\n", shift());
+	indent++;
+}
+
 static void printArchDecl(struct AstNode* aDecl){
 	printf("\e[1;32m""%cArchDecl\r\n", shift());
 	indent++;
+}
+
+static void printLabel(struct AstNode* label){
+	printf("\e[0;34m""%cLabel: \'%s\'\r\n", shift(), ((struct Label*)label)->value);
 }
 
 static void printIdentifier(struct AstNode* ident){
@@ -156,6 +167,19 @@ static void printSignalAssign(struct AstNode* sAssign){
 	indent++;
 }
 
+static void printGenericMapping(struct AstNode* inst){
+	printf("\e[0;34m""%c/*Generic Map*/\r\n", shift());
+}
+
+static void printPortMapping(struct AstNode* inst){
+	printf("\e[0;34m""%c/*Port Map*/\r\n", shift());
+}
+
+static void printInstantiation(struct AstNode* inst){
+	printf("\e[0;33m""%cInstance\r\n", shift());
+	indent++;
+}
+
 static void printProcessStatement(struct AstNode* proc){
 	indent = 2;
 	printf("\e[0;33m""%cProcess\r\n", shift());
@@ -167,7 +191,14 @@ static void printPortMode(struct AstNode* pMode){
 }
 
 static void printDataType(struct AstNode* dType){
-	printf("\e[0;35m""%cDataType: \'%s\'\r\n", shift(), ((struct DataType*)dType)->value);
+	struct DataType* dataType = (struct DataType*)dType;
+
+	printf("\e[0;35m""%cDataType: \'%s", shift(), ((struct DataType*)dType)->value);
+	if(dataType->range == NULL){
+		printf("\'\r\n");
+	} else {
+		printRangeInDataType((struct AstNode*)dataType->range);
+	}
 }
 
 static void printAssignmentOp(struct AstNode* vAssign){
@@ -237,6 +268,23 @@ static void printRange(struct AstNode* rng){
 	printf("\r\n");
 }
 
+static void printRangeInDataType(struct AstNode* rng){
+	printf("(");
+
+	struct Range* range = (struct Range*)rng;
+	printSubExpression(range->left);
+	
+	if(range->right){
+		if(range->descending){
+			printf(" downto ");
+		} else {
+			printf(" to ");
+		}
+
+		printSubExpression(range->right);
+	}
+	printf(")\'\r\n");
+}
 
 // Operation Block ops
 static void printExpression(struct Expression* expr){
@@ -254,12 +302,29 @@ static void printSpecial(struct AstNode* node){
 			printAssignmentOp(node);
 			break;
 
+		case AST_INSTANCE:
+			printGenericMapping(node);
+			break;
+
 		case AST_IF:
 			printElseClause(node);
 			break;
 	
 		case AST_REPORT:
 			printSeverity(node);
+			break;
+
+		default:
+			break;
+	}
+}
+
+static void printOpen(struct AstNode* node){
+
+	switch(node->type){
+
+		case AST_INSTANCE:
+			printInstantiation(node);
 			break;
 
 		default:
@@ -287,6 +352,14 @@ static void printDefault(struct AstNode* node){
 			printEntityDecl(node);
 			break;
 
+		case AST_LABEL:
+			printLabel(node);
+			break;
+
+		case AST_COMPONENT:
+			printComponentDecl(node);
+			break;
+
 		case AST_ARCHITECTURE:
 			printArchDecl(node);
 			break;
@@ -301,6 +374,10 @@ static void printDefault(struct AstNode* node){
 
 		case AST_PROCESS:
 			printProcessStatement(node);
+			break;
+
+		case AST_INSTANCE:
+			printPortMapping(node);
 			break;
 
 		case AST_FOR:
@@ -390,6 +467,7 @@ void PrintProgram(struct Program* prog){
 	// setup block
 	struct OperationBlock opBlk = {
 		.doDefaultOp 		= printDefault,
+		.doOpenOp 			= printOpen,
 		.doCloseOp 			= printClose,
 		.doSpecialOp 		= printSpecial,
 		.doExpressionOp 	= printExpression,

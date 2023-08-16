@@ -15,16 +15,16 @@ TODIR=$(TDIR)/obj
 CC=gcc
 CFLAGS=-I$(IDIR) -g
 
-_DEP = parser.h ast.h dba.h token.h display.h emitter.h
+_DEP = parser.h ast.h dba.h dht.h token.h display.h emitter.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
-_OBJ = dba.o lexer.o display.o ast.o emitter.o
+_OBJ = dba.o dht.o lexer.o display.o ast.o emitter.o
 OBJS = $(patsubst %,$(SODIR)/%,$(_OBJ))
 
 _POBJ = parser_mod.o
 POBJS ?= $(patsubst %,$(SODIR)/%,$(_POBJ))
 
-_TOBJ = parser_test.o lexer_test.o unit_tests.o cutest.o emitter_test.o dba_test.o
+_TOBJ = parser_test.o lexer_test.o unit_tests.o cutest.o emitter_test.o dba_test.o dht_test.o
 TOBJS = $(patsubst %,$(TODIR)/%,$(_TOBJ))
 
 # this is the executable to run all tests
