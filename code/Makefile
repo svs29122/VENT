@@ -57,6 +57,7 @@ help:
 	@echo "  check for memory leaks: 'make checkleaks'"
 	@echo "  display number of lines in source code: 'make linecount'"
 	@echo "  display active items in todo list: 'make todo'"
+	@echo "  update vent vim syntax file (must be run as sudo): 'updateVimSyntax'"
 	@echo "  print flags 'make print'"
 
 debug: 
