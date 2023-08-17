@@ -23,7 +23,7 @@ struct MessageBuffer {
 struct MessageBuffer checkSyntaxErrorsInGeneratedVHDL(){
 	//TODO: find a better way to check VHDL syntax, this takes forever
 	char* cmd = " /tools/Xilinx/Vivado/2022.1/bin/vivado -mode batch -nolog -nojournal \
-					-quiet -source ./test/check_vent_output.tcl -notrace -tclargs a.vhdl";
+					-quiet -source ./test/check_vent.tcl -notrace -tclargs a.vhdl";
 
 	struct MessageBuffer mBuff = {NULL, 0, 8192, 32};
 	mBuff.buffer =  calloc(1, sizeof(char) * mBuff.MAXBUFF);
