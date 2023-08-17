@@ -772,7 +772,7 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 			C2: counter map (\n \
 				SIZE => initSize,\n \
       		clk => clk32,\n \
-      		reset => rst,\n \
+      		rst => reset,\n \
       		Q => open,\n \
 	   	);\n \
 			\n \

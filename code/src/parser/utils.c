@@ -107,7 +107,7 @@ bool thisIsAWildCard(struct Expression* map){
 	return false;
 }
 
-struct ComponentDecl* GetComponentFromStore(char* cname){
+struct ComponentDecl* getComponentFromStore(char* cname){
 	struct ComponentDecl* thisComp = NULL;
 		
 	//find the component corresponding to the instance
@@ -128,7 +128,7 @@ bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t
 	struct DynamicBlockArray* generics = NULL;
 	struct ComponentDecl* comp = NULL;
 
-	comp = GetComponentFromStore(name->value);
+	comp = getComponentFromStore(name->value);
 	if(comp) generics = comp->generics;
 
 	if(generics){

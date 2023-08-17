@@ -210,7 +210,7 @@ syn match	ventError	"\(\/\)[<>&+\-\*\/\\?:]\+"
 syn match	ventError	"[<>=&+\-\*\/\\:]\+\(\/\)"
 
 syn match	ventSpecial	"<>"
-syn match	ventSpecial	"[().,;]"
+syn match	ventSpecial	"[().,;{}]"
 
 
 " time

@@ -975,7 +975,7 @@ static Dba* parseProcessBodyDeclarations(){
 
 static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier* name){
 	struct ExpressionNode *portMap = NULL, *pHead = NULL;
-	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+	struct ComponentDecl* comp = getComponentFromStore(name->value);
 
 	//build the instance mappings from the component
 	if(comp){
@@ -990,7 +990,7 @@ static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier
             portMap->next = calloc(1, sizeof(struct ExpressionNode));
             portMap = portMap->next;
          }
-         portMap->expression = CreateBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
+         portMap->expression = createBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
 		}
 	}
 
@@ -999,7 +999,7 @@ static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier
 
 static struct Expression* parseGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos){
 	struct DynamicBlockArray* generics = NULL;
-	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+	struct ComponentDecl* comp = getComponentFromStore(name->value);
 
 	if(comp) generics = comp->generics;
 
@@ -1008,17 +1008,19 @@ static struct Expression* parseGenericMap(struct Expression* map, struct Identif
          struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i); 
          if(positionalMapping(map)){
             if(generic->position == pos){
-               return CreateBinaryExpression((struct Expression*) generic->name, "=>", map);
+               struct Expression* expr = createBinaryExpression((struct Expression*) generic->name, "=>", map);
+					freeExpression(map);
+					return expr;
             }
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;
             struct Identifier* left = (struct Identifier*)bexp->left;
             if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
 					return map;
-            }
-         } else {
-            printf("Error determining mapping! Map type == %d\r\n", map->type);
-         }    
+				}
+			} else {
+				printf("Error determining mapping! Map type == %d\r\n", map->type);
+			}
       }   
    }   
 
@@ -1027,7 +1029,7 @@ static struct Expression* parseGenericMap(struct Expression* map, struct Identif
 
 static struct Expression* parsePortMap(struct Expression* map, struct Identifier* name, uint16_t pos){
 	struct DynamicBlockArray* ports = NULL;
-	struct ComponentDecl* comp = GetComponentFromStore(name->value);
+	struct ComponentDecl* comp = getComponentFromStore(name->value);
 
 	if(comp) ports = comp->ports;
 
@@ -1036,7 +1038,9 @@ static struct Expression* parsePortMap(struct Expression* map, struct Identifier
          struct PortDecl* port = (struct PortDecl*)ReadBlockArray(ports, i); 
          if(positionalMapping(map)){
             if(port->position == pos){
-               return CreateBinaryExpression((struct Expression*) port->name, "=>", map);
+               struct Expression* expr = createBinaryExpression((struct Expression*) port->name, "=>", map);
+					freeExpression(map);
+					return expr;
             }
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;
@@ -1044,9 +1048,9 @@ static struct Expression* parsePortMap(struct Expression* map, struct Identifier
             if(strncmp(port->name->value, left->value, sizeof(left->value)) == 0) {
 					return map;
             }
-         } else {
-            printf("Error determining mapping! Map type == %d\r\n", map->type);
-         }    
+         } else {  
+         	printf("Error determining mapping! Map type == %d\r\n", map->type);
+			}
       }   
    }   
 

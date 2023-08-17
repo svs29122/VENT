@@ -9,11 +9,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <token.h>
+#include <dht.h>
 
 static char readChar();
+static void initializeKeywordMap();
 
 struct lexer {
 	char *input;
@@ -37,9 +40,70 @@ void InitLexer(char* in){
 	l->readPos = 0;
 	l->line = 1;
 	l->length = strlen(in) + 1;
+	
+	initializeKeywordMap();
 
 	//init our lexer with a char
 	readChar();
+}
+
+static struct DynamicHashTable* keywordMap = NULL;
+
+void FreeLexer(){
+	FreeHashTable(keywordMap);
+}
+
+static void initializeKeywordMap(){
+	keywordMap = InitHashTable();
+	
+	//add all VENT keywords to map
+	SetInHashTable(keywordMap, "and", TOKEN_AND);
+	SetInHashTable(keywordMap, "arch", TOKEN_ARCH);
+	SetInHashTable(keywordMap, "assert", TOKEN_ASSERT);
+	SetInHashTable(keywordMap, "case", TOKEN_CASE);
+	SetInHashTable(keywordMap, "comp", TOKEN_COMP);
+	SetInHashTable(keywordMap, "default", TOKEN_DEFAULT);
+	SetInHashTable(keywordMap, "downto", TOKEN_DOWNTO);
+	SetInHashTable(keywordMap, "else", TOKEN_ELSE);
+	SetInHashTable(keywordMap, "elsif", TOKEN_ELSIF);
+	SetInHashTable(keywordMap, "ent", TOKEN_ENT);
+	SetInHashTable(keywordMap, "error", TOKEN_ERROR);
+	SetInHashTable(keywordMap, "failure", TOKEN_FAILURE);
+	SetInHashTable(keywordMap, "for", TOKEN_FOR);
+	SetInHashTable(keywordMap, "if", TOKEN_IF);
+	SetInHashTable(keywordMap, "int", TOKEN_INTEGER);
+	SetInHashTable(keywordMap, "loop", TOKEN_LOOP);
+	SetInHashTable(keywordMap, "map", TOKEN_MAP);
+	SetInHashTable(keywordMap, "note", TOKEN_NOTE);
+	SetInHashTable(keywordMap, "null", TOKEN_NULL);
+	SetInHashTable(keywordMap, "proc", TOKEN_PROC);
+	SetInHashTable(keywordMap, "report", TOKEN_REPORT);
+	SetInHashTable(keywordMap, "severity", TOKEN_SEVERITY);
+	SetInHashTable(keywordMap, "signed", TOKEN_SIGNED);
+	SetInHashTable(keywordMap, "sig", TOKEN_SIG);
+	SetInHashTable(keywordMap, "stlv", TOKEN_STLV);
+	SetInHashTable(keywordMap, "stl", TOKEN_STL);
+	SetInHashTable(keywordMap, "string", TOKEN_STRING);
+	SetInHashTable(keywordMap, "switch", TOKEN_SWITCH);
+	SetInHashTable(keywordMap, "to", TOKEN_TO);
+	SetInHashTable(keywordMap, "type", TOKEN_TYPE);
+	SetInHashTable(keywordMap, "unsigned", TOKEN_UNSIGNED);
+	SetInHashTable(keywordMap, "use", TOKEN_USE);
+	SetInHashTable(keywordMap, "var", TOKEN_VAR);
+	SetInHashTable(keywordMap, "wait", TOKEN_WAIT);
+	SetInHashTable(keywordMap, "warning", TOKEN_WARNING);
+	SetInHashTable(keywordMap, "while", TOKEN_WHILE);
+}
+
+static enum TOKEN_TYPE getIdentifierType(char* lit){
+	uint64_t largeType = 0;
+	enum TOKEN_TYPE type = TOKEN_IDENTIFIER;
+
+	if(GetInHashTable(keywordMap, lit, &largeType)){
+		type = (enum TOKEN_TYPE)largeType;
+	}
+
+	return type;
 }
 
 static struct Token newToken(enum TOKEN_TYPE type, char literal){
@@ -87,163 +151,6 @@ static char peek(){
 
 static char peekNext(){
 	return l->input[l->readPos];
-}
-
-// 'get' utilities
-static enum TOKEN_TYPE checkKeyword(int start, int keyLen, int litLen, const char* lit, const char* rest, enum TOKEN_TYPE type){
-	
-	if(litLen == start + keyLen && memcmp(&lit[start], rest, keyLen) == 0){
-		return type;
-	}
-
-	return TOKEN_IDENTIFIER;
-}
-
-static enum TOKEN_TYPE getIdentifierType(int size, char* lit){
-	
-	switch(lit[0]){
-		case 'a':
-			if(size > 1){
-				switch(lit[1]){
-					case 'n':	return checkKeyword(2, 1, size, lit, "d", TOKEN_AND);
-					case 'r':	return checkKeyword(2, 2, size, lit, "ch", TOKEN_ARCH);
-					case 's':	return checkKeyword(2, 4, size, lit, "sert", TOKEN_ASSERT);
-				}
-			}
-			break;
-		case 'c':
-			if(size >1){
-				switch(lit[1]){
-					case 'a': 	return checkKeyword(2, 2, size, lit, "se", TOKEN_CASE);
-					case 'o': 	return checkKeyword(2, 2, size, lit, "mp", TOKEN_COMP);
-				}
-			}
-		case 'd':
-			if(size > 1) {
-				switch(lit[1]){
-					case 'e':	return checkKeyword(2, 5, size, lit, "fault", TOKEN_DEFAULT);
-					case 'o':	return checkKeyword(2, 4, size, lit, "wnto", TOKEN_DOWNTO);
-				}
-			} 
-			break;
-		case 'e': 
-			if(size > 1){
-				switch(lit[1]){
-					case 'l':
-						if(size > 2){
-							switch(lit[2]){
-								case 's': 
-									if(size > 3){
-										switch(lit[3]){
-											case 'e': return checkKeyword(4, 0, size, lit, "", TOKEN_ELSE);
-											case 'i': return checkKeyword(4, 1, size, lit, "f", TOKEN_ELSIF);
-										}
-									}
-									break;
-							}	
-						}
-						break;
-					case 'n': return checkKeyword(2, 1, size, lit, "t", TOKEN_ENT);
-					case 'r': return checkKeyword(2, 3, size, lit, "ror", TOKEN_ERROR);
-				}
-			}
-			break;
-		case 'f': 
-			if(size > 1){
-				switch(lit[1]){
-					case 'a': return checkKeyword(2, 5, size, lit, "ilure", TOKEN_FAILURE);
-					case 'o': return checkKeyword(2, 1, size, lit, "r", TOKEN_FOR);
-				}
-			}
-			break;
-		case 'i': 
-			if(size >1){
-				switch(lit[1]){
-					case 'f': return checkKeyword(2, 0, size, lit, "", TOKEN_IF);
-					case 'n': return checkKeyword(2, 1, size, lit, "t", TOKEN_INTEGER);
-				}
-			}
-			break;
-		case 'l': return checkKeyword(1, 3, size, lit, "oop", TOKEN_LOOP);
-		case 'm': return checkKeyword(1, 2, size, lit, "ap", TOKEN_MAP);
-		case 'n':
-			if(size >1){ 
-				switch(lit[1]){
-					case 'u': return checkKeyword(2, 2, size, lit, "ll", TOKEN_NULL);
-					case 'o': return checkKeyword(2, 2, size, lit, "te", TOKEN_NOTE);
-				}
-			}
-			break;
-		case 'p': return checkKeyword(1, 3, size, lit, "roc", TOKEN_PROC);
-		case 'r': return checkKeyword(1, 5, size, lit, "eport", TOKEN_REPORT);
-		case 's': 
-			if(size > 1){
-				switch(lit[1]){
-					case 'e': return checkKeyword(2, 6, size, lit, "verity", TOKEN_SEVERITY);
-					case 'i':
-						if(size > 2){
-							switch(lit[2]){
-								case 'g':
-									if(size > 3) return checkKeyword(3, 3, size, lit, "ned", TOKEN_SIGNED);
-									else return TOKEN_SIG;
-							}
-						}
-						break;
-					case 't':
-						if(size > 2){
-							switch(lit[2]){
-								case 'l':
-									if(size > 3) return checkKeyword(3, 1, size, lit, "v", TOKEN_STLV);
-									else return TOKEN_STL;
-								case 'r': return checkKeyword(3, 3, size, lit, "ing", TOKEN_STRING); 
-							}
-						}
-						break;
-					case 'w': return checkKeyword(2, 4, size, lit, "itch", TOKEN_SWITCH);
-				}
-			}
-			break;
-		case 't': 
-			if(size > 1){
-				switch(lit[1]){
-					case 'o': return checkKeyword(2, 0, size, lit, "", TOKEN_TO);
-					case 'y': return checkKeyword(2, 2, size, lit, "pe", TOKEN_TYPE);
-				}
-			}
-			break;
-		case 'u':
-			if(size > 1){
-				switch(lit[1]){
-					case 's':
-						if(size > 2) return checkKeyword(2, 1, size, lit, "e", TOKEN_USE);
-						break;
-					case 'n':
-						if(size > 2) return checkKeyword(2, 6, size, lit, "signed", TOKEN_UNSIGNED);
-						break;
-				}
-			}
-			break;
-		case 'v': return checkKeyword(1, 2, size, lit, "ar", TOKEN_VAR);
-		case 'w':
-			if(size > 1){
-				switch(lit[1]){
-					case 'a':
-						if(size > 2) {
-							switch(lit[2]){
-								case 'i': return checkKeyword(3, 1, size, lit, "t", TOKEN_WAIT);
-								case 'r': return checkKeyword(3, 4, size, lit, "ning", TOKEN_WARNING);
-							}
-						}
-						break;
-					case 'h':
-						if(size > 2) return checkKeyword(2, 3, size, lit, "ile", TOKEN_WHILE);
-						break;
-				}
-			}
-			break;
-	}
-
-	return TOKEN_IDENTIFIER;
 }
 
 // 'read' utilities
@@ -307,7 +214,7 @@ static struct Token readIdentifier(){
 #ifdef DEBUG 
 	printf("DEBUG: identifer == %s\r\n", tok.literal); 
 #endif
-	tok.type = getIdentifierType(lSize-1, tok.literal);
+	tok.type = getIdentifierType(tok.literal);
 	tok.lineNumber = l->line;
 
 	return tok;

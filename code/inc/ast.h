@@ -73,7 +73,7 @@ struct AstNode {
 };
 
 enum ExpressionType{
-		BINARY_EXPR,
+		BINARY_EXPR = 1,
 		UNARY_EXPR,
 		GROUPED_EXPR,
 		NAME_EXPR,
