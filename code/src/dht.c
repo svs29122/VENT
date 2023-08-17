@@ -82,7 +82,7 @@ struct DynamicHashTable* InitHashTable(){
 	struct DynamicHashTable* hst = calloc(1, sizeof(struct DynamicHashTable));
 	if(hst == NULL){
 		printf("Error: Unable to allocate Hash Table\r\n");
-		exit(-1);
+		return hst;	
 	}
 
 	hst->count = 0;
@@ -184,6 +184,10 @@ struct HashTableIterator {
 
 struct HashTableIterator* CreateHashTableIterator(struct DynamicHashTable* ht) {
 	struct HashTableIterator* newIter = calloc(1, sizeof(struct HashTableIterator));
+	if(newIter == NULL){
+		printf("Error: Unable to allocate Hash Table Iterator\r\n");
+		return newIter;
+	}
 
 	newIter->hashTable = ht;
 	newIter->indexOfPreviousEntry = 0;
