@@ -17,7 +17,7 @@ void destroyToken(struct Token thisToken);
 bool validDataType();
 bool validAssignment();
 
-struct ComponentDecl* GetComponentFromStore(char* cname);
+struct ComponentDecl* getComponentFromStore(char* cname);
 
 bool thereAreDeclarations();
 bool thisIsAPort();

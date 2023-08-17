@@ -30,6 +30,7 @@ void TestNextToken_SingleToken(CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_MultipleTokens(CuTest *tc){
@@ -53,6 +54,7 @@ void TestNextToken_MultipleTokens(CuTest *tc){
 	}
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_SingleLineComment (CuTest *tc){
@@ -80,6 +82,7 @@ void TestNextToken_SingleLineComment (CuTest *tc){
 	
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_MultiLineComment (CuTest *tc){
@@ -107,6 +110,7 @@ important*/ \
 	}
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_MultiLineCommentUnterminated (CuTest *tc){
@@ -129,6 +133,7 @@ void TestNextToken_MultiLineCommentUnterminated (CuTest *tc){
 	}
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Number (CuTest *tc){
@@ -145,6 +150,7 @@ void TestNextToken_Number (CuTest *tc){
 	
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Char (CuTest *tc){
@@ -161,6 +167,7 @@ void TestNextToken_Char (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_BitString (CuTest *tc){
@@ -177,6 +184,7 @@ void TestNextToken_BitString (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_String (CuTest *tc){
@@ -193,6 +201,7 @@ void TestNextToken_String (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Identifier (CuTest *tc){
@@ -209,6 +218,7 @@ void TestNextToken_Identifier (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_IdentifierSingleLetter (CuTest *tc){
@@ -225,6 +235,7 @@ void TestNextToken_IdentifierSingleLetter (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Entity (CuTest *tc){
@@ -241,6 +252,7 @@ void TestNextToken_Entity (CuTest *tc){
 
 	free(nt.literal);	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_EntityDeclaration (CuTest *tc){
@@ -284,6 +296,7 @@ void TestNextToken_EntityDeclaration (CuTest *tc){
 	free(nt.literal);	
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_PortDirections (CuTest *tc){
@@ -318,6 +331,7 @@ void TestNextToken_PortDirections (CuTest *tc){
 	free(nt.literal);	
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_ProcessDeclaration (CuTest *tc){
@@ -351,6 +365,7 @@ void TestNextToken_ProcessDeclaration (CuTest *tc){
 	free(nt.literal);	
 
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Type (CuTest *tc){
@@ -372,6 +387,7 @@ void TestNextToken_Type (CuTest *tc){
 	testNextToken(tc, TOKEN_RBRACE, "}");	
 	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_Component (CuTest *tc){
@@ -413,6 +429,7 @@ void TestNextToken_Component (CuTest *tc){
 	testNextToken(tc, TOKEN_RBRACE, "}");	
 	
 	free(input);
+	FreeLexer();
 }
 
 void TestNextToken_ (CuTest *tc){

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "internal_parser.h"
 
@@ -72,7 +73,7 @@ static void freeBlockArray(struct DynamicBlockArray* arr){
 	FreeBlockArray(arr);
 }
 
-static void freeExpression(struct Expression* expr){
+void freeExpression(struct Expression* expr){
    enum ExpressionType type = expr->type;
 
    switch(type) {
@@ -256,4 +257,5 @@ void FreeProgram(struct Program* prog){
 
 	freeParserTokens();
 	freeComponentStore();
+	FreeLexer();
 }

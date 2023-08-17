@@ -13,7 +13,7 @@ arch behavioral(counter){
 	comp counter {
 		SIZE int := 64;
    	clk -> stl;
-		rst <- stl;
+		rst -> stl;
 		Q <- stlv(3 downto 0);
 	}
 
@@ -22,7 +22,7 @@ arch behavioral(counter){
 	sig rst stl;
 	sig Q stlv(3 downto 0);
 
-	//instanitate 3 counters
+	//instanitate 4 counters
 	C1: counter map(8, clk, rst, Q);
 
 	C2: counter map (

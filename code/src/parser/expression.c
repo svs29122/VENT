@@ -97,9 +97,7 @@ static struct Expression* copyExpression(struct Expression* oldExpr){
 		}
 
 		case NAME_EXPR: {
-			struct Identifier* expr = calloc(1, sizeof(struct Identifier));
-			expr = copyIdentifier((struct Identifier*)oldExpr);
-			newExpr = (struct Expression*)expr;
+			newExpr = (struct Expression*)copyIdentifier((struct Identifier*)oldExpr);
 			break;
 		}
 
@@ -122,11 +120,11 @@ static struct Expression* copyExpression(struct Expression* oldExpr){
 			printf("Unhandled expression type in copyExpression\r\n");
 			break;
 	}
-	
+
 	return newExpr;
 }
 
-struct Expression* CreateBinaryExpression(struct Expression* l, char* op, struct Expression* r){ 
+struct Expression* createBinaryExpression(struct Expression* l, char* op, struct Expression* r){ 
    struct BinaryExpr* biexp = calloc(1, sizeof(struct BinaryExpr));
    biexp->self.root.type = AST_EXPRESSION;
    biexp->self.type = BINARY_EXPR;
