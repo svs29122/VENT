@@ -5,6 +5,7 @@
 #
 
 IDIR=../../inc
+PIDIR=./incp
 SDIR=./
 
 LODIR?=$(SDIR)/obj
@@ -13,10 +14,10 @@ ODIR?=$(SDIR)../obj
 DDIR=$(SDIR)../obj_d
 
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -I$(PIDIR)
 DFLAGS= $(CFLAGS) -g -O0 -DDEBUG
 
-_DEP = parser.h ast.h dba.h lexer.h token.h error.h util.h expression.h 
+_DEP = parser.h ast.h dba.h lexer.h token.h 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEP))
 
 _OBJ = parser.o free.o error.o utils.o expression.o
