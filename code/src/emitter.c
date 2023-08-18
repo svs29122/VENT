@@ -558,9 +558,17 @@ static void emitSubExpression(struct Expression* expr){
 			 emitBinaryOp(bexp->op);
           emitSubExpression(bexp->right);
           break;
-       }
- 
-       case NAME_EXPR: {
+      }
+
+		case ATTRIBUTE_EXPR:{
+         struct AttributeExpr* aexp = (struct AttributeExpr*) expr;
+         emitSubExpression(aexp->object);
+			fprintf(vhdlFile, "%c", aexp->tick);
+         emitSubExpression(aexp->attribute);
+         break;
+      }   
+
+      case NAME_EXPR: {
           //NameExpr* nexp = (NameExpr*) expr;
           //printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
           struct Identifier* ident = (struct Identifier*)expr;

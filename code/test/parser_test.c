@@ -790,6 +790,32 @@ void TestParseProgram_ArchWithMapping(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_SignalWithAttribute(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(looper){\n \
+			\n \
+			sig clk stl;\n \
+			\n \
+			proc(clk) {\n \
+				var num int := 1;\n \
+				\n \
+				if(clk'EVENT and clk == '1') {\n \
+					num++;\n \
+				}\n \
+			}\n \
+		}\n \
+		\
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -827,6 +853,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_EntityWithGeneric);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithComponent);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithMapping);
+	SUITE_ADD_TEST(suite, TestParseProgram_SignalWithAttribute);
 
 	return suite;
 }

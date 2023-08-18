@@ -258,6 +258,26 @@ static struct Expression* parseBinary(struct Expression* expr){
 	return &(biexp->self);
 }
 
+static struct Expression* parseAttribute(struct Expression* expr){
+	struct AttributeExpr* atexp = calloc(1, sizeof(struct AttributeExpr));
+#ifdef DEBUG
+	memcpy(&(atexp->self.root.token), &(p->currToken), sizeof(struct Token));
+#endif
+	atexp->self.root.type = AST_EXPRESSION;
+
+	atexp->self.type = ATTRIBUTE_EXPR;
+	atexp->object = expr;
+
+	atexp->tick = '\'';
+
+	enum Precedence precedence = getRule(p->currToken.type)->precedence;
+	nextToken();
+	
+	atexp->attribute = parseExpression(precedence);
+
+	return &(atexp->self);
+}
+
 static struct Label* parseLabel(){
 	
 	if(match(TOKEN_IDENTIFIER) && peek(TOKEN_COLON)){

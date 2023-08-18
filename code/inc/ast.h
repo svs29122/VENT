@@ -75,6 +75,7 @@ struct AstNode {
 enum ExpressionType{
 		BINARY_EXPR = 1,
 		UNARY_EXPR,
+		ATTRIBUTE_EXPR,
 		GROUPED_EXPR,
 		NAME_EXPR,
 		NUM_EXPR,
@@ -82,7 +83,7 @@ enum ExpressionType{
 		CHAR_EXPR,
 		STRING_EXPR,
 		AGGREGATE_EXPR,
-		Q_EXPR,
+		QUALIFIED_EXPR,
 		NEW_EXPR,
 		CALL_EXPR,
 };
@@ -90,6 +91,13 @@ enum ExpressionType{
 struct Expression {
 	struct AstNode root;
 	enum ExpressionType type;
+};
+
+struct AttributeExpr {
+	struct Expression self;
+	struct Expression* object;
+	struct Expression* attribute;
+	char tick;
 };
 
 struct BinaryExpr {

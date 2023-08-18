@@ -15,7 +15,8 @@
 
 struct MessageBuffer {
 	char* buffer;
-	int msgCount;
+	int errorCount;
+	int warningCount;
 	const int MAXBUFF;
 	const int MAXMSG;
 };
@@ -25,7 +26,7 @@ struct MessageBuffer checkSyntaxErrorsInGeneratedVHDL(){
 	char* cmd = " /tools/Xilinx/Vivado/2022.1/bin/vivado -mode batch -nolog -nojournal \
 					-quiet -source ./test/check_vent.tcl -notrace -tclargs a.vhdl";
 
-	struct MessageBuffer mBuff = {NULL, 0, 8192, 32};
+	struct MessageBuffer mBuff = {NULL, 0, 0, 8192, 32};
 	mBuff.buffer =  calloc(1, sizeof(char) * mBuff.MAXBUFF);
 	char* buffPtr = mBuff.buffer;
 
@@ -41,16 +42,26 @@ struct MessageBuffer checkSyntaxErrorsInGeneratedVHDL(){
 
 	for(int i=0; i < mBuff.MAXMSG; i++){
 		msgSize = getline(&tmpBuf, &maxSize, vOut);
-	
+
 		if(msgSize != -1 && msgSize > 1) {
+			char* startOfMsg = buffPtr;
 			strncpy(buffPtr, tmpBuf, msgSize);
 
 			//concating messages in the buffer
 			buffPtr[msgSize-1] = ' ';
 			buffPtr[msgSize] = '\n';
-
 			buffPtr += msgSize + 1;
-			mBuff.msgCount++;
+			
+			bool warning = (strncmp(startOfMsg, "WARNING", sizeof("WARNING")-1) == 0);
+			if(warning)	{
+				mBuff.warningCount++;
+			}
+			
+			bool critical = (strncmp(startOfMsg, "CRITICAL", sizeof("CRITICAL")-1) == 0); 
+			if(critical) {
+				mBuff.errorCount++;
+			}
+			
 		} else break;
 	}
 
@@ -61,7 +72,8 @@ struct MessageBuffer checkSyntaxErrorsInGeneratedVHDL(){
 
 void checkForSyntaxErrors(CuTest* tc){
 	struct MessageBuffer errorMessages = checkSyntaxErrorsInGeneratedVHDL();
-	bool syntaxErrorFree = errorMessages.msgCount == 0;
+	bool syntaxErrorFree = errorMessages.errorCount == 0;
+	bool warningFree = errorMessages.warningCount == 0;
 
 	if(!syntaxErrorFree){
 		const int maxNameSize = 512;
@@ -74,8 +86,11 @@ void checkForSyntaxErrors(CuTest* tc){
 			remove("./a.vhdl");
 		}
 		printf("*%s completed but had syntax errors.\r\n", tc->name);
+	} else if (!warningFree) {
+		printf("*%s completed but had warnings:", tc->name);
+		printf("%s", errorMessages.buffer);	
 	} else {
-		printf("%s completed without syntax errors.\r\n", tc->name);
+		printf("%s completed without syntax errors or warnings.\r\n", tc->name);
 	}
 
 	CuAssert(tc, errorMessages.buffer, syntaxErrorFree);
@@ -519,6 +534,39 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent counter {\n \
+			clk -> stl;\n \
+		}\n \
+      arch behavioral(counter){\n \
+         \n \
+         proc(clk) {\n \
+            var num int := 1;\n \
+            \n \
+            if(clk'EVENT and clk == '1'){\n \
+               num++;\n \
+            }\n \
+				wait;\n \
+         }\n \
+      }\n \
+      \
+   ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -555,6 +603,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithGenerics);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithComponent);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
 
 	return suite;
 }
