@@ -62,72 +62,72 @@ The VENT source below: <br/>
 use ieee.std_logic_1164.all;
 
 ent spi {
-	clk -> stl;
-	start -> stl;
-	din -> stlv(11 downto 0);
-	cs <- stl;
-	mosi <- stl;
-	done <- stl;
-	sclk <- stl;
+    clk -> stl;
+    start -> stl;
+    din -> stlv(11 downto 0);
+    cs <- stl;
+    mosi <- stl;
+    done <- stl;
+    sclk <- stl;
 }
 
 arch behavioral(spi){
-	type controllerState {idle, tx_start, send, tx_end};
+    type controllerState {idle, tx_start, send, tx_end};
 
-	sig state controllerState;
-	sig sclkt stl := '0';
-	sig temp stlv(11 downto 0);
+    sig state controllerState;
+    sig sclkt stl := '0';
+    sig temp stlv(11 downto 0);
 
-	proc(clk){
-		var count int := 0;
-		if(clk'UP){
-			if(count < 10){
-				count++;
-			} else {
-				count := 0;
-				sclkt <= not sclkt;
-			}
-		}
-	}
+    proc(clk){
+        var count int := 0;
+        if(clk'UP){
+            if(count < 10){
+                count++;
+            } else {
+                count := 0;
+                sclkt <= not sclkt;
+            }
+        }
+    }
 
-	proc(sclkt){
-		var bitcount int := 0;
-		if(sclkt'UP){
-			switch(state) {
-				case idle:
-					mosi <= '0';
-					cs <= '0';
-					done <= '0';
-					if(start == '1'){
-						state <= tx_start;
-					} else {
-						state <= idle;
-					}
-				case tx_start:
-					cs <= '0';
-					temp <= din;
-					state <= send;	
-				case send:
-					if(bitcount <= 11){
-						bitcount++;
-						mosi <= temp(bitcount);
-						state <= send;
-					} else {
-						bitcount := 0;
-						state <= tx_end;
-						mosi <= '0';
-					}
-				case tx_end:
-					cs <= '1';
-					state <= idle;
-					done <= '1';
-				default:
-					state <= idle;
-			}
-		}
-	}
+    proc(sclkt){
+        var bitcount int := 0;
+        if(sclkt'UP){
+            switch(state) {
+                case idle:
+                    mosi <= '0';
+                    cs <= '0';
+                    done <= '0';
+                    if(start == '1'){
+                        state <= tx_start;
+                    } else {
+                        state <= idle;
+                    }
+                case tx_start:
+                    cs <= '0';
+                    temp <= din;
+                    state <= send;	
+                case send:
+                    if(bitcount <= 11){
+                        bitcount++;
+                        mosi <= temp(bitcount);
+                        state <= send;
+                    } else {
+                        bitcount := 0;
+                        state <= tx_end;
+                        mosi <= '0';
+                    }
+                case tx_end:
+                    cs <= '1';
+                    state <= idle;
+                    done <= '1';
+                default:
+                    state <= idle;
+            }
+        } 
+    }
 
-	sclk <= sclkt;
+    sclk <= sclkt;
 }
 ```
 
@@ -138,75 +138,75 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity spi is
-	port(
-		clk: in std_logic;
-		start: in std_logic;
-		din: in std_logic_vector(11 downto 0);
-		cs: out std_logic;
-		mosi: out std_logic;
-		done: out std_logic;
-		sclk: out std_logic
-	);
+    port(
+        clk: in std_logic;
+        start: in std_logic;
+        din: in std_logic_vector(11 downto 0);
+        cs: out std_logic;
+        mosi: out std_logic;
+        done: out std_logic;
+        sclk: out std_logic
+    );
 end spi;
 
 architecture behavioral of spi is
-	type controllerState is ( idle, tx_start, send, tx_end);
-	signal state: controllerState;
-	signal sclkt: std_logic := '0';
-	signal temp: std_logic_vector(11 downto 0);
+    type controllerState is ( idle, tx_start, send, tx_end);
+    signal state: controllerState;
+    signal sclkt: std_logic := '0';
+    signal temp: std_logic_vector(11 downto 0);
 begin
 
-	process (clk) is 
-		variable count: integer := 0;
-	begin
-		if rising_edge(clk) then
-			if count < 10 then
-				count := count + 1;
-			else
-				count := 0;
-				sclkt <= not sclkt;
-			end if;
-		end if;
-	end process;
+    process (clk) is 
+        variable count: integer := 0;
+    begin
+        if rising_edge(clk) then
+            if count < 10 then
+                count := count + 1;
+            else
+                count := 0;
+                sclkt <= not sclkt;
+            end if;
+        end if;
+    end process;
 
-	process (sclkt) is 
-		variable bitcount: integer := 0;
-	begin
-		if rising_edge(sclkt) then
-			case state is
-				when idle =>
-					mosi <= '0';
-					cs <= '0';
-					done <= '0';
-					if start = '1' then
-						state <= tx_start;
-					else
-						state <= idle;
-					end if;
-				when tx_start =>
-					cs <= '0';
-					temp <= din;
-					state <= send;
-				when send =>
-					if bitcount <= 11 then
-						bitcount := bitcount + 1;
-						mosi <= temp(bitcount);
-						state <= send;
-					else
-						bitcount := 0;
-						state <= tx_end;
-						mosi <= '0';
-					end if;
-				when tx_end =>
-					cs <= '1';
-					state <= idle;
-					done <= '1';
-				when others =>
-					state <= idle;
-			end case;
-		end if;
-	end process;
-	sclk <= sclkt;
+    process (sclkt) is 
+        variable bitcount: integer := 0;
+    begin
+        if rising_edge(sclkt) then
+            case state is
+                when idle =>
+                    mosi <= '0';
+                    cs <= '0';
+                    done <= '0';
+                    if start = '1' then
+                        state <= tx_start;
+                    else
+                        state <= idle;
+                    end if;
+                when tx_start =>
+                    cs <= '0';
+                    temp <= din;
+                    state <= send;
+                when send =>
+                    if bitcount <= 11 then
+                        bitcount := bitcount + 1;
+                        mosi <= temp(bitcount);
+                        state <= send;
+                    else
+                        bitcount := 0;
+                        state <= tx_end;
+                        mosi <= '0';
+                    end if;
+                when tx_end =>
+                    cs <= '1';
+                    state <= idle;
+                    done <= '1';
+                when others =>
+                    state <= idle;
+            end case;
+        end if;
+    end process;
+    sclk <= sclkt;
 
 end architecture behavioral;
 ```
@@ -225,7 +225,7 @@ To build TVT just run `make` in the code directory. Run `make help` for more opt
 
 Once built, run TVT against a VENT file: <br/>
 `./tvt ander.vent`<br/>
-
+<br/>
 NOTE: There is a Vim configuration file in the docs directory for VENT syntax highlighting. 
 
 #### Other options include: <br/>
