@@ -138,6 +138,10 @@ syn match   	ventAttribute	"\'image"
 syn match   	ventAttribute	"\'value"
 " VHDL-2017 interface attribute
 syn match   	ventAttribute	"\'converse"
+" VENT special attributes
+syn match   	ventAttribute	"\'up"
+syn match   	ventAttribute	"\'down"
+
 
 syn keyword	ventBoolean	true false
 

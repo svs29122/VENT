@@ -26,6 +26,7 @@ III) Parser ToDo
 ### DONE ###   4) Need to complete architecture body signal assigment parsing and binary expression parsing
 	5) allow declarations and statements to be mixed in source i.e. some declarations can come after statements
 		- there should be rules here e.g. any declaration must come before it is used in a statement
+	6) still need to add support for multiple signals in proc sensitivity list
 	
 
 IV) Transpiler ToDo

@@ -141,7 +141,7 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 		arch behavioral(ander){ \
 			sig temp stl := '0'; \
 		\
-			proc(){ \
+			proc(a){ \
 				var i int := 1; \
 				while( i < 10 ) { \
 					i := i + 1; \
@@ -543,12 +543,21 @@ void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
       arch behavioral(counter){\n \
          \n \
          proc(clk) {\n \
-            var num int := 1;\n \
+            var num1 int := 1;\n \
+				var num2 int := 1;\n \
+				var num3 int := 1;\n \
             \n \
             if(clk'EVENT and clk == '1'){\n \
-               num++;\n \
+               num1++;\n \
             }\n \
-				wait;\n \
+				\n \
+				if(clk'UP){\n \
+					num2++;\n \
+				}\n \
+				\n \
+				if(clk'DOWN){\n \
+					num3++;\n \
+				}\n \
          }\n \
       }\n \
       \
