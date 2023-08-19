@@ -117,6 +117,7 @@ static struct parser parser;
 struct parser *p = &parser;
 
 struct DynamicBlockArray* componentStore;
+struct DynamicHashTable* enumTypeTable;
 
 void SetPrintTokenFlag(){
 	p->printTokenFlag = true;
@@ -134,6 +135,7 @@ static void initParser(){
 	p->peekToken = NextToken();
 
 	componentStore = InitBlockArray(sizeof(struct Declaration));
+	enumTypeTable = InitHashTable();
 }
 
 void nextToken(){	
@@ -159,7 +161,9 @@ static struct Expression* parseExpression(enum Precedence precedence){
 	}	
 	struct Expression* leftExp = prefixRule();
 
-	nextToken();	
+	//never move past the semicolon at the end of an expression
+	if(!match(TOKEN_SCOLON)) nextToken();	
+
 	while(!peek(TOKEN_SCOLON) && precedence < getRule(p->currToken.type)->precedence){
 		ParseInfixFn infixRule = getRule(p->currToken.type)->infix;
 
@@ -194,7 +198,6 @@ static struct Expression* parseCharLiteral(){
 	memcpy(&(chexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
 	chexp->self.root.type = AST_EXPRESSION;
-
 	chexp->self.type = CHAR_EXPR;
 
 	int size = strlen(p->currToken.literal) + 1;
@@ -210,7 +213,6 @@ static struct Expression* parseStringLiteral(){
 	memcpy(&(stexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
 	stexp->self.root.type = AST_EXPRESSION;
-
 	stexp->self.type = STRING_EXPR;
 
 	int size = strlen(p->currToken.literal) + 1;
@@ -226,7 +228,6 @@ static struct Expression* parseNumericLiteral(){
 	memcpy(&(nexp->self.root.token), &(p->currToken), sizeof(struct Token));
 #endif
 	nexp->self.root.type = AST_EXPRESSION;
-
 	nexp->self.type = NUM_EXPR;
 
 	int size = strlen(p->currToken.literal) + 1;
@@ -234,6 +235,26 @@ static struct Expression* parseNumericLiteral(){
 	memcpy(nexp->literal, p->currToken.literal, size);
 
 	return &(nexp->self);
+}
+
+static struct Expression* parseUnary(){
+	struct UnaryExpr* uexp = calloc(1, sizeof(struct UnaryExpr));
+#ifdef DEBUG
+	memcpy(&(uexp->self.root.token), &(p->currToken), sizeof(struct Token));
+#endif
+	uexp->self.root.type = AST_EXPRESSION;
+	uexp->self.type = UNARY_EXPR;
+
+	int size = strlen(p->currToken.literal) + 1;
+	uexp->op = calloc(size, sizeof(char));
+	memcpy(uexp->op, p->currToken.literal, size);
+
+	enum Precedence precedence = getRule(p->currToken.type)->precedence;
+	nextToken();
+
+	uexp->right = parseExpression(precedence);
+
+	return &(uexp->self);
 }
 
 static struct Expression* parseBinary(struct Expression* expr){
@@ -453,6 +474,9 @@ static void parseTypeDeclaration(struct TypeDecl* decl){
 		decl->enumList = parseEnumerationList();
 	}
 
+	//add this new type to the enumType lookup table
+	SetInHashTable(enumTypeTable, decl->typeName->value, 1);
+
 	consume(TOKEN_RBRACE, "Expect } after last enum in type declaration");
 	consumeNext(TOKEN_SCOLON, "Expect semicolon at end of type declaration");
 }
@@ -464,10 +488,11 @@ static void parseSignalDeclaration(struct SignalDecl* decl){
 	decl->name = (struct Identifier*)parseIdentifier();
 		
 	nextToken();
-	if(!validDataType()){
+	if(validDataType() || userDefinedDataType()){
+		decl->dtype = parseDataType(p->currToken.literal);
+	} else {
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type after signal identifier");
-	}	
-	decl->dtype = parseDataType(p->currToken.literal);
+	}
 		
 	nextToken();
 	if(match(TOKEN_VASSIGN)){

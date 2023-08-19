@@ -15,8 +15,9 @@ ent spi {
 arch behavioral(spi){
 	type controllerState {idle, tx_start, send, tx_end};
 
-	sig state stl;/*controllerState;*/
-	sig sclkt stl := 0;
+	sig state controllerState;
+	sig sclkt stl := '0';
+	sig temp stlv(11 downto 0);
 
 	proc(clk){
 		var count int := 0;
@@ -31,7 +32,6 @@ arch behavioral(spi){
 	}
 
 	proc(sclkt){
-		sig temp stlv(11 downto 0) := B"000000000000";
 		var bitcount int := 0;
 		if(sclkt'UP){
 			switch(state) {
@@ -39,7 +39,7 @@ arch behavioral(spi){
 					mosi <= '0';
 					cs <= '0';
 					done <= '0';
-					if(start){
+					if(start == '1'){
 						state <= tx_start;
 					} else {
 						state <= idle;

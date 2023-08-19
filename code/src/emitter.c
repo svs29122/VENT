@@ -519,6 +519,8 @@ static void emitDataType(struct AstNode* dtype){
 		fprintf(vhdlFile, ")");
 	} else if(strcmp(typeName, "int") == 0){
 		fprintf(vhdlFile, "integer");
+	} else {
+		fprintf(vhdlFile, "%s", typeName);
 	}
 
 	if(!eStat.incoming) {
@@ -527,7 +529,6 @@ static void emitDataType(struct AstNode* dtype){
 }
 
 static void emitBinaryOp(char* bop){
-	
 	if(strcmp(bop, "!=") == 0){
 		fprintf(vhdlFile, " /= ");
 	} else if (strcmp(bop, "==") == 0) {
@@ -583,6 +584,13 @@ static void emitSubExpression(struct Expression* expr){
 			fprintf(vhdlFile, "%s", nexp->literal);
 			break;
 		}
+
+		case UNARY_EXPR:{
+          struct UnaryExpr* uexp = (struct UnaryExpr*) expr;
+			 fprintf(vhdlFile, "%s ", uexp->op);
+          emitSubExpression(uexp->right);
+          break;
+      }
 
 		case BINARY_EXPR:{
           struct BinaryExpr* bexp = (struct BinaryExpr*) expr;

@@ -229,6 +229,13 @@ static void printSubExpression(struct Expression* expr){
 			break;
 		}
 
+		case UNARY_EXPR:{
+			struct UnaryExpr* uexp = (struct UnaryExpr*) expr;
+			printf("%s ", uexp->op);
+			printSubExpression(uexp->right);
+			break;
+		}
+
 		case BINARY_EXPR:{
 			struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
 			printSubExpression(bexp->left);

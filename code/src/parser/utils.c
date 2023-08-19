@@ -57,6 +57,10 @@ bool validDataType(){
 	return valid;
 }
 
+bool userDefinedDataType(){
+	return match(TOKEN_IDENTIFIER) && GetInHashTable(enumTypeTable, p->currToken.literal, NULL);
+}
+
 bool validAssignment(){
 	bool valid = false;
 

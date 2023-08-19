@@ -26,6 +26,7 @@ struct ParseRule{
 static struct Expression* parseCall(struct Expression* expr);
 static struct Expression* parseAttribute(struct Expression* expr);
 static struct Expression* parseBinary(struct Expression* expr);
+static struct Expression* parseUnary();
 static struct Expression* parseIdentifier();
 static struct Expression* parseCharLiteral();
 static struct Expression* parseStringLiteral();
@@ -39,6 +40,7 @@ static struct ParseRule rules[] = {
    [TOKEN_AND]          = {NULL                 , parseBinary     , LOGICAL_PREC},
    [TOKEN_OR]           = {NULL                 , parseBinary     , LOGICAL_PREC},
    [TOKEN_XOR]          = {NULL                 , parseBinary     , LOGICAL_PREC},
+   [TOKEN_NOT]          = {parseUnary           , NULL			   , LOGICAL_PREC},
    [TOKEN_EQUAL]        = {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_NOT_EQUAL]    = {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_GREATER]      = {NULL                 , parseBinary     , RELATIONAL_PREC},

@@ -4,6 +4,7 @@
 #include <ast.h>
 #include <lexer.h>
 #include <token.h>
+#include <dht.h>
 
 struct parser {
    bool printTokenFlag;
@@ -13,6 +14,7 @@ struct parser {
 
 extern struct parser* p;
 extern struct DynamicBlockArray* componentStore;
+extern struct DynamicHashTable* enumTypeTable;
 
 void nextToken();
 

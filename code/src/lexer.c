@@ -75,6 +75,7 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "int", TOKEN_INTEGER);
 	SetInHashTable(keywordMap, "loop", TOKEN_LOOP);
 	SetInHashTable(keywordMap, "map", TOKEN_MAP);
+	SetInHashTable(keywordMap, "not", TOKEN_NOT);
 	SetInHashTable(keywordMap, "note", TOKEN_NOTE);
 	SetInHashTable(keywordMap, "null", TOKEN_NULL);
 	SetInHashTable(keywordMap, "proc", TOKEN_PROC);
@@ -360,8 +361,9 @@ static void skipWhiteSpace(){
 					// handle single-line comment
 					while(peek() != '\n' && peek() != '\0'){
 						l->line++;
-						 readChar();
+						readChar();
 					}
+					if(peek() == '\n') l->line++;
 				} else if (peekNext() == '*'){
 					//handle multi-line comment
 					readChar();

@@ -141,7 +141,8 @@ bool GetInHashTable(struct DynamicHashTable* hst, char*  key, uint64_t* val){
 	struct Entry* entry = findEntry(hst->entries, hst->capacity, key);
 	if(entry->key == NULL) return false;
 
-	*val = entry->value;
+	if(val != NULL) *val = entry->value;
+
 	return true;
 }
 

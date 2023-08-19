@@ -582,7 +582,7 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 		\n \
 		use ieee.std_logic_1164.all;\n \
 		\n \
-		ent spi {\n \
+		ent spi_ctl {\n \
 			clk -> stl;\n \
 			start -> stl;\n \
 			din -> stlv(11 downto 0);\n \
@@ -592,11 +592,12 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 			sclk <- stl;\n \
 		}\n \
 		\n \
-		arch behavioral(spi){\n \
+		arch behavioral(spi_ctl){\n \
 			type controllerState {idle, tx_start, send, tx_end};\n \
 		\n \
 			sig state controllerState;\n \
-			sig sclkt stl := 0;\n \
+			sig sclkt stl := '0';\n \
+			sig temp stlv(11 downto 0);\n \
 		\n \
 			proc(clk){\n \
 				var count int := 0;\n \
@@ -605,13 +606,12 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 						count++;\n \
 					} else {\n \
 						count := 0;\n \
-						sclkt <= sclkt;\n \
+						sclkt <= not sclkt;\n \
 					}\n \
 				}\n \
 			}\n \
 		\n \
 			proc(sclkt){\n \
-				sig temp stlv(11 downto 0);\n \
 				var bitcount int := 0;\n \
 				if(sclkt'UP){\n \
 					switch(state) {\n \
@@ -619,7 +619,7 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 							mosi <= '0';\n \
 							cs <= '0';\n \
 							done <= '0';\n \
-							if(start){\n \
+							if(start == '1'){\n \
 								state <= tx_start;\n \
 							} else {\n \
 								state <= idle;\n \
@@ -663,7 +663,7 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 
 	FreeProgram(prog);
 	free(input);
-	//remove("./a.vhdl");
+	remove("./a.vhdl");
 }
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \

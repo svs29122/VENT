@@ -92,6 +92,14 @@ void freeExpression(struct Expression* expr){
          break;
       }
 
+      case UNARY_EXPR: {
+         struct UnaryExpr* uexp = (struct UnaryExpr*)expr;
+         free(uexp->op);
+         freeExpression(uexp->right);
+			free(uexp);
+         break;
+      }
+
       case BINARY_EXPR:{
          struct BinaryExpr* bexp = (struct BinaryExpr*) expr;
          freeExpression(bexp->left);
@@ -253,8 +261,9 @@ static void freeParserTokens(){
    if(p->peekToken.literal) free(p->peekToken.literal);
 }
 
-static void freeComponentStore(){
+static void freeParserData(){
 	FreeBlockArray(componentStore);
+	FreeHashTable(enumTypeTable);
 }
 
 void FreeProgram(struct Program* prog){
@@ -272,6 +281,6 @@ void FreeProgram(struct Program* prog){
 	WalkTree(prog, &opBlk);
 
 	freeParserTokens();
-	freeComponentStore();
+	freeParserData();
 	FreeLexer();
 }

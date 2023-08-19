@@ -15,6 +15,7 @@ struct Token copyToken(struct Token oldToken);
 void destroyToken(struct Token thisToken);
 
 bool validDataType();
+bool userDefinedDataType();
 bool validAssignment();
 
 struct ComponentDecl* getComponentFromStore(char* cname);
