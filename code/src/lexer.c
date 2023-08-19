@@ -426,7 +426,7 @@ struct Token NextToken() {
 				if(peekNext() == '>') return newMultiCharToken(TOKEN_INOUT, 3);
 				return newMultiCharToken(TOKEN_OUTPUT, 2);
 			} else if(peek() == '='){
-				return newMultiCharToken(TOKEN_SASSIGN, 2);
+				return newMultiCharToken(TOKEN_LESS_EQUAL, 2);
 			} 
 			return newToken(TOKEN_LESS, ch);
 		case '>':

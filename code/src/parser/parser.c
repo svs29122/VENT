@@ -278,6 +278,29 @@ static struct Expression* parseAttribute(struct Expression* expr){
 	return &(atexp->self);
 }
 
+static struct Expression* parseCall(struct Expression* expr){
+	struct CallExpr* cexp = calloc(1, sizeof(struct CallExpr));
+#ifdef DEBUG
+	memcpy(&(cexp->self.root.token), &(p->currToken), sizeof(struct Token));
+#endif
+	cexp->self.root.type = AST_EXPRESSION;
+
+	cexp->self.type = CALL_EXPR;
+	cexp->function = expr;
+
+	consume(TOKEN_LPAREN, "Expect '(' after function in call expression");
+
+	enum Precedence precedence = getRule(p->currToken.type)->precedence;
+	nextToken();
+	
+	cexp->parameters = parseExpression(precedence);
+
+	consume(TOKEN_RPAREN, "Expect ')' after paremeter in call expression");
+	nextToken();
+
+	return &(cexp->self);
+}
+
 static struct Label* parseLabel(){
 	
 	if(match(TOKEN_IDENTIFIER) && peek(TOKEN_COLON)){
@@ -535,7 +558,7 @@ static void parseSignalAssignment(struct SignalAssign *sigAssign){
 	consume(TOKEN_IDENTIFIER, "expect identifer at start of statement");
 	sigAssign->target = (struct Identifier*)parseIdentifier();
 	
-	consumeNext(TOKEN_SASSIGN, "Expect <= after identifier");
+	consumeNext(TOKEN_LESS_EQUAL, "Expect <= after identifier");
 #ifdef DEBUG
 	memcpy(&(sigAssign->self.token), &(p->currToken), sizeof(struct Token));
 #endif
@@ -549,7 +572,7 @@ static void parseSignalAssignment(struct SignalAssign *sigAssign){
 static void parseSequentialAssignment(struct SequentialStatement* seqStmt){
 	//TODO: this may need some work depending on what we do with labels
 	switch(p->peekToken.type){
-		case TOKEN_SASSIGN: {
+		case TOKEN_LESS_EQUAL: {
 			seqStmt->type = QSIGNAL_ASSIGNMENT;
 			parseSignalAssignment(&(seqStmt->as.signalAssignment));
 			break;
@@ -1189,7 +1212,7 @@ static Dba* parseArchBodyStatements(){
 						break;
 					}
 
-					case TOKEN_SASSIGN: {
+					case TOKEN_LESS_EQUAL: {
 						conStmt.type = SIGNAL_ASSIGNMENT;
 						parseSignalAssignment(&(conStmt.as.signalAssignment));
 						break;

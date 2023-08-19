@@ -23,6 +23,7 @@ struct ParseRule{
 };
 
 //forward declarations
+static struct Expression* parseCall(struct Expression* expr);
 static struct Expression* parseAttribute(struct Expression* expr);
 static struct Expression* parseBinary(struct Expression* expr);
 static struct Expression* parseIdentifier();
@@ -43,11 +44,12 @@ static struct ParseRule rules[] = {
    [TOKEN_GREATER]      = {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_GREATER_EQUAL]= {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_LESS]         = {NULL                 , parseBinary     , RELATIONAL_PREC},
-   [TOKEN_LESS_EQUAL]   = {NULL                 , parseBinary     , RELATIONAL_PREC},
+   [TOKEN_LESS_EQUAL]	= {NULL                 , parseBinary     , RELATIONAL_PREC},
    [TOKEN_PLUS]         = {NULL                 , parseBinary     , ADD_PREC},
    [TOKEN_MINUS]        = {NULL                 , parseBinary     , ADD_PREC},
    [TOKEN_STAR]         = {parseCharLiteral     , parseBinary     , MULTIPLY_PREC},
    [TOKEN_SLASH]        = {NULL                 , parseBinary     , MULTIPLY_PREC},
+   [TOKEN_LPAREN]			= {NULL                 , parseCall     	, CALL_PREC},
    [TOKEN_TICK]         = {NULL                 , parseAttribute  , MAP_PREC},
    [TOKEN_MASSIGN]      = {NULL                 , parseBinary     , MAP_PREC},
 };

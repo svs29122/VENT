@@ -245,6 +245,15 @@ static void printSubExpression(struct Expression* expr){
 			break;
 		}
 
+		case CALL_EXPR:{
+			struct CallExpr* cexp = (struct CallExpr*) expr;
+			printSubExpression(cexp->function);
+			printf("(");
+			printSubExpression(cexp->parameters);
+			printf(")");
+			break;
+		}
+
 		case NAME_EXPR: {
 			//NameExpr* nexp = (NameExpr*) expr;
 			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);

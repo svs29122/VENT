@@ -576,6 +576,95 @@ void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
+	char* input = strdup(" \
+		// simple spi master implemented in VENT\n \
+		\n \
+		use ieee.std_logic_1164.all;\n \
+		\n \
+		ent spi {\n \
+			clk -> stl;\n \
+			start -> stl;\n \
+			din -> stlv(11 downto 0);\n \
+			cs <- stl;\n \
+			mosi <- stl;\n \
+			done <- stl;\n \
+			sclk <- stl;\n \
+		}\n \
+		\n \
+		arch behavioral(spi){\n \
+			type controllerState {idle, tx_start, send, tx_end};\n \
+		\n \
+			sig state controllerState;\n \
+			sig sclkt stl := 0;\n \
+		\n \
+			proc(clk){\n \
+				var count int := 0;\n \
+				if(clk'UP){\n \
+					if(count < 10){\n \
+						count++;\n \
+					} else {\n \
+						count := 0;\n \
+						sclkt <= sclkt;\n \
+					}\n \
+				}\n \
+			}\n \
+		\n \
+			proc(sclkt){\n \
+				sig temp stlv(11 downto 0);\n \
+				var bitcount int := 0;\n \
+				if(sclkt'UP){\n \
+					switch(state) {\n \
+						case idle:\n \
+							mosi <= '0';\n \
+							cs <= '0';\n \
+							done <= '0';\n \
+							if(start){\n \
+								state <= tx_start;\n \
+							} else {\n \
+								state <= idle;\n \
+							}\n \
+						case tx_start:\n \
+							cs <= '0';\n \
+							temp <= din;\n \
+							state <= send;	\n \
+						case send:\n \
+							if(bitcount <= 11){\n \
+								bitcount++;\n \
+								mosi <= temp(bitcount);\n \
+								state <= send;\n \
+							} else {\n \
+								bitcount := 0;\n \
+								state <= tx_end;\n \
+								mosi <= '0';\n \
+							}\n \
+						case tx_end:\n \
+							cs <= '1';\n \
+							state <= idle;\n \
+							done <= '1';\n \
+						default:\n \
+							state <= idle;\n \
+					}\n \
+				}\n \
+			}\n \
+		\n \
+			sclk <= sclkt;\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	//PrintProgram(prog);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	//remove("./a.vhdl");
+}
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -613,6 +702,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithComponent);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_MediumSizeProgram1);
 
 	return suite;
 }

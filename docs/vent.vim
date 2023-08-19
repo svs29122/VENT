@@ -47,7 +47,7 @@ syn keyword 	ventStatement	range record register reject report return
 syn keyword 	ventStatement	release restrict restrict_guarantee
 syn keyword 	ventStatement	select severity signal sig shared
 syn keyword 	ventStatement	subtype
-syn keyword 	ventStatement	sequence strong
+syn keyword 	ventStatement	sequence strong switch
 syn keyword 	ventStatement	then to transport type
 syn keyword 	ventStatement	unaffected units until use
 syn keyword 	ventStatement	variable var

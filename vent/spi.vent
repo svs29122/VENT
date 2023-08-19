@@ -1,0 +1,72 @@
+// simple spi master implemented in VENT
+
+use ieee.std_logic_1164.all;
+
+ent spi {
+	clk -> stl;
+	start -> stl;
+	din -> stlv(11 downto 0);
+	cs <- stl;
+	mosi <- stl;
+	done <- stl;
+	sclk <- stl;
+}
+
+arch behavioral(spi){
+	type controllerState {idle, tx_start, send, tx_end};
+
+	sig state stl;/*controllerState;*/
+	sig sclkt stl := 0;
+
+	proc(clk){
+		var count int := 0;
+		if(clk'UP){
+			if(count < 10){
+				count++;
+			} else {
+				count := 0;
+				sclkt <= not sclkt;
+			}
+		}
+	}
+
+	proc(sclkt){
+		sig temp stlv(11 downto 0) := B"000000000000";
+		var bitcount int := 0;
+		if(sclkt'UP){
+			switch(state) {
+				case idle:
+					mosi <= '0';
+					cs <= '0';
+					done <= '0';
+					if(start){
+						state <= tx_start;
+					} else {
+						state <= idle;
+					}
+				case tx_start:
+					cs <= '0';
+					temp <= din;
+					state <= send;	
+				case send:
+					if(bitcount <= 11){
+						bitcount++;
+						mosi <= temp(bitcount);
+						state <= send;
+					} else {
+						bitcount := 0;
+						state <= tx_end;
+						mosi <= '0';
+					}
+				case tx_end:
+					cs <= '1';
+					state <= idle;
+					done <= '1';
+				default:
+					state <= idle;
+			}
+		}
+	}
+
+	sclk <= sclkt;
+}

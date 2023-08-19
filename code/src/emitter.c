@@ -598,6 +598,15 @@ static void emitSubExpression(struct Expression* expr){
          break;
       }   
 
+		case CALL_EXPR:{
+         struct CallExpr* cexp = (struct CallExpr*) expr;
+         emitSubExpression(cexp->function);
+			fprintf(vhdlFile, "(");
+         emitSubExpression(cexp->parameters);
+			fprintf(vhdlFile, ")");
+         break;
+      }   
+
       case NAME_EXPR: {
           //NameExpr* nexp = (NameExpr*) expr;
           //printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);

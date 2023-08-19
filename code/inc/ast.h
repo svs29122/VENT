@@ -93,6 +93,12 @@ struct Expression {
 	enum ExpressionType type;
 };
 
+struct CallExpr {
+	struct Expression self;
+	struct Expression* function;
+	struct Expression* parameters; 
+};
+
 struct AttributeExpr {
 	struct Expression self;
 	struct Expression* object;
