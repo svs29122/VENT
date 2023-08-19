@@ -101,6 +101,14 @@ void freeExpression(struct Expression* expr){
          break;
       }
 
+      case ATTRIBUTE_EXPR:{
+         struct AttributeExpr* aexp = (struct AttributeExpr*) expr;
+         freeExpression(aexp->object);
+         freeExpression(aexp->attribute);
+			free(aexp);
+         break;
+      }
+
       case NAME_EXPR: {
          //NameExpr* nexp = (NameExpr*) expr;
          //free(nexp->name->value);

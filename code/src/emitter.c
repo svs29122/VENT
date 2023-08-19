@@ -27,6 +27,7 @@ static char emitIndent(){
 
 //forward declarations
 static void emitRange(struct AstNode* rstmt);
+static void emitSubExpression(struct Expression* expr);
 
 static void emitUseStatement(struct AstNode* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;
@@ -237,8 +238,15 @@ static void emitInstantiationClose(struct AstNode* inst){
 	eStat.line = false;
 }
 
-static void emitProcess(struct AstNode* proc){
-	fprintf(vhdlFile, "\n\tprocess is \n"); 
+static void emitProcess(struct AstNode* process){
+	struct Process* proc = (struct Process*)process;
+	
+	fprintf(vhdlFile, "\n\tprocess"); 
+	if(proc->sensitivityList){
+		fprintf(vhdlFile, " (%s)", proc->sensitivityList->value); 
+	} 
+	fprintf(vhdlFile, " is \n"); 
+
 	indent++;
 }
 
@@ -529,6 +537,30 @@ static void emitBinaryOp(char* bop){
 	}
 }
 
+static void emitAttribute(struct AttributeExpr* aexp){
+	char* attributeLiteral = ((struct Identifier*)aexp->attribute)->value;
+
+	bool risingEdge = strncmp(attributeLiteral, "UP", 2) == 0; 
+	if(risingEdge){
+		fprintf(vhdlFile, "rising_edge("); 
+		emitSubExpression(aexp->object);
+		fprintf(vhdlFile, ")"); 
+		return;
+	}
+
+	bool fallingEdge = strncmp(attributeLiteral, "DOWN", 4) == 0; 
+	if(fallingEdge){
+		fprintf(vhdlFile, "falling_edge("); 
+		emitSubExpression(aexp->object);
+		fprintf(vhdlFile, ")"); 
+		return;
+	}
+
+	emitSubExpression(aexp->object);
+	fprintf(vhdlFile, "%c", aexp->tick);
+   emitSubExpression(aexp->attribute);
+}
+
 static void emitSubExpression(struct Expression* expr){
 	enum ExpressionType type = expr->type;
 
@@ -558,9 +590,15 @@ static void emitSubExpression(struct Expression* expr){
 			 emitBinaryOp(bexp->op);
           emitSubExpression(bexp->right);
           break;
-       }
- 
-       case NAME_EXPR: {
+      }
+
+		case ATTRIBUTE_EXPR:{
+         struct AttributeExpr* aexp = (struct AttributeExpr*) expr;
+			emitAttribute(aexp);
+         break;
+      }   
+
+      case NAME_EXPR: {
           //NameExpr* nexp = (NameExpr*) expr;
           //printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);
           struct Identifier* ident = (struct Identifier*)expr;

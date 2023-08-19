@@ -61,7 +61,7 @@ void FreeBlockArray(Dba* arr);
 */
 void WriteBlockArray(Dba* arr, char* block);
 
-/*
+/************************
 	ReadBlockArray() - returns a block from the array located
 		at index (0-based indexing)
 
@@ -78,7 +78,7 @@ void WriteBlockArray(Dba* arr, char* block);
 */
 void* ReadBlockArray(Dba* arr, int index);
 
-/*
+/************************
 	BlockCount() - returns the current number of blocks in the array
 
 	Inputs: 

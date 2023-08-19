@@ -237,6 +237,14 @@ static void printSubExpression(struct Expression* expr){
 			break;
 		}
 
+		case ATTRIBUTE_EXPR:{
+			struct AttributeExpr* aexp = (struct AttributeExpr*) expr;
+			printSubExpression(aexp->object);
+			printf("%c", aexp->tick);
+			printSubExpression(aexp->attribute);
+			break;
+		}
+
 		case NAME_EXPR: {
 			//NameExpr* nexp = (NameExpr*) expr;
 			//printf("\e[0;35m""\'%s\'\r\n", nexp->name->value);

@@ -16,6 +16,10 @@ enum TOKEN_TYPE {
 	TOKEN_DOWNTO,
 	TOKEN_BAR,
 
+	//attributes
+	TOKEN_UP,
+	TOKEN_DOWN,
+
 	//operators
 	TOKEN_SLASH, 
 	TOKEN_SLASH_EQUAL, 

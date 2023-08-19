@@ -28,9 +28,9 @@ syn case	ignore
 syn keyword		ventStatement	access after alias all assert
 syn keyword 	ventStatement	architecture arch array attribute
 syn keyword 	ventStatement	assume assume_guarantee
-syn keyword 	ventStatement	begin block body buffer bus
+syn keyword 	ventStatement	begin block body buffer bus break
 syn keyword 	ventStatement	case comp component configuration constant
-syn keyword 	ventStatement	context cover
+syn keyword 	ventStatement	context cover cont
 syn keyword 	ventStatement	default disconnect downto
 syn keyword 	ventStatement	elsif end ent entity exit
 syn keyword 	ventStatement	file for function
@@ -65,6 +65,7 @@ syn match	ventError	"\<else\s\+if\>"
 " Predefined standard VHDL types
 syn match	ventType	"\<bit\>\'\="
 syn match	ventType	"\<boolean\>\'\="
+syn match	ventType	"\<bool\>\'\="
 syn match	ventType	"\<natural\>\'\="
 syn match	ventType	"\<positive\>\'\="
 syn match	ventType	"\<int\>\'\="
@@ -137,6 +138,10 @@ syn match   	ventAttribute	"\'image"
 syn match   	ventAttribute	"\'value"
 " VHDL-2017 interface attribute
 syn match   	ventAttribute	"\'converse"
+" VENT special attributes
+syn match   	ventAttribute	"\'up"
+syn match   	ventAttribute	"\'down"
+
 
 syn keyword	ventBoolean	true false
 
@@ -224,7 +229,6 @@ syn case	ignore
 
 syn region	ventComment	start="/\*" end="\*/"	contains=ventTodo,ventFixme,@Spell
 syn match	ventComment	"\(^\|\s\)//.*"		contains=ventTodo,ventFixme,@Spell
-syn match	ventComment	"\(^\|\s\)--.*"		contains=ventTodo,ventFixme,@Spell
 
 " Standard IEEE P1076.6 preprocessor directives (metacomments).
 syn match	ventPreProc	"/\*\s*rtl_synthesis\s\+\(on\|off\)\s*\*/"

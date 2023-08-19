@@ -432,15 +432,42 @@ void TestNextToken_Component (CuTest *tc){
 	FreeLexer();
 }
 
+void TestNextToken_SignalWithEdge (CuTest *tc){
+	char* input = strdup("\
+		proc (clk) {\n \
+			if(clk'up){}\n \
+		}\n \
+	");
+	InitLexer(input);
+
+	testNextToken(tc, TOKEN_PROC, "proc");	
+	testNextToken(tc, TOKEN_LPAREN, "(");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "clk");	
+	testNextToken(tc, TOKEN_RPAREN, ")");	
+	testNextToken(tc, TOKEN_LBRACE, "{");	
+	testNextToken(tc, TOKEN_IF, "if");	
+	testNextToken(tc, TOKEN_LPAREN, "(");	
+	testNextToken(tc, TOKEN_IDENTIFIER, "clk");	
+	testNextToken(tc, TOKEN_TICK, "\'");	
+	testNextToken(tc, TOKEN_UP, "up");	
+	testNextToken(tc, TOKEN_RPAREN, ")");	
+	testNextToken(tc, TOKEN_LBRACE, "{");	
+	testNextToken(tc, TOKEN_RBRACE, "}");	
+	testNextToken(tc, TOKEN_RBRACE, "}");	
+	
+	free(input);
+	FreeLexer();
+}
+
 void TestNextToken_ (CuTest *tc){
 	char* input = strdup("");
-
 
 	InitLexer(input);
 
 	//test case here
 	
 	free(input);
+	FreeLexer();
 }
 
 CuSuite* LexerTestGetSuite(){
@@ -463,6 +490,7 @@ CuSuite* LexerTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestNextToken_ProcessDeclaration);
 	SUITE_ADD_TEST(suite, TestNextToken_Type);
 	SUITE_ADD_TEST(suite, TestNextToken_Component);
+	SUITE_ADD_TEST(suite, TestNextToken_SignalWithEdge);
 
 	return suite;
 }

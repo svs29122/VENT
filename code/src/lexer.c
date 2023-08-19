@@ -63,6 +63,7 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "case", TOKEN_CASE);
 	SetInHashTable(keywordMap, "comp", TOKEN_COMP);
 	SetInHashTable(keywordMap, "default", TOKEN_DEFAULT);
+	SetInHashTable(keywordMap, "down", TOKEN_DOWN);
 	SetInHashTable(keywordMap, "downto", TOKEN_DOWNTO);
 	SetInHashTable(keywordMap, "else", TOKEN_ELSE);
 	SetInHashTable(keywordMap, "elsif", TOKEN_ELSIF);
@@ -88,6 +89,7 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "to", TOKEN_TO);
 	SetInHashTable(keywordMap, "type", TOKEN_TYPE);
 	SetInHashTable(keywordMap, "unsigned", TOKEN_UNSIGNED);
+	SetInHashTable(keywordMap, "up", TOKEN_UP);
 	SetInHashTable(keywordMap, "use", TOKEN_USE);
 	SetInHashTable(keywordMap, "var", TOKEN_VAR);
 	SetInHashTable(keywordMap, "wait", TOKEN_WAIT);
@@ -432,8 +434,8 @@ struct Token NextToken() {
 			return newToken(TOKEN_GREATER, ch);
 		case '=' : 
 			if(peek() == '>') return newMultiCharToken(TOKEN_MASSIGN, 2); 			
-			//return newToken(TOKEN_EQUAL, ch); 			
 			if(peek() == '=') return newMultiCharToken(TOKEN_EQUAL, 2); 			
+			return newToken(TOKEN_EQUAL, ch); 			
 		case '\'':
 			if(isCharLiteral()) return readCharLiteral();
 			return newToken(TOKEN_TICK, ch);
@@ -466,6 +468,8 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_COMMA:			return "TOKEN_COMMA";
 		case TOKEN_TICK:			return "TOKEN_TICK";
 		case TOKEN_BAR:			return "TOKEN_BAR";
+		case TOKEN_UP:				return "TOKEN_UP";
+		case TOKEN_DOWN:			return "TOKEN_DOWN";
 		case TOKEN_SLASH:			return "TOKEN_SLASH";
 		case TOKEN_TO:				return "TOKEN_TO";
 		case TOKEN_DOWNTO:		return "TOKEN_DOWNTO";
