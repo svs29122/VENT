@@ -489,7 +489,8 @@ const char* TokenToString(enum TOKEN_TYPE type){
 		case TOKEN_INPUT: 		return "TOKEN_INPUT";
 		case TOKEN_OUTPUT: 		return "TOKEN_OUTPUT";
 		case TOKEN_INOUT: 		return "TOKEN_INOUT";
-		case TOKEN_SASSIGN: 		return "TOKEN_SASSIGN";
+		case TOKEN_SASSIGN: 		
+		case TOKEN_LESS_EQUAL:	return "TOKEN_LESS_EQUAL";
 		case TOKEN_VASSIGN: 		return "TOKEN_VASSIGN";
 		case TOKEN_MASSIGN: 		return "TOKEN_MASSIGN";
 		case TOKEN_STL:	 		return "TOKEN_STL";
