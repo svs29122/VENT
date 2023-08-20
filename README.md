@@ -374,5 +374,7 @@ Program
 |-- Expression: 'temp'
 
 ```
+More options to come!
 <br/>
-<more options to come!>
+## Licensing
+VENT is licensed under the permissive MIT License. 
