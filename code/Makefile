@@ -83,6 +83,10 @@ checkleaks:
 	clear && valgrind --leak-check=full ./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
+checkSyntax:
+	@echo checking vhdl syntax
+	@/tools/Xilinx/Vivado/2022.1/bin/vivado -mode batch -nolog -nojournal \-quiet -source ./test/check_vent.tcl -notrace -tclargs *.vhdl
+
 clean:
 	rm -fr $(ODIR)
 	rm -f tvt
