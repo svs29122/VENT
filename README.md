@@ -86,7 +86,7 @@ arch divider(clk_divider){
 use ieee.std_logic_1164.all;
 
 ent spi {
-	WIDTH int := 11;
+    WIDTH int := 11;
     clk -> stl;
     start -> stl;
     din -> stlv(WIDTH downto 0);
@@ -99,7 +99,7 @@ ent spi {
 arch behavioral(spi){
     type controllerState {idle, tx_start, send, tx_end};
 
-	comp clk_divider{
+    comp clk_divider{
         DIV int := 8;
         clk -> stl;
         oclk <- stl;
@@ -109,7 +109,7 @@ arch behavioral(spi){
     sig sclkt stl := '0';
     sig temp stlv(WIDTH downto 0);
 
-	D1: clk_divider map (10, clk, sclkt);
+    D1: clk_divider map (10, clk, sclkt);
 
     proc(sclkt){
         var bitcount int := 0;
@@ -266,6 +266,7 @@ begin
             end case;
         end if;
     end process;
+
     sclk <= sclkt;
 
 end architecture behavioral;
