@@ -8,7 +8,6 @@ static void freeRange(struct AstNode* rng);
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
-	pg->useStatements = NULL;
 	pg->units = NULL;
 
 	free(pg);

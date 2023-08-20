@@ -20,7 +20,9 @@ bool validAssignment();
 
 struct ComponentDecl* getComponentFromStore(char* cname);
 
+bool endOfProgram();
 bool thereAreDeclarations();
+bool thereAreDesignUnits();
 bool thisIsAPort();
 bool thisIsAWildCard(struct Expression* map);
 bool thisIsAGenericMap(struct Expression* map, struct Identifier* name, uint16_t pos);

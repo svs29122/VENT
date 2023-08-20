@@ -75,6 +75,20 @@ bool validAssignment(){
 	return valid;
 }
 
+bool endOfProgram(){
+	return match(TOKEN_EOP);
+}
+
+bool thereAreDesignUnits(){
+	bool valid = false;
+
+	valid = 	match(TOKEN_USE)	|| 
+				match(TOKEN_ENT)  ||
+				match(TOKEN_ARCH);
+
+	return valid;
+}
+
 bool thereAreDeclarations(){
 	bool valid = false;
 

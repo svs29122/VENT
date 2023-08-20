@@ -485,7 +485,7 @@ struct EntityDecl {
 	struct DynamicBlockArray* generics;
 };
 
-struct DesignUnit{
+struct LibraryUnit{
 	enum {
 		ENTITY,
 		ARCHITECTURE,
@@ -508,10 +508,20 @@ struct UseStatement {
 	char* value;
 };
 
+struct DesignUnit{
+	enum {
+		USE_STATEMENT,
+		LIBRARY_UNIT
+	} type;
+	union {
+		struct UseStatement useStatement;
+		struct LibraryUnit libraryUnit;
+	} as;
+};
+
 struct Program {
 	struct AstNode self;
 
-	struct DynamicBlockArray* useStatements;
 	struct DynamicBlockArray* units;
 };
 

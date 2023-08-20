@@ -581,11 +581,34 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 		// simple spi master implemented in VENT\n \
 		\n \
 		use ieee.std_logic_1164.all;\n \
+		ent clk_divider {\n \
+			DIV int := 8;\n \
+			clk -> stl;\n \
+			oclk <- stl;\n \
+		}\n \
 		\n \
+		arch divider(clk_divider){\n \
+			sig modClk stl := '0';\n \
+			proc(clk){\n \
+				var count int := 0;\n \
+				if(clk'UP){\n \
+					if(count < DIV){\n \
+						count++;\n \
+					} else {\n \
+						count := 0;\n \
+						modClk <= not modClk;\n \
+					}\n \
+				}\n \
+			}\n \
+			oclk <= modClk;\n \
+		}\n \
+		\n \
+		use ieee.std_logic_1164.all;\n \
 		ent spi_ctl {\n \
+			WIDTH int := 11;\n \
 			clk -> stl;\n \
 			start -> stl;\n \
-			din -> stlv(11 downto 0);\n \
+			din -> stlv(WIDTH downto 0);\n \
 			cs <- stl;\n \
 			mosi <- stl;\n \
 			done <- stl;\n \
@@ -594,23 +617,19 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 		\n \
 		arch behavioral(spi_ctl){\n \
 			type controllerState {idle, tx_start, send, tx_end};\n \
-		\n \
+			\n \
+			comp clk_divider {\n \
+				DIV int := 8;\n \
+				clk -> stl;\n \
+				oclk <- stl;\n \
+			}\n \
+			\n \
 			sig state controllerState;\n \
 			sig sclkt stl := '0';\n \
-			sig temp stlv(11 downto 0);\n \
-		\n \
-			proc(clk){\n \
-				var count int := 0;\n \
-				if(clk'UP){\n \
-					if(count < 10){\n \
-						count++;\n \
-					} else {\n \
-						count := 0;\n \
-						sclkt <= not sclkt;\n \
-					}\n \
-				}\n \
-			}\n \
-		\n \
+			sig temp stlv(WIDTH downto 0);\n \
+			\n \
+			D1: clk_divider map (10, clk, sclk);\n \
+			\n \
 			proc(sclkt){\n \
 				var bitcount int := 0;\n \
 				if(sclkt'UP){\n \
@@ -647,7 +666,7 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 					}\n \
 				}\n \
 			}\n \
-		\n \
+			\n \
 			sclk <= sclkt;\n \
 		}\n \
 	");

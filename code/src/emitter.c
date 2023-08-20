@@ -256,7 +256,7 @@ static void emitProcessOpen(struct AstNode* proc){
 
 static void emitProcessClose(struct AstNode* proc){
 	indent--;
-	fprintf(vhdlFile, "\tend process;\n");
+	fprintf(vhdlFile, "\tend process;\n\n");
 }
 
 static void emitIfStatement(struct AstNode* ifstmt){

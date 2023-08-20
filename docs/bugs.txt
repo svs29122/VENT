@@ -3,7 +3,8 @@
 Bug 0001: When parsing a port direction mode if there are no spaces between the port identifier or type then everything will be parsed as a single token
 --
 
-Bug 0002:
+Bug 0002: When parsing a default assignment of a sig there is no check on the type of value e.g. a numeric literal 0 vs a logic value '0'
+	- a user should be informed of this mistake during parsing i.e. we shouln't emit faulty code into the VHDL
 --
 
 Bug 00XX:

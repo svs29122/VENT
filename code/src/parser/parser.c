@@ -1431,45 +1431,52 @@ static void parseEntityDecl(struct EntityDecl* eDecl){
 	consume(TOKEN_RBRACE, "Expect } at the end of entity declaration");
 }
 
-static struct UseStatement parseUseStatement(){
-	struct UseStatement stmt = {0};
-
+static void parseUseStatement(struct UseStatement* stmt){
 #ifdef DEBUG	
-	memcpy(&(stmt.self.token), &(p->currToken), sizeof(struct Token));
+	memcpy(&(stmt->self.token), &(p->currToken), sizeof(struct Token));
 #endif
-	stmt.self.type = AST_USE;
+	stmt->self.type = AST_USE;
 
 	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
 	
 	int size = strlen(p->currToken.literal) + 1;
-	stmt.value = malloc(sizeof(char) * size);
-	memcpy(stmt.value, p->currToken.literal, size);
+	stmt->value = malloc(sizeof(char) * size);
+	memcpy(stmt->value, p->currToken.literal, size);
 	
 	consumeNext(TOKEN_SCOLON, "Expect ; at end of use statment");
+}
 
-	return stmt;
+static void parseLibraryUnit(struct LibraryUnit* libUnit){
+
+	switch(p->currToken.type){
+		case TOKEN_ENT: { 
+			libUnit->type = ENTITY;
+			parseEntityDecl(&(libUnit->as.entity));
+			break;
+		}
+
+		case TOKEN_ARCH: {
+			libUnit->type = ARCHITECTURE;
+			parseArchitectureDecl(&(libUnit->as.architecture));
+			break;
+		}
+
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid library unit type");
+			break;
+	}
 }
 
 static struct DesignUnit parseDesignUnit(){
 	struct DesignUnit unit = {0};
 
-	switch(p->currToken.type){
-		case TOKEN_ENT: { 
-			unit.type = ENTITY;
-			parseEntityDecl(&(unit.as.entity));
-			break;
-		}
-
-		case TOKEN_ARCH: {
-			unit.type = ARCHITECTURE;
-			parseArchitectureDecl(&(unit.as.architecture));
-			break;
-		}
-
-		default:
-			error(p->currToken.lineNumber, p->currToken.literal, "Expect valid design unit type");
-			break;
-	}
+	if(match(TOKEN_USE)){
+		unit.type = USE_STATEMENT;
+		parseUseStatement(&(unit.as.useStatement));
+	} else {
+		unit.type = LIBRARY_UNIT;
+		parseLibraryUnit(&(unit.as.libraryUnit));	
+	} 
 
 	return unit;
 }
@@ -1482,26 +1489,16 @@ struct Program* ParseProgram(char* ventProgram){
 	struct Program* prog = calloc(1, sizeof(struct Program));
 	prog->self.type = AST_PROGRAM;
 
-	// first get the use statements
-	while(p->currToken.type == TOKEN_USE && p->currToken.type != TOKEN_EOP){
-		struct UseStatement stmt = parseUseStatement();
-	
-		if(prog->useStatements == NULL){
-			prog->useStatements = InitBlockArray(sizeof(struct UseStatement));
+	while(!endOfProgram()){
+		if(thereAreDesignUnits()){
+			struct DesignUnit unit = parseDesignUnit();
+			
+			if(prog->units == NULL){
+				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
+			}
+			WriteBlockArray(prog->units, (char*)(&unit));
+			nextToken();
 		}
-		WriteBlockArray(prog->useStatements, (char*)(&stmt));
-		nextToken();
-	}
-
-	// next parse any design units
-	while(p->currToken.type != TOKEN_EOP){
-		struct DesignUnit unit = parseDesignUnit();
-		
-		if(prog->units == NULL){
-			prog->units = InitBlockArray(sizeof(struct DesignUnit));	
-		}
-		WriteBlockArray(prog->units, (char*)(&unit));
-		nextToken();
 	}
 	
 	return prog;

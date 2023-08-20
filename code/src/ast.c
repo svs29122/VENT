@@ -18,6 +18,17 @@ static void getOperationBlockReady(struct OperationBlock* op){
 	if(!(op->doBlockArrayOp)) op->doBlockArrayOp = noBlkOp;;
 }
 
+uint16_t ExpressionCount(struct ExpressionNode* eNode){
+   uint16_t count = 0;
+
+   while(eNode){
+      count++;
+      eNode = eNode->next;
+   }   
+   
+   return count;
+}
+
 //forward declarations
 static void walkSequentialStatements(Dba* stmts, struct OperationBlock* op);
 static void walkPorts(Dba* ports, struct OperationBlock* op);
@@ -504,16 +515,37 @@ static void walkEntity(struct EntityDecl* entDecl, struct OperationBlock* op){
 	op->doCloseOp(&(entDecl->self));
 }
 
+static void walkUseStatement(struct UseStatement* stmt, struct OperationBlock* op){
+	if(stmt){
+		op->doDefaultOp(&(stmt->self));
+	}
+}
+
+static void walkLibraryUnit(struct LibraryUnit* lunit, struct OperationBlock* op){
+	switch(lunit->type){
+		case ENTITY: {
+			walkEntity(&(lunit->as.entity), op);
+			break;
+		}
+		case ARCHITECTURE: {					
+			walkArchitecture(&(lunit->as.architecture), op);
+			break;
+		}
+		default:
+			break;
+	}		
+}
+
 static void walkDesignUnits(Dba* arr, struct OperationBlock* op){
 	for(int i=0; i < BlockCount(arr); i++){
 		struct DesignUnit* unit = (struct DesignUnit*) ReadBlockArray(arr, i);
 		switch(unit->type){
-			case ENTITY: {
-				walkEntity(&(unit->as.entity), op);
+			case USE_STATEMENT: {
+				walkUseStatement(&(unit->as.useStatement), op);
 				break;
 			}
-			case ARCHITECTURE: {					
-				walkArchitecture(&(unit->as.architecture), op);
+			case LIBRARY_UNIT: {					
+				walkLibraryUnit(&(unit->as.libraryUnit), op);
 				break;
 			}
 			default:
@@ -523,24 +555,11 @@ static void walkDesignUnits(Dba* arr, struct OperationBlock* op){
 	op->doBlockArrayOp(arr);	
 }
 
-static void walkUseStatements(Dba* arr, struct OperationBlock* op){
-	for(int i=0; i < BlockCount(arr); i++){
-		struct UseStatement* stmt = (struct UseStatement*) ReadBlockArray(arr, i);
-		if(stmt){
-			op->doDefaultOp(&(stmt->self));
-		}
-	}
-	op->doBlockArrayOp(arr);
-}
-
 void WalkTree(struct Program *prog, struct OperationBlock* op){
 	getOperationBlockReady(op);
 	
 	if(prog){
 		op->doDefaultOp(&(prog->self));
-		if(prog->useStatements){
-			walkUseStatements(prog->useStatements, op);
-		}
 		if(prog->units){
 			walkDesignUnits(prog->units, op);
 		}
@@ -548,13 +567,3 @@ void WalkTree(struct Program *prog, struct OperationBlock* op){
 	}
 }
 
-uint16_t ExpressionCount(struct ExpressionNode* eNode){
-   uint16_t count = 0;
-
-   while(eNode){
-      count++;
-      eNode = eNode->next;
-   }   
-   
-   return count;
-}
