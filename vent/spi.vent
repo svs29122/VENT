@@ -2,10 +2,35 @@
 
 use ieee.std_logic_1164.all;
 
+ent clk_divider{
+	DIV int := 8;
+	clk -> stl;
+	oclk <- stl;
+}
+
+arch divider(clk_divider){
+	sig modClk stl := '0';
+	proc(clk){
+		var count int := 0;
+		if(clk'UP){
+			if(count < DIV){
+				count++;
+			} else {
+				count := 0;
+				modClk <= not modClk;
+			}
+		}
+	}
+	oclk <= modClk;	
+}
+
+use ieee.std_logic_1164.all;
+
 ent spi {
+	WIDTH int := 11;
 	clk -> stl;
 	start -> stl;
-	din -> stlv(11 downto 0);
+	din -> stlv(WIDTH downto 0);
 	cs <- stl;
 	mosi <- stl;
 	done <- stl;
@@ -15,21 +40,17 @@ ent spi {
 arch behavioral(spi){
 	type controllerState {idle, tx_start, send, tx_end};
 
+	comp clk_divider{
+		DIV int := 8;
+		clk -> stl;
+		oclk <- stl;
+	}
+
 	sig state controllerState;
 	sig sclkt stl := '0';
-	sig temp stlv(11 downto 0);
+	sig temp stlv(WIDTH downto 0);
 
-	proc(clk){
-		var count int := 0;
-		if(clk'UP){
-			if(count < 10){
-				count++;
-			} else {
-				count := 0;
-				sclkt <= not sclkt;
-			}
-		}
-	}
+	D1: clk_divider map (10, clk, sclkt);	
 
 	proc(sclkt){
 		var bitcount int := 0;

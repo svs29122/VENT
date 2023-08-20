@@ -81,7 +81,7 @@ syn match	ventType	"\<time_vector\>\'\="
 
 syn match	ventType	"\<character\>\'\="
 syn match	ventType	"\<string\>\'\="
-syn keyword	ventType	line text side width
+"syn keyword	ventType	line text side width
 
 " Predefined standard IEEE VHDL types
 syn match	ventType	"\<stl\>\'\="
