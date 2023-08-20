@@ -61,10 +61,35 @@ The VENT source below: <br/>
 ```vhdl
 use ieee.std_logic_1164.all;
 
+ent clk_divider{
+    DIV int := 8;
+    clk -> stl;
+    oclk <- stl;
+}
+
+arch divider(clk_divider){
+    sig modClk stl := '0';
+    proc(clk){
+        var count int := 0;
+        if(clk'UP){
+            if(count < DIV){
+                count++;
+            } else {
+                count := 0;
+                modClk <= not modClk;
+            }
+        }
+    }   
+    oclk <= modClk; 
+}
+
+use ieee.std_logic_1164.all;
+
 ent spi {
+	WIDTH int := 11;
     clk -> stl;
     start -> stl;
-    din -> stlv(11 downto 0);
+    din -> stlv(WIDTH downto 0);
     cs <- stl;
     mosi <- stl;
     done <- stl;
@@ -74,21 +99,17 @@ ent spi {
 arch behavioral(spi){
     type controllerState {idle, tx_start, send, tx_end};
 
+	comp clk_divider{
+        DIV int := 8;
+        clk -> stl;
+        oclk <- stl;
+    }   
+
     sig state controllerState;
     sig sclkt stl := '0';
-    sig temp stlv(11 downto 0);
+    sig temp stlv(WIDTH downto 0);
 
-    proc(clk){
-        var count int := 0;
-        if(clk'UP){
-            if(count < 10){
-                count++;
-            } else {
-                count := 0;
-                sclkt <= not sclkt;
-            }
-        }
-    }
+	D1: clk_divider map (10, clk, sclkt);
 
     proc(sclkt){
         var bitcount int := 0;
@@ -108,7 +129,7 @@ arch behavioral(spi){
                     temp <= din;
                     state <= send;	
                 case send:
-                    if(bitcount <= 11){
+                    if(bitcount <= WIDTH){
                         bitcount++;
                         mosi <= temp(bitcount);
                         state <= send;
@@ -137,11 +158,48 @@ will be transpiled to the following VHDL: <br/>
 library ieee;
 use ieee.std_logic_1164.all;
 
+entity clk_divider is
+    generic(
+        DIV: integer := 8   
+        );
+    port(
+        clk: in std_logic;
+        oclk: out std_logic
+    );  
+end clk_divider;
+
+architecture divider of clk_divider is
+    signal modClk: std_logic := '0';
+begin
+
+    process (clk) is  
+        variable count: integer := 0;
+    begin
+        if rising_edge(clk) then
+            if count < DIV then
+                count := count + 1;
+            else
+                count := 0;
+                modClk <= not modClk;
+            end if; 
+        end if; 
+    end process;
+
+    oclk <= modClk;
+
+end architecture divider;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
 entity spi is
+    generic(
+        WIDTH: integer := 11    
+        );
     port(
         clk: in std_logic;
         start: in std_logic;
-        din: in std_logic_vector(11 downto 0);
+        din: in std_logic_vector(WIDTH downto 0);
         cs: out std_logic;
         mosi: out std_logic;
         done: out std_logic;
@@ -151,23 +209,25 @@ end spi;
 
 architecture behavioral of spi is
     type controllerState is ( idle, tx_start, send, tx_end);
+    component clk_divider is
+        generic(
+            DIV: integer := 8
+        );
+        port(
+            clk: in std_logic;
+            oclk: out std_logic
+        );
+    end component;
     signal state: controllerState;
     signal sclkt: std_logic := '0';
-    signal temp: std_logic_vector(11 downto 0);
+    signal temp: std_logic_vector(WIDTH downto 0);
 begin
-
-    process (clk) is 
-        variable count: integer := 0;
-    begin
-        if rising_edge(clk) then
-            if count < 10 then
-                count := count + 1;
-            else
-                count := 0;
-                sclkt <= not sclkt;
-            end if;
-        end if;
-    end process;
+    D1: clk_divider
+        generic map ( DIV => 10
+        )
+        port map ( clk => clk,
+             oclk => sclkt
+        );
 
     process (sclkt) is 
         variable bitcount: integer := 0;
@@ -188,7 +248,7 @@ begin
                     temp <= din;
                     state <= send;
                 when send =>
-                    if bitcount <= 11 then
+                    if bitcount <= WIDTH then
                         bitcount := bitcount + 1;
                         mosi <= temp(bitcount);
                         state <= send;
