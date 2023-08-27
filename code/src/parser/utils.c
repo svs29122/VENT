@@ -21,7 +21,7 @@ void consume(enum TOKEN_TYPE type, const char* msg){
 		if(peek(type)) {
 			nextToken();
 		} else {
-			while(!peek(TOKEN_RBRACE) && !peek(TOKEN_EOP) && !match(TOKEN_EOP)){
+			while(!peek(TOKEN_RBRACE)  && !peek(TOKEN_SCOLON) && !peek(TOKEN_EOP) && !match(TOKEN_EOP)){
 				nextToken();
 			}
 		}

@@ -39,7 +39,7 @@ $(POBJ):
 $(MAIN) : main.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: help debug test again runtest checkleaks clean cleand cleant cleanv cleanall linecount todo print updateVimSyntax
+.PHONY: help debug test again runtest checkleaks checksyntax clean cleand cleant cleanv cleanall linecount todo print updateVimSyntax
 
 help:
 	@echo "  build tvt: 'make tvt' or just 'make'"
@@ -83,7 +83,7 @@ checkleaks:
 	clear && valgrind --leak-check=full ./test/UnitTests
 	@$(MAKE) -C ./test clean --silent
 
-checkSyntax:
+checksyntax:
 	@echo checking vhdl syntax
 	@/tools/Xilinx/Vivado/2022.1/bin/vivado -mode batch -nolog -nojournal \-quiet -source ./test/check_vent.tcl -notrace -tclargs *.vhdl
 

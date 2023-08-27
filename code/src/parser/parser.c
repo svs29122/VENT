@@ -1052,13 +1052,13 @@ static void parseWildCardMap(struct ExpressionNode **portHead, struct Identifier
 		for(int i=0; i<BlockCount(comp->ports); i++){
 			struct PortDecl* port = (struct PortDecl*)ReadBlockArray(comp->ports, i);
 			if(portMap == NULL){
-            portMap = calloc(1, sizeof(struct ExpressionNode));
-            pHead = portMap;
-         } else {
-            portMap->next = calloc(1, sizeof(struct ExpressionNode));
-            portMap = portMap->next;
-         }
-         portMap->expression = createBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
+				portMap = calloc(1, sizeof(struct ExpressionNode));
+            	pHead = portMap;
+         	} else {
+            	portMap->next = calloc(1, sizeof(struct ExpressionNode));
+            	portMap = portMap->next;
+         	}
+         	portMap->expression = createBinaryExpression((struct Expression*) port->name, "=>", (struct Expression*) port->name);
 		}
 	}
 
@@ -1076,19 +1076,15 @@ static struct Expression* parseGenericMap(struct Expression* map, struct Identif
          struct GenericDecl* generic = (struct GenericDecl*)ReadBlockArray(generics, i); 
          if(positionalMapping(map)){
             if(generic->position == pos){
-               struct Expression* expr = createBinaryExpression((struct Expression*) generic->name, "=>", map);
-					freeExpression(map);
-					return expr;
+               	struct Expression* expr = createBinaryExpression((struct Expression*) generic->name, "=>", map);
+				freeExpression(map);
+				return expr;
             }
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;
             struct Identifier* left = (struct Identifier*)bexp->left;
-            if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) {
-					return map;
-				}
-			} else {
-				printf("Error determining mapping! Map type == %d\r\n", map->type);
-			}
+            if(strncmp(generic->name->value, left->value, sizeof(left->value)) == 0) { return map; }
+		} else { printf("Error determining mapping! Map type == %d\r\n", map->type); }
       }   
    }   
 
@@ -1113,12 +1109,8 @@ static struct Expression* parsePortMap(struct Expression* map, struct Identifier
          } else if (associativeMapping(map)) {
             struct BinaryExpr* bexp = (struct BinaryExpr*)map;
             struct Identifier* left = (struct Identifier*)bexp->left;
-            if(strncmp(port->name->value, left->value, sizeof(left->value)) == 0) {
-					return map;
-            }
-         } else {  
-         	printf("Error determining mapping! Map type == %d\r\n", map->type);
-			}
+            if(strncmp(port->name->value, left->value, sizeof(left->value)) == 0) { return map; }
+         } else { printf("Error determining mapping! Map type == %d\r\n", map->type); }
       }   
    }   
 
