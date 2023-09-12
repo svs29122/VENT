@@ -826,7 +826,7 @@ void TestParseProgram_ProcessWithSensitivityList(CuTest *tc){
 			proc(clk, arst) {\n \
 				if(arst) { \n \
 					count <= \"00000000\";\n \
-				} else if (clk'UP) {\n \
+				} elsif (clk'UP) {\n \
 					if(count == 256) {\n \
 						count <= 0;\n \
 					} else {\n \
