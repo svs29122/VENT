@@ -5,4 +5,6 @@
 
 void error(int line, char* where, const char* message);
 
+void resetErrors(void);
+
 #endif //INC_ERROR_H

@@ -136,6 +136,8 @@ static void initParser(){
 
 	componentStore = InitBlockArray(sizeof(struct Declaration));
 	enumTypeTable = InitHashTable();
+	
+	resetErrors();
 }
 
 void nextToken(){	
@@ -1481,16 +1483,14 @@ struct Program* ParseProgram(char* ventProgram){
 	struct Program* prog = calloc(1, sizeof(struct Program));
 	prog->self.type = AST_PROGRAM;
 
-	while(!endOfProgram()){
-		if(thereAreDesignUnits()){
-			struct DesignUnit unit = parseDesignUnit();
+	while(!endOfProgram() && thereAreDesignUnits()){
+		struct DesignUnit unit = parseDesignUnit();
 			
-			if(prog->units == NULL){
-				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
-			}
-			WriteBlockArray(prog->units, (char*)(&unit));
-			nextToken();
+		if(prog->units == NULL){
+			prog->units = InitBlockArray(sizeof(struct DesignUnit));	
 		}
+		WriteBlockArray(prog->units, (char*)(&unit));
+		nextToken();
 	}
 	
 	return prog;

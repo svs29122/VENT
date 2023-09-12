@@ -78,6 +78,7 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "not", TOKEN_NOT);
 	SetInHashTable(keywordMap, "note", TOKEN_NOTE);
 	SetInHashTable(keywordMap, "null", TOKEN_NULL);
+	SetInHashTable(keywordMap, "or", TOKEN_OR);
 	SetInHashTable(keywordMap, "proc", TOKEN_PROC);
 	SetInHashTable(keywordMap, "report", TOKEN_REPORT);
 	SetInHashTable(keywordMap, "severity", TOKEN_SEVERITY);
@@ -96,6 +97,7 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "wait", TOKEN_WAIT);
 	SetInHashTable(keywordMap, "warning", TOKEN_WARNING);
 	SetInHashTable(keywordMap, "while", TOKEN_WHILE);
+	SetInHashTable(keywordMap, "xor", TOKEN_XOR);
 }
 
 static enum TOKEN_TYPE getIdentifierType(char* lit){
