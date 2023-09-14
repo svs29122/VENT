@@ -723,6 +723,33 @@ void TestTranspileProgram_WithSensitivityList(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_MultiPortDeclaration(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent ander {\n \
+			a,b,c -> stl;\n \
+			d,e,f int := 0;\n \
+			g, h, i <- stl;\n \
+			x, y <-> stlv(4 downto 0);\n \
+		}\n \
+		arch empty(ander){\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	//PrintProgram(prog);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -762,6 +789,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_MediumSizeProgram1);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSensitivityList);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_MultiPortDeclaration);
 
 	return suite;
 }

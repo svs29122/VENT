@@ -324,6 +324,28 @@ static struct Expression* parseCall(struct Expression* expr){
 	return &(cexp->self);
 }
 
+static struct Identifier* parseIdentifierList(){
+	struct Identifier* ident = NULL;
+
+	if(match(TOKEN_IDENTIFIER)){
+		consume(TOKEN_IDENTIFIER, "expect identifier");
+		ident = (struct Identifier*)parseIdentifier();
+	}
+
+	if(peek(TOKEN_COMMA)){
+		struct Identifier* iList = ident;
+
+		while(peek(TOKEN_COMMA)) {
+			nextToken();
+			consumeNext(TOKEN_IDENTIFIER, "expect identifer after comma in identifier list");
+			iList->next = (struct Identifier*)parseIdentifier();
+			iList = iList->next;
+		}
+	}
+
+	return ident;
+}
+
 static struct Label* parseLabel(){
 	
 	if(match(TOKEN_IDENTIFIER) && peek(TOKEN_COLON)){
@@ -511,8 +533,11 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 	uint16_t posInComponent = 1;
 
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		struct Identifier* names = parseIdentifierList();
+
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.name = names;
 			port.position = posInComponent++;
 
 			if(cDecl->ports == NULL) {
@@ -522,6 +547,7 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 			WriteBlockArray(cDecl->ports, (char*)(&port));
 		} else { //this is a generic
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.name = names;
 			generic.position = posInComponent++;
 
 			if(cDecl->generics == NULL) {
@@ -1190,21 +1216,8 @@ static void parseProcessStatement(struct Process* proc){
 	consume(TOKEN_PROC, "expect proc keyword at start of process");
 	consumeNext(TOKEN_LPAREN, "expect '(' after proc keyword");
 	
-	if(peek(TOKEN_IDENTIFIER)){
-		consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
-		proc->sensitivityList = (struct Identifier*)parseIdentifier();
-	}
-
-	if(peek(TOKEN_COMMA)){
-		struct Identifier* sList = proc->sensitivityList;
-
-		while(peek(TOKEN_COMMA)) {
-			nextToken();
-			consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
-			sList->next = (struct Identifier*)parseIdentifier();
-			sList = sList->next;
-		}
-	}
+	if(peek(TOKEN_IDENTIFIER)) nextToken();
+	proc->sensitivityList = parseIdentifierList();
 
 	consumeNext(TOKEN_RPAREN, "expect ')' after proc sensitivity list");
 	consumeNext(TOKEN_LBRACE, "expect '{' after proc sensitivity list");
@@ -1341,9 +1354,6 @@ static struct GenericDecl parseGenericDecl(){
 	struct GenericDecl generic = {0};		
 	generic.self.type = AST_GENERIC;
 
-	consume(TOKEN_IDENTIFIER, "Expect identifier at start of generic declaration");
-	generic.name = (struct Identifier*)parseIdentifier();
-		
 	nextToken();
 	if(!validDataType()){
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
@@ -1366,9 +1376,6 @@ static struct PortDecl parsePortDecl(){
 	struct PortDecl port = {0};		
 	port.self.type = AST_PORT;
 
-	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
-	port.name = (struct Identifier*)parseIdentifier();
-		
 	nextToken();
 	if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
@@ -1392,8 +1399,11 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 	uint16_t posInEntity = 1;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		struct Identifier* names = parseIdentifierList();
+
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.name = names;
 			port.position = posInEntity++;
 
 			if(eDecl->ports == NULL) {
@@ -1403,6 +1413,7 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 			WriteBlockArray(eDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.name = names;
 			generic.position = posInEntity++;
 
 			if(eDecl->generics == NULL) {

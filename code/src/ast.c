@@ -467,7 +467,7 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 
 		op->doDefaultOp(&(genericDecl->self));
 		if(genericDecl->name){
-			op->doDefaultOp(&(genericDecl->name->self.root));
+			walkIdentifierList(genericDecl->name, op);
 		}
 		if(genericDecl->dtype){
 			op->doDefaultOp(&(genericDecl->dtype->self));
@@ -497,7 +497,7 @@ static void walkPorts(Dba* ports, struct OperationBlock* op){
 	
 		op->doDefaultOp(&(portDecl->self));
 		if(portDecl->name){
-			op->doDefaultOp(&(portDecl->name->self.root));
+			walkIdentifierList(portDecl->name, op);
 		}
 		if(portDecl->pmode){
 			op->doDefaultOp(&(portDecl->pmode->self));
