@@ -866,7 +866,7 @@ void TestParseProgram_MultiPortDeclaration(CuTest *tc){
 
 void TestParseProgram_DeclarationsAfterStatements(CuTest *tc){
 	char* input = strdup(" \
-		arch behavioral(my_ent){\n \
+		arch behavioral(an_entity){\n \
 			sig a stl;\n \
 			sig b stl;\n \
 			\n \
@@ -882,7 +882,7 @@ void TestParseProgram_DeclarationsAfterStatements(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
-	PrintProgram(prog);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);

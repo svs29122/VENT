@@ -98,13 +98,22 @@ bool thereAreDesignUnits(){
 bool thereAreDeclarations(){
 	bool valid = false;
 
-	valid = 	match(TOKEN_SIG)		|| match(TOKEN_VAR)		||
-				match(TOKEN_TYPE)		|| match(TOKEN_COMP)		|| 
+	valid = 	match(TOKEN_SIG)	|| match(TOKEN_VAR)		||
+				match(TOKEN_TYPE)	|| match(TOKEN_COMP)	|| 
 				match(TOKEN_FILE);
 
 	return valid;
 }
 
+bool thisIsADeclaration(){
+	bool valid = false;
+
+	valid = 	match(TOKEN_SIG)	|| match(TOKEN_VAR)		||
+				match(TOKEN_TYPE)	|| match(TOKEN_COMP)	|| 
+				match(TOKEN_FILE);
+
+	return valid;
+}
 
 bool thisIsAPort(){
 	bool valid = false;

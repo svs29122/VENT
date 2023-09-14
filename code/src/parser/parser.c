@@ -1231,96 +1231,107 @@ static void parseProcessStatement(struct Process* proc){
 	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
 }
 
-static Dba* parseArchBodyStatements(){
-	Dba* stmts = InitBlockArray(sizeof(struct ConcurrentStatement));
-	
-	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+static struct ConcurrentStatement parseArchBodyStatement(){
 		
-		struct ConcurrentStatement conStmt = {0};
-		conStmt.label = parseLabel();
+	struct ConcurrentStatement conStmt = {0};
+	conStmt.label = parseLabel();
 		
-		switch(p->currToken.type){
-			case TOKEN_PROC: {
-				conStmt.type = PROCESS;
-				parseProcessStatement(&(conStmt.as.process));
-				break;
-			}
-	
-			case TOKEN_IDENTIFIER: { 
-				//some concurrent statements begin with identifiers
-				switch(p->peekToken.type){
-					case TOKEN_MAP: {
-						conStmt.type = INSTANTIATION;
-						parseInstantiation(&(conStmt.as.instantiation));
-						break;
-					}
-
-					case TOKEN_LESS_EQUAL: {
-						conStmt.type = SIGNAL_ASSIGNMENT;
-						parseSignalAssignment(&(conStmt.as.signalAssignment));
-						break;
-					}
-					
-					default:
-						error(p->currToken.lineNumber, p->currToken.literal, 
-							"Expect valid concurrent statement in architecture body");
-						break;
-				}
-				break;
-			}
-	
-			default:
-				error(p->currToken.lineNumber, p->currToken.literal, 
-					"Expect valid concurrent statement in architecture body");
-				break;
+	switch(p->currToken.type){
+		case TOKEN_PROC: {
+			conStmt.type = PROCESS;
+			parseProcessStatement(&(conStmt.as.process));
+			break;
 		}
+	
+		case TOKEN_IDENTIFIER: { 
+			//some concurrent statements begin with identifiers
+			switch(p->peekToken.type){
+				case TOKEN_MAP: {
+					conStmt.type = INSTANTIATION;
+					parseInstantiation(&(conStmt.as.instantiation));
+					break;
+				}
 
-		WriteBlockArray(stmts, (char*)(&conStmt));
-		nextToken();	
+				case TOKEN_LESS_EQUAL: {
+					conStmt.type = SIGNAL_ASSIGNMENT;
+					parseSignalAssignment(&(conStmt.as.signalAssignment));
+					break;
+				}
+					
+				default:
+					error(p->currToken.lineNumber, p->currToken.literal, 
+						"Expect valid concurrent statement in architecture body");
+					break;
+			}
+			break;
+		}
+	
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, 
+				"Expect valid concurrent statement in architecture body");
+			break;
 	}
 
-	return stmts;
+	return conStmt;
 }
 
-static Dba* parseArchBodyDeclarations(){
-	Dba* decls = InitBlockArray(sizeof(struct Declaration));
-
-	while(thereAreDeclarations()){
+static struct Declaration parseArchBodyDeclaration(){
 		
-		struct Declaration decl = {0};
+	struct Declaration decl = {0};
 
-		switch(p->currToken.type){
-			case TOKEN_TYPE: {
-				decl.type = TYPE_DECLARATION;
-				parseTypeDeclaration(&(decl.as.typeDeclaration));
-				break;
-			}
-
-			case TOKEN_SIG: {
-				decl.type = SIGNAL_DECLARATION;
-				parseSignalDeclaration(&(decl.as.signalDeclaration));
-				break;
-			}
-
-			case TOKEN_COMP: {
-				decl.type = COMPONENT_DECLARATION;
-				parseComponentDeclaration(&(decl.as.componentDeclaration));
-				WriteBlockArray(componentStore, (char*)(&decl));
-				break;
-			}
-
-			default:
-				error(p->currToken.lineNumber, p->currToken.literal, 
-					"Expect valid declaration statement in architecture declarations");
-				break;
+	switch(p->currToken.type){
+		case TOKEN_TYPE: {
+			decl.type = TYPE_DECLARATION;
+			parseTypeDeclaration(&(decl.as.typeDeclaration));
+			break;
 		}
 
-		WriteBlockArray(decls, (char*)(&decl));
+		case TOKEN_SIG: {
+			decl.type = SIGNAL_DECLARATION;
+			parseSignalDeclaration(&(decl.as.signalDeclaration));
+			break;
+		}
+
+		case TOKEN_COMP: {
+			decl.type = COMPONENT_DECLARATION;
+			parseComponentDeclaration(&(decl.as.componentDeclaration));
+			WriteBlockArray(componentStore, (char*)(&decl));
+			break;
+		}
+
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, 
+				"Expect valid declaration statement in architecture declarations");
+			break;
+	}
+
+	return decl;
+}
+
+static void parseArchitectureInterior(struct ArchitectureDecl* aDecl){
+	
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+	
+		if(thisIsADeclaration()){
+			struct Declaration decl = parseArchBodyDeclaration();
+
+			if(aDecl->declarations == NULL) {
+				aDecl->declarations = InitBlockArray(sizeof(struct Declaration));
+			}
+
+			WriteBlockArray(aDecl->declarations, (char*)(&decl));
+		} else { //this is a statement
+			struct ConcurrentStatement stmt = parseArchBodyStatement();
+
+			if(aDecl->statements == NULL) {
+				aDecl->statements = InitBlockArray(sizeof(struct ConcurrentStatement));
+			}
+
+			WriteBlockArray(aDecl->statements, (char*)(&stmt));
+		}
+
 		nextToken();	
-
-	} // end while
-
-	return decls;
+	}
 }
 
 static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
@@ -1342,8 +1353,7 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 
 	nextToken();
 	if(!match(TOKEN_RBRACE)){
-		aDecl->declarations = parseArchBodyDeclarations();	
-		aDecl->statements = parseArchBodyStatements();	
+		parseArchitectureInterior(aDecl);
 	}
 
 	consume(TOKEN_RBRACE, "Expect } after architecture body");
