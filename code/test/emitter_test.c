@@ -141,7 +141,7 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 		arch behavioral(ander){ \
 			sig temp stl := '0'; \
 		\
-			proc(a){ \
+			proc(){ \
 				var i int := 1; \
 				while( i < 10 ) { \
 					i := i + 1; \
@@ -534,7 +534,7 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
 	remove("./a.vhdl");
 }
 
-void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
+void TestTranspileProgram_WithSignalAttribute(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
 		ent counter {\n \
@@ -576,7 +576,7 @@ void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
 	remove("./a.vhdl");
 }
 
-void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
+void TestTranspileProgram_WithMediumSizeProgram1(CuTest *tc){
 	char* input = strdup(" \
 		// simple spi master implemented in VENT\n \
 		\n \
@@ -723,7 +723,7 @@ void TestTranspileProgram_WithSensitivityList(CuTest *tc){
 	remove("./a.vhdl");
 }
 
-void TestTranspileProgram_MultiPortDeclaration(CuTest *tc){
+void TestTranspileProgram_WithMultiPortDeclaration(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
 		ent ander {\n \
@@ -786,10 +786,10 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithGenerics);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithComponent);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_MediumSizeProgram1);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSignalAttribute);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMediumSizeProgram1);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSensitivityList);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_MultiPortDeclaration);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultiPortDeclaration);
 
 	return suite;
 }

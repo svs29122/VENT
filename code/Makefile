@@ -55,6 +55,7 @@ help:
 	@echo "  clean vhdl output products: 'make cleanv'"
 	@echo "  "
 	@echo "  check for memory leaks: 'make checkleaks'"
+	@echo "  check syntax of all VHDL files in code dir: 'make checksyntax'"
 	@echo "  display number of lines in source code: 'make linecount'"
 	@echo "  display active items in todo list: 'make todo'"
 	@echo "  update vent vim syntax file (must be run as sudo): 'updateVimSyntax'"

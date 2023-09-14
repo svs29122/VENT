@@ -269,14 +269,15 @@ static void emitProcess(struct AstNode* process){
 	if(curr) {
 		fprintf(vhdlFile, " (%s", curr->value); 
 		curr = curr->next;
-	}
 	
-	while(curr){
-		prev = curr;
-		curr = curr->next;
-		fprintf(vhdlFile, ", %s", prev->value); 
-	} 
-	fprintf(vhdlFile, ") is \n"); 
+		while(curr){
+			prev = curr;
+			curr = curr->next;
+			fprintf(vhdlFile, ", %s", prev->value); 
+		} 
+		fprintf(vhdlFile, ")"); 
+	}
+	fprintf(vhdlFile, " is \n"); 
 
 	indent++;
 }
