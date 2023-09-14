@@ -20,8 +20,8 @@ static void freeUse(struct AstNode* stmt){
 
 static void freeIdentifier(struct AstNode* ident){
 	struct Identifier* id = (struct Identifier*)ident;
-	if(id->value) free(id->value);
 
+	if(id->value) free(id->value);
 	free(id);
 }
 

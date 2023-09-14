@@ -242,10 +242,21 @@ static void emitProcess(struct AstNode* process){
 	struct Process* proc = (struct Process*)process;
 	
 	fprintf(vhdlFile, "\n\tprocess"); 
-	if(proc->sensitivityList){
-		fprintf(vhdlFile, " (%s)", proc->sensitivityList->value); 
+
+	struct Identifier *curr, *prev;
+	curr = proc->sensitivityList;
+
+	if(curr) {
+		fprintf(vhdlFile, " (%s", curr->value); 
+		curr = curr->next;
+	}
+	
+	while(curr){
+		prev = curr;
+		curr = curr->next;
+		fprintf(vhdlFile, ", %s", prev->value); 
 	} 
-	fprintf(vhdlFile, " is \n"); 
+	fprintf(vhdlFile, ") is \n"); 
 
 	indent++;
 }

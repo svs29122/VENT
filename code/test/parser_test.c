@@ -841,7 +841,24 @@ void TestParseProgram_ProcessWithSensitivityList(CuTest *tc){
 	struct Program* prog = ParseProgram(input);
 
 	CuAssertTrue(tc, ThereWasAnError() == false);
-	PrintProgram(prog);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_MultiPortDeclaration(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		ent ander { \
+			a,b,c -> stl; \
+		} \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
 
 	FreeProgram(prog);
 	free(input);
@@ -910,6 +927,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithMapping);
 	SUITE_ADD_TEST(suite, TestParseProgram_SignalWithAttribute);
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSensitivityList);
+	SUITE_ADD_TEST(suite, TestParseProgram_MultiPortDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_DeclarationsAfterStatements);
 
 	return suite;

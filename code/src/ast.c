@@ -381,10 +381,21 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 	op->doCloseOp(&(inst->self));
 }
 
+static void walkIdentifierList(struct Identifier* ident, struct OperationBlock* op){
+	struct Identifier *curr, *prev;
+	curr = ident;
+
+	while(curr){
+		prev = curr;
+		curr = curr->next;
+		op->doDefaultOp(&(prev->self.root));
+	}
+}
+
 static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
 	op->doDefaultOp(&(proc->self));
 	if(proc->sensitivityList){
-		op->doDefaultOp(&(proc->sensitivityList->self.root));
+		walkIdentifierList(proc->sensitivityList, op);
 	}
 	if(proc->declarations){
 		walkDeclarations(proc->declarations, op);

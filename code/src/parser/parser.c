@@ -1194,7 +1194,18 @@ static void parseProcessStatement(struct Process* proc){
 		consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
 		proc->sensitivityList = (struct Identifier*)parseIdentifier();
 	}
-	
+
+	if(peek(TOKEN_COMMA)){
+		struct Identifier* sList = proc->sensitivityList;
+
+		while(peek(TOKEN_COMMA)) {
+			nextToken();
+			consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
+			sList->next = (struct Identifier*)parseIdentifier();
+			sList = sList->next;
+		}
+	}
+
 	consumeNext(TOKEN_RPAREN, "expect ')' after proc sensitivity list");
 	consumeNext(TOKEN_LBRACE, "expect '{' after proc sensitivity list");
 

@@ -684,6 +684,45 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 	free(input);
 	remove("./a.vhdl");
 }
+
+void TestTranspileProgram_WithSensitivityList(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent counter {\n \
+			clk -> stl;\n \
+			arst -> stl;\n \
+		}\n \
+        arch behavioral(counter){\n \
+            sig count int;\n \
+            \n \
+            proc(clk, arst) {\n \
+                if(arst == '0') { \n \
+                    count <= 0;\n \
+                } elsif (clk'UP) {\n \
+                    if(count == 256) {\n \
+                        count <= 0;\n \
+                    } else {\n \
+                        count <= count + 1;\n \
+                    }\n \
+                }\n \
+            }\n \
+            \n \
+        }\n \
+    ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -722,6 +761,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_MediumSizeProgram1);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSensitivityList);
 
 	return suite;
 }
