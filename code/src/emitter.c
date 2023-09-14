@@ -114,8 +114,17 @@ static void emitGenericDeclarationSpecial(struct AstNode* gDecl){
 
 static void emitGenericDeclaration(struct AstNode* gdecl){
 	struct GenericDecl* genericDecl = (struct GenericDecl*) gdecl;
-	fprintf(vhdlFile, "%c%s: ", emitIndent(), genericDecl->name->value);
+	fprintf(vhdlFile, "%c%s", emitIndent(), genericDecl->name->value);
 	
+	struct Identifier *curr, *prev;
+    curr = genericDecl->name->next;
+    while(curr){
+        prev = curr;
+        curr = curr->next;
+		fprintf(vhdlFile, ", %s", prev->value);
+    }   
+	fprintf(vhdlFile, ": ");
+
 	if(genericDecl->defaultValue){
 		eStat.incoming = true;
 		eStat.close = true;
@@ -130,7 +139,18 @@ static void emitPortDeclarationOpen(struct AstNode* pDecl){
 
 static void emitPortDeclaration(struct AstNode* pdecl){
 	struct PortDecl* portDecl = (struct PortDecl*) pdecl;
-	fprintf(vhdlFile, "%c%s: ", emitIndent(), portDecl->name->value);
+	fprintf(vhdlFile, "%c%s", emitIndent(), portDecl->name->value);
+
+	struct Identifier *curr, *prev;
+    curr = portDecl->name->next;
+
+    while(curr){
+        prev = curr;
+        curr = curr->next;
+		fprintf(vhdlFile, ", %s", prev->value);
+    }   
+
+	fprintf(vhdlFile, ": ");
 }
 
 static void emitPortMode(struct AstNode* pmode){
@@ -242,9 +262,21 @@ static void emitProcess(struct AstNode* process){
 	struct Process* proc = (struct Process*)process;
 	
 	fprintf(vhdlFile, "\n\tprocess"); 
-	if(proc->sensitivityList){
-		fprintf(vhdlFile, " (%s)", proc->sensitivityList->value); 
-	} 
+
+	struct Identifier *curr, *prev;
+	curr = proc->sensitivityList;
+
+	if(curr) {
+		fprintf(vhdlFile, " (%s", curr->value); 
+		curr = curr->next;
+	
+		while(curr){
+			prev = curr;
+			curr = curr->next;
+			fprintf(vhdlFile, ", %s", prev->value); 
+		} 
+		fprintf(vhdlFile, ")"); 
+	}
 	fprintf(vhdlFile, " is \n"); 
 
 	indent++;

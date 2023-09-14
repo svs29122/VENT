@@ -734,11 +734,11 @@ void TestParseProgram_ArchWithComponent(CuTest *tc){
 			\n \
 			comp counter {\n \
 				SIZE int;\n \
-      		clk -> stl;\n \
-      		rst -> stl;\n \
-      		upDown -> stl;\n \
-      		Q <- stlv(3 downto 0);\n \
-   		}\n \
+      			clk -> stl;\n \
+      			rst -> stl;\n \
+      			upDown -> stl;\n \
+      			Q <- stlv(3 downto 0);\n \
+   			}\n \
 		}\n \
 		\
 	");
@@ -818,6 +818,76 @@ void TestParseProgram_SignalWithAttribute(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ProcessWithSensitivityList(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(counter){\n \
+			sig count stlv(7 downto 0);\n \
+			\n \
+			proc(clk, arst) {\n \
+				if(arst) { \n \
+					count <= \"00000000\";\n \
+				} elsif (clk'UP) {\n \
+					if(count == 256) {\n \
+						count <= 0;\n \
+					} else {\n \
+						count <= count + 1;\n \
+					}\n \
+				}\n \
+			}\n \
+			\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_MultiPortDeclaration(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all; \
+		ent ander { \
+			a,b,c -> stl; \
+		} \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_DeclarationsAfterStatements(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(an_entity){\n \
+			sig a stl;\n \
+			sig b stl;\n \
+			\n \
+			y <= a and b;\n \
+			\n \
+			sig c stl := '0';\n \
+			c <= a or b;\n \
+			z <= c xor '1';\n \
+		}\n \
+		\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	//PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParse_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -856,6 +926,9 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithComponent);
 	SUITE_ADD_TEST(suite, TestParseProgram_ArchWithMapping);
 	SUITE_ADD_TEST(suite, TestParseProgram_SignalWithAttribute);
+	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSensitivityList);
+	SUITE_ADD_TEST(suite, TestParseProgram_MultiPortDeclaration);
+	SUITE_ADD_TEST(suite, TestParseProgram_DeclarationsAfterStatements);
 
 	return suite;
 }

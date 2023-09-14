@@ -17,13 +17,19 @@ void consume(enum TOKEN_TYPE type, const char* msg){
 	if(!match(type)){
 		error(p->currToken.lineNumber, p->currToken.literal, msg);
 		
-		// if the next token is the one we expect move to it
+		// first check if next token is the one we expect
+		nextToken();
+		if(match(type)) return;
+
+		// if not then try the next token
 		if(peek(type)) {
 			nextToken();
-		} else {
-			while(!peek(TOKEN_RBRACE)  && !peek(TOKEN_SCOLON) && !peek(TOKEN_EOP) && !match(TOKEN_EOP)){
-				nextToken();
-			}
+			return;
+		}
+
+		// else just roll to the end of a statement, block, or progran
+		while(!peek(TOKEN_RBRACE) && !peek(TOKEN_SCOLON) && !peek(TOKEN_EOP) && !match(TOKEN_EOP)){
+			nextToken();
 		}
 	}
 }
@@ -92,13 +98,22 @@ bool thereAreDesignUnits(){
 bool thereAreDeclarations(){
 	bool valid = false;
 
-	valid = 	match(TOKEN_SIG)		|| match(TOKEN_VAR)		||
-				match(TOKEN_TYPE)		|| match(TOKEN_COMP)		|| 
+	valid = 	match(TOKEN_SIG)	|| match(TOKEN_VAR)		||
+				match(TOKEN_TYPE)	|| match(TOKEN_COMP)	|| 
 				match(TOKEN_FILE);
 
 	return valid;
 }
 
+bool thisIsADeclaration(){
+	bool valid = false;
+
+	valid = 	match(TOKEN_SIG)	|| match(TOKEN_VAR)		||
+				match(TOKEN_TYPE)	|| match(TOKEN_COMP)	|| 
+				match(TOKEN_FILE);
+
+	return valid;
+}
 
 bool thisIsAPort(){
 	bool valid = false;

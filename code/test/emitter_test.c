@@ -141,7 +141,7 @@ void TestTranspileProgram_WithProcess(CuTest *tc){
 		arch behavioral(ander){ \
 			sig temp stl := '0'; \
 		\
-			proc(a){ \
+			proc(){ \
 				var i int := 1; \
 				while( i < 10 ) { \
 					i := i + 1; \
@@ -534,7 +534,7 @@ void TestTranspileProgram_WithInstantiation(CuTest *tc){
 	remove("./a.vhdl");
 }
 
-void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
+void TestTranspileProgram_WithSignalAttribute(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
 		ent counter {\n \
@@ -576,7 +576,7 @@ void TestTranspileProgram_SignalWithAttribute(CuTest *tc){
 	remove("./a.vhdl");
 }
 
-void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
+void TestTranspileProgram_WithMediumSizeProgram1(CuTest *tc){
 	char* input = strdup(" \
 		// simple spi master implemented in VENT\n \
 		\n \
@@ -684,6 +684,72 @@ void TestTranspileProgram_MediumSizeProgram1(CuTest *tc){
 	free(input);
 	remove("./a.vhdl");
 }
+
+void TestTranspileProgram_WithSensitivityList(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent counter {\n \
+			clk -> stl;\n \
+			arst -> stl;\n \
+		}\n \
+        arch behavioral(counter){\n \
+            sig count int;\n \
+            \n \
+            proc(clk, arst) {\n \
+                if(arst == '0') { \n \
+                    count <= 0;\n \
+                } elsif (clk'UP) {\n \
+                    if(count == 256) {\n \
+                        count <= 0;\n \
+                    } else {\n \
+                        count <= count + 1;\n \
+                    }\n \
+                }\n \
+            }\n \
+            \n \
+        }\n \
+    ");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
+void TestTranspileProgram_WithMultiPortDeclaration(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		ent ander {\n \
+			a,b,c -> stl;\n \
+			d,e,f int := 0;\n \
+			g, h, i <- stl;\n \
+			x, y <-> stlv(4 downto 0);\n \
+		}\n \
+		arch empty(ander){\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+	//PrintProgram(prog);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -720,8 +786,10 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithGenerics);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithComponent);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithInstantiation);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_SignalWithAttribute);
-	SUITE_ADD_TEST(suite, TestTranspileProgram_MediumSizeProgram1);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSignalAttribute);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMediumSizeProgram1);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSensitivityList);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultiPortDeclaration);
 
 	return suite;
 }

@@ -71,6 +71,7 @@ VIII) Components
 	### DONE ###	3) Generic mapping
 	### DONE ### 	4) emit instance mappings with each port on new line
 	5) Direct entity instantation
+	6) Need to fix instantations where multi port/generics are defined
 
 
 IX) Language features

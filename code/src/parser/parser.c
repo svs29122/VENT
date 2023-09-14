@@ -136,6 +136,8 @@ static void initParser(){
 
 	componentStore = InitBlockArray(sizeof(struct Declaration));
 	enumTypeTable = InitHashTable();
+	
+	resetErrors();
 }
 
 void nextToken(){	
@@ -320,6 +322,28 @@ static struct Expression* parseCall(struct Expression* expr){
 	nextToken();
 
 	return &(cexp->self);
+}
+
+static struct Identifier* parseIdentifierList(){
+	struct Identifier* ident = NULL;
+
+	if(match(TOKEN_IDENTIFIER)){
+		consume(TOKEN_IDENTIFIER, "expect identifier");
+		ident = (struct Identifier*)parseIdentifier();
+	}
+
+	if(peek(TOKEN_COMMA)){
+		struct Identifier* iList = ident;
+
+		while(peek(TOKEN_COMMA)) {
+			nextToken();
+			consumeNext(TOKEN_IDENTIFIER, "expect identifer after comma in identifier list");
+			iList->next = (struct Identifier*)parseIdentifier();
+			iList = iList->next;
+		}
+	}
+
+	return ident;
 }
 
 static struct Label* parseLabel(){
@@ -509,8 +533,11 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 	uint16_t posInComponent = 1;
 
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		struct Identifier* names = parseIdentifierList();
+
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.name = names;
 			port.position = posInComponent++;
 
 			if(cDecl->ports == NULL) {
@@ -520,6 +547,7 @@ static void parseComponentInterior(struct ComponentDecl *cDecl){
 			WriteBlockArray(cDecl->ports, (char*)(&port));
 		} else { //this is a generic
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.name = names;
 			generic.position = posInComponent++;
 
 			if(cDecl->generics == NULL) {
@@ -1188,11 +1216,9 @@ static void parseProcessStatement(struct Process* proc){
 	consume(TOKEN_PROC, "expect proc keyword at start of process");
 	consumeNext(TOKEN_LPAREN, "expect '(' after proc keyword");
 	
-	if(peek(TOKEN_IDENTIFIER)){
-		consumeNext(TOKEN_IDENTIFIER, "expect identifer in sensitivity list");
-		proc->sensitivityList = (struct Identifier*)parseIdentifier();
-	}
-	
+	if(peek(TOKEN_IDENTIFIER)) nextToken();
+	proc->sensitivityList = parseIdentifierList();
+
 	consumeNext(TOKEN_RPAREN, "expect ')' after proc sensitivity list");
 	consumeNext(TOKEN_LBRACE, "expect '{' after proc sensitivity list");
 
@@ -1205,96 +1231,107 @@ static void parseProcessStatement(struct Process* proc){
 	consume(TOKEN_RBRACE, "expect '}' at end of process statement");
 }
 
-static Dba* parseArchBodyStatements(){
-	Dba* stmts = InitBlockArray(sizeof(struct ConcurrentStatement));
-	
-	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+static struct ConcurrentStatement parseArchBodyStatement(){
 		
-		struct ConcurrentStatement conStmt = {0};
-		conStmt.label = parseLabel();
+	struct ConcurrentStatement conStmt = {0};
+	conStmt.label = parseLabel();
 		
-		switch(p->currToken.type){
-			case TOKEN_PROC: {
-				conStmt.type = PROCESS;
-				parseProcessStatement(&(conStmt.as.process));
-				break;
-			}
-	
-			case TOKEN_IDENTIFIER: { 
-				//some concurrent statements begin with identifiers
-				switch(p->peekToken.type){
-					case TOKEN_MAP: {
-						conStmt.type = INSTANTIATION;
-						parseInstantiation(&(conStmt.as.instantiation));
-						break;
-					}
-
-					case TOKEN_LESS_EQUAL: {
-						conStmt.type = SIGNAL_ASSIGNMENT;
-						parseSignalAssignment(&(conStmt.as.signalAssignment));
-						break;
-					}
-					
-					default:
-						error(p->currToken.lineNumber, p->currToken.literal, 
-							"Expect valid concurrent statement in architecture body");
-						break;
-				}
-				break;
-			}
-	
-			default:
-				error(p->currToken.lineNumber, p->currToken.literal, 
-					"Expect valid concurrent statement in architecture body");
-				break;
+	switch(p->currToken.type){
+		case TOKEN_PROC: {
+			conStmt.type = PROCESS;
+			parseProcessStatement(&(conStmt.as.process));
+			break;
 		}
+	
+		case TOKEN_IDENTIFIER: { 
+			//some concurrent statements begin with identifiers
+			switch(p->peekToken.type){
+				case TOKEN_MAP: {
+					conStmt.type = INSTANTIATION;
+					parseInstantiation(&(conStmt.as.instantiation));
+					break;
+				}
 
-		WriteBlockArray(stmts, (char*)(&conStmt));
-		nextToken();	
+				case TOKEN_LESS_EQUAL: {
+					conStmt.type = SIGNAL_ASSIGNMENT;
+					parseSignalAssignment(&(conStmt.as.signalAssignment));
+					break;
+				}
+					
+				default:
+					error(p->currToken.lineNumber, p->currToken.literal, 
+						"Expect valid concurrent statement in architecture body");
+					break;
+			}
+			break;
+		}
+	
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, 
+				"Expect valid concurrent statement in architecture body");
+			break;
 	}
 
-	return stmts;
+	return conStmt;
 }
 
-static Dba* parseArchBodyDeclarations(){
-	Dba* decls = InitBlockArray(sizeof(struct Declaration));
-
-	while(thereAreDeclarations()){
+static struct Declaration parseArchBodyDeclaration(){
 		
-		struct Declaration decl = {0};
+	struct Declaration decl = {0};
 
-		switch(p->currToken.type){
-			case TOKEN_TYPE: {
-				decl.type = TYPE_DECLARATION;
-				parseTypeDeclaration(&(decl.as.typeDeclaration));
-				break;
-			}
-
-			case TOKEN_SIG: {
-				decl.type = SIGNAL_DECLARATION;
-				parseSignalDeclaration(&(decl.as.signalDeclaration));
-				break;
-			}
-
-			case TOKEN_COMP: {
-				decl.type = COMPONENT_DECLARATION;
-				parseComponentDeclaration(&(decl.as.componentDeclaration));
-				WriteBlockArray(componentStore, (char*)(&decl));
-				break;
-			}
-
-			default:
-				error(p->currToken.lineNumber, p->currToken.literal, 
-					"Expect valid declaration statement in architecture declarations");
-				break;
+	switch(p->currToken.type){
+		case TOKEN_TYPE: {
+			decl.type = TYPE_DECLARATION;
+			parseTypeDeclaration(&(decl.as.typeDeclaration));
+			break;
 		}
 
-		WriteBlockArray(decls, (char*)(&decl));
+		case TOKEN_SIG: {
+			decl.type = SIGNAL_DECLARATION;
+			parseSignalDeclaration(&(decl.as.signalDeclaration));
+			break;
+		}
+
+		case TOKEN_COMP: {
+			decl.type = COMPONENT_DECLARATION;
+			parseComponentDeclaration(&(decl.as.componentDeclaration));
+			WriteBlockArray(componentStore, (char*)(&decl));
+			break;
+		}
+
+		default:
+			error(p->currToken.lineNumber, p->currToken.literal, 
+				"Expect valid declaration statement in architecture declarations");
+			break;
+	}
+
+	return decl;
+}
+
+static void parseArchitectureInterior(struct ArchitectureDecl* aDecl){
+	
+	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+	
+		if(thisIsADeclaration()){
+			struct Declaration decl = parseArchBodyDeclaration();
+
+			if(aDecl->declarations == NULL) {
+				aDecl->declarations = InitBlockArray(sizeof(struct Declaration));
+			}
+
+			WriteBlockArray(aDecl->declarations, (char*)(&decl));
+		} else { //this is a statement
+			struct ConcurrentStatement stmt = parseArchBodyStatement();
+
+			if(aDecl->statements == NULL) {
+				aDecl->statements = InitBlockArray(sizeof(struct ConcurrentStatement));
+			}
+
+			WriteBlockArray(aDecl->statements, (char*)(&stmt));
+		}
+
 		nextToken();	
-
-	} // end while
-
-	return decls;
+	}
 }
 
 static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
@@ -1316,8 +1353,7 @@ static void parseArchitectureDecl(struct ArchitectureDecl* aDecl){
 
 	nextToken();
 	if(!match(TOKEN_RBRACE)){
-		aDecl->declarations = parseArchBodyDeclarations();	
-		aDecl->statements = parseArchBodyStatements();	
+		parseArchitectureInterior(aDecl);
 	}
 
 	consume(TOKEN_RBRACE, "Expect } after architecture body");
@@ -1328,9 +1364,6 @@ static struct GenericDecl parseGenericDecl(){
 	struct GenericDecl generic = {0};		
 	generic.self.type = AST_GENERIC;
 
-	consume(TOKEN_IDENTIFIER, "Expect identifier at start of generic declaration");
-	generic.name = (struct Identifier*)parseIdentifier();
-		
 	nextToken();
 	if(!validDataType()){
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid data type");
@@ -1353,9 +1386,6 @@ static struct PortDecl parsePortDecl(){
 	struct PortDecl port = {0};		
 	port.self.type = AST_PORT;
 
-	consume(TOKEN_IDENTIFIER, "Expect identifier at start of port declaration");
-	port.name = (struct Identifier*)parseIdentifier();
-		
 	nextToken();
 	if(!match(TOKEN_INPUT) && !match(TOKEN_OUTPUT) && !match(TOKEN_INOUT)){
 		error(p->currToken.lineNumber, p->currToken.literal, "Expect valid port mode");
@@ -1379,8 +1409,11 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 	uint16_t posInEntity = 1;
 	
 	while(!match(TOKEN_RBRACE) && !match(TOKEN_EOP)){
+		struct Identifier* names = parseIdentifierList();
+
 		if(thisIsAPort()) {
 			struct PortDecl port = parsePortDecl();	
+			port.name = names;
 			port.position = posInEntity++;
 
 			if(eDecl->ports == NULL) {
@@ -1390,6 +1423,7 @@ static void parseEntityInterior(struct EntityDecl *eDecl){
 			WriteBlockArray(eDecl->ports, (char*)(&port));
 		} else {
 			struct GenericDecl generic = parseGenericDecl();	
+			generic.name = names;
 			generic.position = posInEntity++;
 
 			if(eDecl->generics == NULL) {
@@ -1481,16 +1515,14 @@ struct Program* ParseProgram(char* ventProgram){
 	struct Program* prog = calloc(1, sizeof(struct Program));
 	prog->self.type = AST_PROGRAM;
 
-	while(!endOfProgram()){
-		if(thereAreDesignUnits()){
-			struct DesignUnit unit = parseDesignUnit();
+	while(!endOfProgram() && thereAreDesignUnits()){
+		struct DesignUnit unit = parseDesignUnit();
 			
-			if(prog->units == NULL){
-				prog->units = InitBlockArray(sizeof(struct DesignUnit));	
-			}
-			WriteBlockArray(prog->units, (char*)(&unit));
-			nextToken();
+		if(prog->units == NULL){
+			prog->units = InitBlockArray(sizeof(struct DesignUnit));	
 		}
+		WriteBlockArray(prog->units, (char*)(&unit));
+		nextToken();
 	}
 	
 	return prog;

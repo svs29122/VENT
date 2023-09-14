@@ -381,10 +381,21 @@ static void walkInstantiation(struct Instantiation* inst, struct OperationBlock*
 	op->doCloseOp(&(inst->self));
 }
 
+static void walkIdentifierList(struct Identifier* ident, struct OperationBlock* op){
+	struct Identifier *curr, *prev;
+	curr = ident;
+
+	while(curr){
+		prev = curr;
+		curr = curr->next;
+		op->doDefaultOp(&(prev->self.root));
+	}
+}
+
 static void walkProcessStatement(struct Process* proc, struct OperationBlock* op){
 	op->doDefaultOp(&(proc->self));
 	if(proc->sensitivityList){
-		op->doDefaultOp(&(proc->sensitivityList->self.root));
+		walkIdentifierList(proc->sensitivityList, op);
 	}
 	if(proc->declarations){
 		walkDeclarations(proc->declarations, op);
@@ -456,7 +467,7 @@ static void walkGenerics(Dba* generics, struct OperationBlock* op){
 
 		op->doDefaultOp(&(genericDecl->self));
 		if(genericDecl->name){
-			op->doDefaultOp(&(genericDecl->name->self.root));
+			walkIdentifierList(genericDecl->name, op);
 		}
 		if(genericDecl->dtype){
 			op->doDefaultOp(&(genericDecl->dtype->self));
@@ -486,7 +497,7 @@ static void walkPorts(Dba* ports, struct OperationBlock* op){
 	
 		op->doDefaultOp(&(portDecl->self));
 		if(portDecl->name){
-			op->doDefaultOp(&(portDecl->name->self.root));
+			walkIdentifierList(portDecl->name, op);
 		}
 		if(portDecl->pmode){
 			op->doDefaultOp(&(portDecl->pmode->self));

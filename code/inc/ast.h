@@ -142,9 +142,7 @@ struct NumExpr {
 struct Identifier {
 	struct Expression self;
 	char* value;
-	//TODO: perhaps identifiers can have pointers to other identifiers?
-	//this would be an easy way to implement comma separated lists of 
-	//identifiers e.g. in portDecls and proc sensitivity lists
+	struct Identifier* next;
 };
 
 struct Range {
