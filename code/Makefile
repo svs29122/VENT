@@ -22,10 +22,10 @@ MAIN=$(ODIR)/main.o
 
 #this is the VENT Transpiler executable
 tvt: $(OBJ) $(POBJ) $(MAIN)
-	$(CC) -o $@ $> $^ $(CLFAGS)
+	$(CC) -o $@ $^ $(CLFAGS)
 
 tvt_d: $(OBJ) $(POBJ) $(MAIN)
-	$(CC) -o $@ $> $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 $(ODIR):
 	mkdir -p $@
@@ -114,7 +114,7 @@ linecountAll:
 	wc -l inc/*.* src/*.* src/parser/*.* test/*_test*.c main.c
 
 updateVimSyntax:
-	cp ../docs/vent.vim /usr/share/vim/vim81/syntax/
+	cp ../docs/vent.vim /usr/share/vim/vim82/syntax/
 
 todo:
 	@clear && grep -v '###' ../docs/todo.txt | grep -v -e ^[[:space:]]*\$

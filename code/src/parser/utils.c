@@ -55,9 +55,9 @@ void destroyToken(struct Token thisToken){
 bool validDataType(){
 	bool valid = false; 
 	
-	valid = 	match(TOKEN_STL) 		||	match(TOKEN_STLV) 	||
-				match(TOKEN_INTEGER) || match(TOKEN_STRING) 	||
-				match(TOKEN_BIT) 		|| match(TOKEN_BITV)		||
+	valid = 	match(TOKEN_STL) 	||	match(TOKEN_STLV) 	||
+				match(TOKEN_INTEGER)|| match(TOKEN_STRING) 	||
+				match(TOKEN_BIT) 	|| match(TOKEN_BITV)	||
 				match(TOKEN_SIGNED)	|| match(TOKEN_UNSIGNED);
 
 	return valid;

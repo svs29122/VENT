@@ -80,10 +80,16 @@ static void initializeKeywordMap(){
 	SetInHashTable(keywordMap, "null", TOKEN_NULL);
 	SetInHashTable(keywordMap, "or", TOKEN_OR);
 	SetInHashTable(keywordMap, "proc", TOKEN_PROC);
+	SetInHashTable(keywordMap, "rem", TOKEN_REM);
 	SetInHashTable(keywordMap, "report", TOKEN_REPORT);
+	SetInHashTable(keywordMap, "rol", TOKEN_ROL);
+	SetInHashTable(keywordMap, "ror", TOKEN_ROR);
 	SetInHashTable(keywordMap, "severity", TOKEN_SEVERITY);
 	SetInHashTable(keywordMap, "signed", TOKEN_SIGNED);
 	SetInHashTable(keywordMap, "sig", TOKEN_SIG);
+	SetInHashTable(keywordMap, "sll", TOKEN_SLL);
+	SetInHashTable(keywordMap, "sra", TOKEN_SRA);
+	SetInHashTable(keywordMap, "srl", TOKEN_SRL);
 	SetInHashTable(keywordMap, "stlv", TOKEN_STLV);
 	SetInHashTable(keywordMap, "stl", TOKEN_STL);
 	SetInHashTable(keywordMap, "string", TOKEN_STRING);
