@@ -71,7 +71,7 @@ bool SetInHashTable(struct DynamicHashTable* hst, char* key, uint64_t val);
       key - string representing entry in table
 
    Outputs:
-		val - pointer to output paramter holding value corersponding to key
+		val - pointer to output parameter holding value corresponding to key (can be NULL!)
 
    Returns:
 		true if key was located in table

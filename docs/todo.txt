@@ -1,8 +1,7 @@
 This is a TODO list for VENT work:
 -
 ** High Priority **
-	1) remove duplicate library production in emitter
-	2) update call expression to allow multiple arguments
+	1) update call expression to allow multiple arguments
 __________________________________________________________________________________________________
 -
 -
@@ -33,6 +32,7 @@ III) Parser ToDo
 	5) allow declarations and statements to be mixed in source i.e. some declarations can come after statements
 		- there should be rules here e.g. any declaration must come before it is used in a statement
 	6) still need to add support for multiple signals in proc sensitivity list
+	7) need to be able to use call Expression outside of assignment i.e. just call it directly 
 	
 
 IV) Transpiler ToDo
@@ -44,6 +44,7 @@ V) Refactor ToDo
 ### DONE ###  	1) Go through Valgrind output and fix memory leaks
 ### DONE ###  	2) Go add static keyword to any variables that should be static
 ### DONE ###	3) Wondering about maybe passing the ventsrc char* to ParseProgram and having it do lexer/parser initialization instead of requiring a caller to do all of that work upfront
+### DONE ###    4) remove duplicate library production in emitter
 		
 
 VI) Overall ToDo

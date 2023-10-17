@@ -888,7 +888,29 @@ void TestParseProgram_DeclarationsAfterStatements(CuTest *tc){
 	free(input);
 }
 
-void TestParse_(CuTest *tc){
+void TestParseProgram_CallExpressionsWithManyArguments(CuTest *tc){
+	char* input = strdup(" \
+		arch behavioral(an_ent){\n \
+            proc(){\n \
+                var temp int := 0;\n \
+                temp := functionCall(a, b, c, d);\n \
+                temp := anotherCall(afun(a, b));\n \
+                temp := anotherCall(afun(a, b), bfun(c, d), c, d);\n \
+            }\n \
+        }\n \
+        \n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	CuAssertTrue(tc, ThereWasAnError() == false);
+	PrintProgram(prog);
+
+	FreeProgram(prog);
+	free(input);
+}
+
+void TestParseProgram_(CuTest *tc){
 	char* input = strdup(" \
 		\
 	");
@@ -929,6 +951,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_ProcessWithSensitivityList);
 	SUITE_ADD_TEST(suite, TestParseProgram_MultiPortDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_DeclarationsAfterStatements);
+	SUITE_ADD_TEST(suite, TestParseProgram_CallExpressionsWithManyArguments);
 
 	return suite;
 }

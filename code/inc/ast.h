@@ -96,7 +96,7 @@ struct Expression {
 struct CallExpr {
 	struct Expression self;
 	struct Expression* function;
-	struct Expression* parameters; 
+	struct ExpressionNode* arguments; 
 };
 
 struct AttributeExpr {
