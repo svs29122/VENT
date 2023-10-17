@@ -1466,8 +1466,18 @@ static void parseUseStatement(struct UseStatement* stmt){
 	consumeNext(TOKEN_IDENTIFIER, "Expect use path after use keyword");
 	
 	int size = strlen(p->currToken.literal) + 1;
-	stmt->value = malloc(sizeof(char) * size);
+	stmt->value = calloc(size, sizeof(char));
 	memcpy(stmt->value, p->currToken.literal, size);
+    
+    // extract library (lop off '.' and add '\0')
+    char* libEnd = stmt->value;
+    int libLen = 1;
+    while(*libEnd != '.' && libLen <= size){
+        libLen++; libEnd++;
+    }
+	stmt->library = calloc(libLen, sizeof(char));
+	memcpy(stmt->library, stmt->value, libLen-1);
+    stmt->library[libLen-1] = '\0';
 	
 	consumeNext(TOKEN_SCOLON, "Expect ; at end of use statment");
 }

@@ -750,6 +750,42 @@ void TestTranspileProgram_WithMultiPortDeclaration(CuTest *tc){
 	remove("./a.vhdl");
 }
 
+void TestTranspileProgram_WithMultipleUseStatements(CuTest *tc){
+	char* input = strdup(" \
+		use ieee.std_logic_1164.all;\n \
+		use ieee.numeric_std.all;\n \
+		ent space {\n \
+		}\n \
+		arch empty(space){\n \
+		}\n \
+		use ieee.std_logic_1164.all;\n \
+		use ieee.numeric_std.all;\n \
+		use ieee.math_real.all;\n \
+		ent another_space {\n \
+		}\n \
+		arch empty(another_space){\n \
+		}\n \
+		use ieee.math_real.all;\n \
+        use ieee.math_complex.all;\n \
+		ent final_space {\n \
+		}\n \
+		arch empty(final_space){\n \
+		}\n \
+	");
+
+	struct Program* prog = ParseProgram(input);
+
+	TranspileProgram(prog, NULL);
+
+#ifdef CHECK_VHDL_SYNTAX
+	checkForSyntaxErrors(tc);
+#endif
+
+	FreeProgram(prog);
+	free(input);
+	remove("./a.vhdl");
+}
+
 void TestTranspileProgram_(CuTest *tc){
 	char* input = strdup(" \
 		use ieee.std_logic_1164.all;\n \
@@ -790,6 +826,7 @@ CuSuite* TranspileTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMediumSizeProgram1);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithSensitivityList);
 	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultiPortDeclaration);
+	SUITE_ADD_TEST(suite, TestTranspileProgram_WithMultipleUseStatements);
 
 	return suite;
 }
