@@ -504,6 +504,7 @@ struct UseStatement {
 	struct AstNode self;
 
 	char* value;
+    char* library;
 };
 
 struct DesignUnit{

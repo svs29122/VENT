@@ -1,5 +1,11 @@
 This is a TODO list for VENT work:
-
+-
+** High Priority **
+	1) remove duplicate library production in emitter
+	2) update call expression to allow multiple arguments
+__________________________________________________________________________________________________
+-
+-
 I) Lexer ToDo
 	1) Build out robust handling for Illegal tokens
 

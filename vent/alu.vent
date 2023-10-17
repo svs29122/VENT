@@ -1,0 +1,59 @@
+
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+ent alu {
+	WORD_SIZE int := 16;
+	ldata -> unsigned(WORD_SIZE-1 downto 0);
+	rdata -> unsigned(WORD_SIZE-1 downto 0);
+	control -> stlv(3 downto 0);
+	nzcv -> stlv(3 downto 0);
+	odata <- unsigned(WORD-SIZE-1 downto 0);
+}
+
+arch behavioral (alu) {
+
+	sig idata unsigned(WORD_SIZE-1 downto 0);
+
+	//perform operation based on control
+	proc (control) {
+		var temp unsigned(WORD_SIZE-1 downto 0);
+		switch(control) {
+			case "0000":
+				idata <= ldata;
+			case "0001":
+				idata <= not ldata;
+			case "0010":
+				idata <= ldata and rdata;
+			case "0011":
+				temp := ldata and rdata;
+				idata <= to_signed(temp); 
+			case "0100":
+				idata <= ldata + rdata;
+			case "0101":
+				idata <= ldata - rdata;
+			case "0110":
+				idata <= ldata * rdata;
+			case "0111":
+				idata <= ldata / rdata;
+			case "1000":
+				idata <= ldata rem rdata;
+			case "1001":
+				idata <= ldata or rdata;
+			case "1010":
+				idata <= ldata xor rdata;
+			case "1011":
+				idata <= shift_left(ldata, to_integer(rdata));
+			case "1100":
+				idata <= shift_right(ldata, to_integer(rdata));
+			case "1101":
+				idata <= shift_left(ldata, to_integer(rdata));
+			case "1110":
+				idata <= rotate_left(ldata, to_integer(rdata));
+			case "1111":
+				idata <= rotate_right(ldata, to_integer(rdata));
+		}
+	}
+
+	odata <= idata;
+}

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <dht.h>
 #include <emitter.h>
 
 static FILE* vhdlFile;
@@ -25,30 +26,30 @@ static char emitIndent(){
 	return '\t';
 }
 
+struct DynamicHashTable* libraryLookup = NULL;
+static void clearLibraryLookup(){
+    FreeHashTable(libraryLookup);
+    libraryLookup = NULL;
+}
+
 //forward declarations
 static void emitRange(struct AstNode* rstmt);
 static void emitSubExpression(struct Expression* expr);
 
 static void emitUseStatement(struct AstNode* stmt){
 	struct UseStatement* useStmt = (struct UseStatement*)stmt;
-	
-	int libCnt = -1;
-	char currChar = 0;
-	while(currChar != '.'){
-		libCnt++;
-		currChar = useStmt->value[libCnt];
-	}
 
-	//TODO: Need to fure out what to do when multiple use statements for same library	
-	// consider storing the library in the UseStatment AST node! 
-	char* library = malloc(sizeof(char) * libCnt + 1);
-	memcpy(library, useStmt->value, libCnt);
-	library[libCnt] = '\0';
-	fprintf(vhdlFile, "library %s;\n", library);
+    if(libraryLookup == NULL){
+        libraryLookup = InitHashTable();
+    }  
 	
+    if(!GetInHashTable(libraryLookup, useStmt->library, NULL)){
+	    fprintf(vhdlFile, "library %s;\n", useStmt->library);
+        SetInHashTable(libraryLookup, useStmt->library, 1);
+    }
+    
+
 	fprintf(vhdlFile, "use %s;\n", useStmt->value);
-	
-	free(library);
 }
 
 static void emitEntityDeclaration(struct AstNode* edecl){
@@ -58,6 +59,8 @@ static void emitEntityDeclaration(struct AstNode* edecl){
 
 	fprintf(vhdlFile, "\nentity %s is\n", entIdent);
 	indent++;
+
+    clearLibraryLookup();
 }
 
 static void emitEntityDeclarationClose(struct AstNode* edecl){
