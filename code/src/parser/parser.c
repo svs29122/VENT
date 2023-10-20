@@ -313,12 +313,27 @@ static struct Expression* parseCall(struct Expression* expr){
 
 	consume(TOKEN_LPAREN, "Expect '(' after function in call expression");
 
-	enum Precedence precedence = getRule(p->currToken.type)->precedence;
 	nextToken();
+	enum Precedence precedence = getRule(p->currToken.type)->precedence;
 	
-	cexp->parameters = parseExpression(precedence);
+    if(!match(TOKEN_RPAREN)){
+	    struct ExpressionNode* argList = calloc(1, sizeof(struct ExpressionNode));
+        struct ExpressionNode* argCurr = argList;
 
-	consume(TOKEN_RPAREN, "Expect ')' after paremeter in call expression");
+        argCurr->expression = parseExpression(precedence);
+
+        while(match(TOKEN_COMMA)){
+            nextToken();
+            argCurr->next = calloc(1, sizeof(struct ExpressionNode));
+            argCurr = argCurr->next;
+
+            argCurr->expression = parseExpression(precedence);
+        }
+            
+        cexp->arguments = argList; 
+    }
+
+	consume(TOKEN_RPAREN, "Expect ')' after parameter in call expression");
 	nextToken();
 
 	return &(cexp->self);

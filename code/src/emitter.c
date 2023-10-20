@@ -644,9 +644,14 @@ static void emitSubExpression(struct Expression* expr){
 		case CALL_EXPR:{
          struct CallExpr* cexp = (struct CallExpr*) expr;
          emitSubExpression(cexp->function);
-			fprintf(vhdlFile, "(");
-         emitSubExpression(cexp->parameters);
-			fprintf(vhdlFile, ")");
+		 fprintf(vhdlFile, "(");
+         struct ExpressionNode* e = cexp->arguments;
+         while(e) {
+            emitSubExpression(e->expression);
+		    if (e->next != NULL) fprintf(vhdlFile, ", ");
+            e = e->next;
+         }
+		 fprintf(vhdlFile, ")");
          break;
       }   
 

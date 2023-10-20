@@ -6,6 +6,7 @@
 #include <ast.h>
 
 static void printRangeInDataType(struct AstNode* rng);
+static void printSubExpression(struct Expression* expr);
 
 void PrintUsage(void){
 	printf("Usage:\n"
@@ -206,6 +207,14 @@ static void printAssignmentOp(struct AstNode* vAssign){
 	printf("\e[0;35m""%cOperator:   \'%s\'\r\n", shift(), (char*)op);
 }
 
+static void printExpressionList(struct ExpressionNode* expr){
+    while(expr){
+		printSubExpression(expr->expression);
+        expr = expr->next;
+        if(expr != NULL) printf(", ");
+    }   
+}
+
 static void printSubExpression(struct Expression* expr){
 	enum ExpressionType type = expr->type;
 
@@ -256,7 +265,7 @@ static void printSubExpression(struct Expression* expr){
 			struct CallExpr* cexp = (struct CallExpr*) expr;
 			printSubExpression(cexp->function);
 			printf("(");
-			printSubExpression(cexp->parameters);
+			printExpressionList(cexp->arguments);
 			printf(")");
 			break;
 		}
