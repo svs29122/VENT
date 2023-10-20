@@ -5,7 +5,7 @@
 #include "internal_parser.h"
 
 static void freeRange(struct AstNode* rng);
-static void freeExpressionList(struct ExpressionNode* head);
+static void freeExpressionList(struct ExpressionNode* head, bool freeInnerExpression);
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
@@ -121,7 +121,7 @@ void freeExpression(struct Expression* expr){
       case CALL_EXPR:{
          struct CallExpr* cexp = (struct CallExpr*) expr;
          freeExpression(cexp->function);
-         freeExpressionList(cexp->arguments);
+         freeExpressionList(cexp->arguments, true);
 		 free(cexp);
          break;
       }
@@ -156,7 +156,7 @@ static void freeRange(struct AstNode* rng){
 	free(range);
 }
 
-static void freeExpressionList(struct ExpressionNode* head){
+static void freeExpressionList(struct ExpressionNode* head, bool freeInnerExpression){
 
 	struct ExpressionNode *curr, *prev;
 	curr = head;
@@ -164,7 +164,7 @@ static void freeExpressionList(struct ExpressionNode* head){
 	while(curr){
 		prev = curr;
 		curr = curr->next;
-        if(prev->expression) freeExpression(prev->expression);
+        if(freeInnerExpression) freeExpression(prev->expression);
 		free(prev);
 	}
 }
@@ -184,18 +184,21 @@ static void freeOpen(struct AstNode* node){
 
 static void freeClose(struct AstNode* node){
 
+    // leave the expressions in these nodes alone as they have already been freed
+    bool butLeaveExpression = false;
+
 	switch(node->type){
 
 		case AST_INSTANCE: {
 			struct Instantiation* instance = (struct Instantiation*)node;
-			freeExpressionList(instance->portMap);
-			freeExpressionList(instance->genericMap);
+			freeExpressionList(instance->portMap, butLeaveExpression);
+			freeExpressionList(instance->genericMap, butLeaveExpression);
 			break;
 		}
 
 		case AST_TDECL: {
 			struct TypeDecl* typeDecl = (struct TypeDecl*)node;
-			freeExpressionList(typeDecl->enumList);
+			freeExpressionList(typeDecl->enumList, butLeaveExpression);
 			break;
 		}
 
