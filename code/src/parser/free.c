@@ -5,6 +5,7 @@
 #include "internal_parser.h"
 
 static void freeRange(struct AstNode* rng);
+static void freeExpressionList(struct ExpressionNode* head);
 
 static void freeProgram(struct AstNode* prog){
 	struct Program* pg = (struct Program*)prog;
@@ -16,6 +17,7 @@ static void freeProgram(struct AstNode* prog){
 static void freeUse(struct AstNode* stmt){
 	struct UseStatement* st = (struct UseStatement*)stmt;
 	if(st->value) free(st->value);
+	if(st->library) free(st->library);
 }
 
 static void freeIdentifier(struct AstNode* ident){
@@ -119,8 +121,8 @@ void freeExpression(struct Expression* expr){
       case CALL_EXPR:{
          struct CallExpr* cexp = (struct CallExpr*) expr;
          freeExpression(cexp->function);
-         freeExpression(cexp->parameters);
-			free(cexp);
+         freeExpressionList(cexp->arguments);
+		 free(cexp);
          break;
       }
 
@@ -162,6 +164,7 @@ static void freeExpressionList(struct ExpressionNode* head){
 	while(curr){
 		prev = curr;
 		curr = curr->next;
+        if(prev->expression) freeExpression(prev->expression);
 		free(prev);
 	}
 }

@@ -645,7 +645,7 @@ static void emitSubExpression(struct Expression* expr){
          struct CallExpr* cexp = (struct CallExpr*) expr;
          emitSubExpression(cexp->function);
 			fprintf(vhdlFile, "(");
-         emitSubExpression(cexp->parameters);
+         emitSubExpression(cexp->arguments->expression);
 			fprintf(vhdlFile, ")");
          break;
       }   
