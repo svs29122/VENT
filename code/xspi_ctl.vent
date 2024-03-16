@@ -17,6 +17,15 @@ ent xspi_ctl {
 
 arch core(xspi_ctl) {
 
+    type StateType {
+        IDLE,
+        P0,
+        P1,
+    };
+    
+    signal state_reg : StateType;
+    signal state_next: StateType;
+
     sig tmp stl;
     sig tmp2 stlv(3 downto 0);
 }

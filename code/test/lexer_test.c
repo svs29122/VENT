@@ -171,11 +171,11 @@ void TestNextToken_Char (CuTest *tc){
 }
 
 void TestNextToken_BitString (CuTest *tc){
-	char* input = strdup("X\"1AFF\"");
+	char* input = strdup("X\"0000\"");
 	InitLexer(input);
 
 	enum TOKEN_TYPE expToken = TOKEN_BSTRINGLIT;
-	char* expLiteral = "X\"1AFF\"";
+	char* expLiteral = "X\"0000\"";
 	
 	struct Token nt = NextToken();
 

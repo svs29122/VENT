@@ -1,0 +1,60 @@
+
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+
+ent spi {
+    clk, reset -> stl;
+    din -> stlv(7 downto 0);
+    dvsr -> stlv(15 downto 0);
+    start -> stl;
+    cpol, cph -> stl;
+    dout <- stlv(7 downto 0);
+    spi_done_tick <- stl;
+    read <- stl;
+    sclk <- stl;
+    miso -> stl;
+    mosi <- stl;
+}
+
+arch core(spi) {
+
+    type statetype {idle, p0, p1}; 
+    sig state_reg  statetype;
+    sig state_next statetype;
+
+    sig p_clk stl;
+
+    sig c_reg unsigned(15 downto 0);
+    sig c_next unsigned(15 downto 0);
+
+    sig spi_clk_reg stl;
+    sig spi_clk_next stl;
+
+    sig n_reg unsigned(2 downto 0);
+    sig n_next unsigned(2 downto 0);
+    
+    sig si_reg stlv(7 downto 0);
+    sig si_next stlv(7 downto 0);
+    sig so_reg stlv(7 downto 0);
+    sig so_next stlv(7 downto 0);
+
+    /* register updates*/
+    proc(clk, reset) {
+        if(reset == '1') {
+            state_reg <= idle;
+            si_reg <= X"00"; 
+            so_reg <= X"00";
+            n_reg <= X"00";
+            c_reg <= X"00";
+            spi_clk_reg <= '0';
+        } elsif (clk'UP) {
+            state_reg <= state_next;
+            si_reg <= si_next;
+            so_reg <= so_next;
+            n_reg <= n_next;
+            c_reg <= c_next;
+            spi_clk_reg <= spi_clk_next;
+        }   
+    }
+}

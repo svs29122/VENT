@@ -37,6 +37,7 @@ static struct ParseRule rules[] = {
    [TOKEN_CHARLIT]      = {parseCharLiteral     , NULL            , LOWEST_PREC},
    [TOKEN_STRINGLIT]    = {parseStringLiteral   , NULL            , LOWEST_PREC},
    [TOKEN_NUMBERLIT]    = {parseNumericLiteral  , NULL            , LOWEST_PREC},
+   [TOKEN_BSTRINGLIT] = {parseNumericLiteral  , NULL            , LOWEST_PREC},
    [TOKEN_AND]          = {NULL                 , parseBinary     , LOGICAL_PREC},
    [TOKEN_OR]           = {NULL                 , parseBinary     , LOGICAL_PREC},
    [TOKEN_XOR]          = {NULL                 , parseBinary     , LOGICAL_PREC},

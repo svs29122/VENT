@@ -910,6 +910,24 @@ void TestParseProgram_CallExpressionsWithManyArguments(CuTest *tc){
 	free(input);
 }
 
+void TestParseProgram_ArchitectureWithSignalAssignBitStringLiteral(CuTest *tc){
+	char* input = strdup("arch behavioral(ander) { sig temp stlv(7 downto 0); temp <= X\"0000\";}");
+
+	struct Program* prog = ParseProgram(input);
+	CuAssertPtrNotNullMsg(tc,"ParseProgram() returned NULL!", prog);	
+
+	CuAssertStrEquals_Msg(tc,"Architecture identifier incorrect!", "behavioral", (getArch(getLibraryUnit(prog, 0)))->archName->value);
+	CuAssertStrEquals_Msg(tc,"Architecture entity binding incorrect!", "ander", (getArch(getLibraryUnit(prog, 0)))->entName->value);
+
+	CuAssertStrEquals(tc, "temp", (getSigDecl(getDeclaration(getArch(getLibraryUnit(prog, 0)), 0)))->name->value);
+	CuAssertStrEquals(tc, "stlv", (getSigDecl(getDeclaration(getArch(getLibraryUnit(prog, 0)), 0)))->dtype->value);
+
+	CuAssertStrEquals_Msg(tc,"Signal identifier incorrect!", "temp", (getSigAssign(getConStatement(getArch(getLibraryUnit(prog, 0)), 0)))->target->value);
+
+	FreeProgram(prog);
+	free(input);
+}
+
 void TestParseProgram_(CuTest *tc){
 	char* input = strdup(" \
 		\
@@ -952,6 +970,7 @@ CuSuite* ParserTestGetSuite(){
 	SUITE_ADD_TEST(suite, TestParseProgram_MultiPortDeclaration);
 	SUITE_ADD_TEST(suite, TestParseProgram_DeclarationsAfterStatements);
 	SUITE_ADD_TEST(suite, TestParseProgram_CallExpressionsWithManyArguments);
+	SUITE_ADD_TEST(suite, TestParseProgram_ArchitectureWithSignalAssignBitStringLiteral);
 
 	return suite;
 }

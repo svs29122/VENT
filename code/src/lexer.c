@@ -280,7 +280,7 @@ static struct Token readBitStringLiteral(){
 		end++;
 	}	
 
-	//add the end quote too
+    //add the end quote
 	if(peek() != '\0'){
 		readChar();
 		end++;
@@ -289,10 +289,14 @@ static struct Token readBitStringLiteral(){
 	tok.type = TOKEN_BSTRINGLIT;
 	tok.lineNumber = l->line;
 	
-	int lSize = sizeof(char) * (int)(end-start) + 2;
+	int lSize = sizeof(char) * (int)(end-start) + 1;
 	tok.literal = (char*)malloc(lSize);
 	strncpy(tok.literal, start, lSize);
 	tok.literal[lSize-1] = '\0';
+
+#ifdef DEBUG
+    printf("Got %s\r\n", tok.literal);
+#endif
 
 	return tok;
 }
