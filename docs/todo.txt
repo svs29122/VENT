@@ -35,6 +35,8 @@ III) Parser ToDo
     9) allow multiple signals declared on single line
     10) allow conversions e..g unsigned(my_vec)
     11) add parser support for concatenation
+    12) add support for ranges in vector access 
+        e.g. out_vec <= in_vec(3 downto 0);
 	
 
 IV) Transpiler ToDo
