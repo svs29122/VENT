@@ -1,0 +1,22 @@
+
+use ieee.std_logic_1164.all;
+
+
+ent xspi_ctl {
+    // system interface
+    clk -> stl;
+    rst -> stl;
+    int0 <- stl;
+    // spi interface
+    sclk <- stl;
+    cs_n <- stl;
+    io0 <- stl;
+    io1 -> stl;
+    //user interfaces
+}
+
+arch core(xspi_ctl) {
+
+    sig tmp stl;
+    sig tmp2 stlv(3 downto 0);
+}
