@@ -57,4 +57,53 @@ arch core(spi) {
             spi_clk_reg <= spi_clk_next;
         }   
     }
+
+    /* next-state logic and data path*/
+    proc(state_reg, si_reg, so_reg, n_reg, c_reg, din, dvsr, start, cpha, miso) {
+        state_next <= state_reg;
+        ready <= '0';
+        spi_done_tick <= '0';
+        si_next <= si_reg;
+        so_next <= so_reg;
+        n_next <= n_reg;
+        c_next <= c_reg;
+
+        switch(state_reg) {
+            case(idle):
+                ready <= '1';
+                if(start == '1') {
+                    so_next <= din;
+                    n_next <= X"00";
+                    c_next <= X"00";
+                    state_next <= p0;
+                }   
+            case(p0):
+                //if(c_reg == unsigned(dvsr) { // sclk 0-to-1
+                if(c_reg == dvsr) { // sclk 0-to-1
+                    state_next <= p1;
+                    //si_next <= si_reg(6 downto 0) & miso;
+                    si_next <= si_reg(6);
+                    c_next <= X"00";
+                } else {
+                    c_next <= c_reg + 1;
+                }
+            case(p1):
+                //if(c_reg == unsigned(dvsr) { // sclk 1-to-0
+                if(c_reg == dvsr) { // sclk 1-to-0
+                    if(n_reg == 7) {
+                        spi_done_tick <= '1';
+                        state_next <= idle;
+                    } else {
+                        //so_next <= so_reg(6 downto 0)  & '0';
+                        so_next <= so_reg(6);
+                        state_next <= p0;
+                        n_next <= n_reg + 1;
+                        c_next <= X"00";
+                    }
+                } else {
+                    c_next <= c_reg + 1;
+                }   
+        }
+    }
+
 }

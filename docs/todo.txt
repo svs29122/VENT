@@ -33,6 +33,8 @@ III) Parser ToDo
 	7) need to be able to use call Expression outside of assignment i.e. just call it directly 
     8) Make changes in emitter and free'er to emit nested call expressions
     9) allow multiple signals declared on single line
+    10) allow conversions e..g unsigned(my_vec)
+    11) add parser support for concatenation
 	
 
 IV) Transpiler ToDo
