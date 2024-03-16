@@ -68,9 +68,20 @@ int main(int argc, char* argv[]) {
 		} else if(strcmp("--print-ast", argv[2]) == 0){
 			printProgramTree = true;
 		}
-	}
+    }
 	
 	doTranspile(argv[1], printProgramTree, printTokens);
+
+    if(argc == 4) {
+       if (strcmp("-o", argv[2]) == 0) {
+            char buf[1024];
+            char* loc = strstr(argv[1], "vent");
+            if(loc != NULL) strcpy(loc, "vhdl");
+
+            snprintf(buf, sizeof(buf), "cp %s %s", argv[1], argv[3]);
+            if(system(buf) == 0) printf("Copied %s to %s\r\n", argv[1], argv[3]);
+        }
+	}
 
 	return 0;
 }
